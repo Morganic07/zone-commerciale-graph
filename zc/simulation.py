@@ -93,6 +93,10 @@ class Simulation:
 
         # Nombre d'entrées sur chaque arête pendant le dernier pas (φ_e).
         self.flux = [0] * len(self.aretes)
+        # Nombre d'agents qui attendent au bout de chaque arête, faute de place dans le
+        # nœud suivant. Le taux τ_e ne les voit pas (une arête où plus personne n'entre
+        # paraît vide) : la file d'attente est donc donnée à part.
+        self.attente = [0] * len(self.aretes)
 
     def ajouter_sens(self, depart: str, arrivee: str, i: int) -> None:
         """Note que l'arête numéro i permet d'aller de `depart` à `arrivee`."""
@@ -139,7 +143,20 @@ class Simulation:
         self.avancer_sur_les_aretes()
         self.entrer_dans_les_noeuds()
         self.entrer_sur_les_aretes()
+        self.mettre_a_jour_les_taux()
         self.temps += self.dt
+
+    def mettre_a_jour_les_taux(self) -> None:
+        """Taux d'occupation de chaque arête, τ_e = φ_e / (c_e × Δt) (consigne § 2.2), et
+        file d'attente au bout de chaque arête. Le taux d'un nœud se lit directement :
+        `Noeud.taux_occupation()`."""
+        for i in range(len(self.aretes)):
+            a = self.aretes[i]
+            a.taux = self.flux[i] / (a.capacite_max * self.dt)
+        self.attente = [0] * len(self.aretes)
+        for agent in self.agents:
+            if agent.etat == EN_ATTENTE and agent.arete is not None:
+                self.attente[agent.arete] += 1
 
     def avancer_sur_les_aretes(self) -> None:
         """Les agents sur une arête marchent ; au bout, ils passent en attente."""
