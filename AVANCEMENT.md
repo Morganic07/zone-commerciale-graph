@@ -18,7 +18,7 @@ Correspondance avec la consigne :
 
 ## Epic 2 — Données
 
-- [ ] **2.1 Valeurs physiques sourcées.** `donnees/parametres.json` (vitesse valide, vitesse PMR, débit par mètre de largeur, densité maximale) et `rapport/sources.md`.
+- [x] **2.1 Valeurs physiques sourcées.** `donnees/parametres.json` (vitesse valide, vitesse PMR, débit par mètre de largeur, densité maximale) et `rapport/sources.md`.
   *Critère :* chaque valeur cite son organisme ou son texte, avec l'année ; le chargement refuse une valeur dont la source est absente.
 - [ ] **2.2 Modèle et format centre.** Modèle de données, lecture et écriture JSON au format imposé, validation.
   *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique. Un test par règle de validation : identifiants uniques ; extrémités existantes ; `type`, `statut` et `sens` dans leurs ensembles ; `occupation ≤ capacite_max` ; `niveau_fumee ∈ [0, 100]`.
