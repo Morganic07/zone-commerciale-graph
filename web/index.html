@@ -17,6 +17,7 @@
   <main class="page">
     <section class="plan" aria-label="Plan de la zone">
       <div id="graphe" class="graphe"></div>
+      <canvas id="agents" class="agents"></canvas>
 
       <div class="legende" aria-label="Légende">
         <p class="legende-titre">Occupation</p>
@@ -48,7 +49,20 @@
 
       <section class="groupe">
         <h2>Lecture</h2>
-        <button id="un-pas" type="button">Avancer d'un pas</button>
+        <div class="boutons">
+          <button id="lancer" type="button">Lancer</button>
+          <button id="pause" type="button">Pause</button>
+          <button id="un-pas" type="button">Pas à pas</button>
+        </div>
+        <label for="vitesse">Vitesse (secondes simulées par seconde)</label>
+        <select id="vitesse">
+          <option value="1">× 1</option>
+          <option value="2">× 2</option>
+          <option value="5" selected>× 5</option>
+          <option value="10">× 10</option>
+          <option value="30">× 30</option>
+          <option value="60">× 60</option>
+        </select>
       </section>
 
       <p id="message" class="message" role="status"></p>
@@ -57,6 +71,7 @@
 
   <script src="/web/vendor/cytoscape.min.js"></script>
   <script src="/web/plan.js"></script>
+  <script src="/web/agents.js"></script>
   <script src="/web/app.js"></script>
 </body>
 </html>

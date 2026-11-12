@@ -81,6 +81,15 @@ def test_scenario_aux_foyers_dans_deux_centres(tmp_path: Path,
     assert "un seul centre" in reponse.json()["detail"]
 
 
+def test_chaque_scenario_se_joue() -> None:
+    for scenario in client.get("/api/scenarios").json():
+        assert client.post(f"/api/scenarios/{scenario['id']}").status_code == 200
+        for _ in range(3):
+            reponse = client.post("/api/pas?nombre=100")
+            assert reponse.status_code == 200, scenario["id"]
+        assert reponse.json()["temps"] == 300.0
+
+
 def test_scenario_inconnu() -> None:
     reponse = client.post("/api/scenarios/inexistant")
     assert reponse.status_code == 404
