@@ -32,6 +32,7 @@ DANS_NOEUD = "dans_noeud"
 SUR_ARETE = "sur_arete"
 EN_ATTENTE = "en_attente"
 PARTI = "parti"  # revenu à sa source et reparti : il ne compte plus nulle part
+SAUVE = "sauvé"  # sorti d'un centre en feu : il ne compte plus nulle part
 
 
 @dataclass
@@ -136,6 +137,14 @@ class Simulation:
         if agent.etat != DANS_NOEUD or agent.position not in self.sources:
             raise ValueError(f"l'agent {agent.id} n'est pas dans une source")
         agent.etat = PARTI
+
+    def sauver(self, agent: Agent) -> None:
+        """L'agent sort par une sortie pendant une évacuation : il quitte la simulation et
+        libère sa place dans le nœud."""
+        if agent.etat != DANS_NOEUD or agent.position not in self.noeuds:
+            raise ValueError(f"l'agent {agent.id} n'est pas dans un nœud de centre")
+        self.noeuds[agent.position].occupation -= 1
+        agent.etat = SAUVE
 
     def vitesse(self, agent: Agent) -> float:
         if agent.pmr:
