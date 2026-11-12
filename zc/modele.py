@@ -66,3 +66,63 @@ class Centre:
             if n.id == identifiant:
                 return n
         raise KeyError(identifiant)
+
+
+# --- zone commerciale (consigne § 1, PLAN.md § 2.2) ------------------------------------
+
+TYPES_SOURCE = frozenset({"parking", "station", "quartier"})
+
+# Un nœud de centre est désigné dans la zone par « <centre>:<id> ». Les identifiants de
+# centres et de sources ne contiennent donc jamais ce séparateur : un identifiant avec
+# « : » est un nœud de centre, sans « : » une source, sans ambiguïté possible.
+SEPARATEUR = ":"
+
+
+def identifiant_zone(centre: str, noeud: str) -> str:
+    return f"{centre}{SEPARATEUR}{noeud}"
+
+
+@dataclass
+class Source:
+    """Région d'où partent les visiteurs : parking, station ou quartier. Sa capacité est
+    illimitée (PLAN.md § 2.2)."""
+
+    id: str
+    type: str
+    x: Nombre | None = None
+    y: Nombre | None = None
+
+
+@dataclass
+class CentreZone:
+    """Macro-nœud : un centre placé dans la zone. Les identifiants de `centre` sont déjà
+    préfixés par `id` (« A:S1 »)."""
+
+    id: str
+    centre: Centre
+    x: Nombre | None = None
+    y: Nombre | None = None
+
+
+@dataclass
+class Zone:
+    """Zone commerciale : centres (macro-nœuds), sources et connexions. Une connexion
+    relie deux points d'entrée de la zone : une source ou la sortie d'un centre."""
+
+    centres: list[CentreZone] = field(default_factory=list)
+    sources: list[Source] = field(default_factory=list)
+    connexions: list[Arete] = field(default_factory=list)
+
+    @staticmethod
+    def macro_noeud(identifiant: str) -> str:
+        """Macro-nœud qui contient ce nœud : le centre d'un « A:S1 », la source elle-même."""
+        return identifiant.split(SEPARATEUR, 1)[0]
+
+    def vue_macro(self) -> tuple[list[str], list[tuple[str, str]]]:
+        """Graphe contracté : un sommet par centre et par source, une arête par connexion
+        entre leurs macro-nœuds (deux connexions parallèles restent deux arêtes).
+        Complexité O(C + S + K) pour C centres, S sources et K connexions."""
+        sommets = [c.id for c in self.centres] + [s.id for s in self.sources]
+        aretes = [(self.macro_noeud(a.source), self.macro_noeud(a.cible))
+                  for a in self.connexions]
+        return sommets, aretes
