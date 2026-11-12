@@ -14,7 +14,8 @@ positives (vérifié au chargement), τ ≥ 0 et β ≥ 0 (vérifié par la navi
 
 import heapq
 
-from zc.navigation import Arc
+from zc.modele import SEPARATEUR, Zone
+from zc.navigation import Arc, graphe_de_la_zone
 
 
 def dijkstra(graphe: dict[str, list[Arc]],
@@ -78,3 +79,52 @@ def plus_court_chemin(graphe: dict[str, list[Arc]], depart: str,
     if arrivee not in distances:
         return None
     return distances[arrivee], reconstruire_chemin(predecesseurs, depart, arrivee)
+
+
+def itineraire(zone: Zone, source: str, centre: str, critere: str, beta: float = 0.0,
+               magasin: str | None = None) -> tuple[float, list[str]] | None:
+    """Itinéraire d'une région (source) vers un centre commercial (consigne § 1, Q2).
+
+    Sans `magasin`, l'itinéraire s'arrête à la sortie du centre la moins coûteuse à
+    atteindre : c'est l'entrée du visiteur. Avec `magasin` (identifiant dans le centre,
+    par exemple « M4 »), il continue jusqu'au magasin.
+    `critere` : « court », « encombre » ou « pmr » (voir `zc/navigation.py`).
+    Renvoie (coût, liste des nœuds), ou None s'il n'y a aucun chemin (sens interdits,
+    passages bloqués). Une source, un centre ou un magasin inconnus lèvent ValueError :
+    une faute de frappe ne doit pas passer pour un itinéraire impossible.
+    Complexité : un seul Dijkstra, O((V + E) log V) sur le graphe de la zone.
+    """
+    ids_sources = []
+    for s in zone.sources:
+        ids_sources.append(s.id)
+    if source not in ids_sources:
+        raise ValueError(f"source « {source} » inconnue")
+
+    sorties = []
+    ids_noeuds = []
+    for c in zone.centres:
+        if c.id == centre:
+            for n in c.centre.noeuds:
+                ids_noeuds.append(n.id)
+                if n.type == "sortie":
+                    sorties.append(n.id)
+    if len(sorties) == 0:
+        raise ValueError(f"centre « {centre} » inconnu ou sans sortie")
+
+    graphe = graphe_de_la_zone(zone, critere, beta)
+    if magasin is not None:
+        arrivee = centre + SEPARATEUR + magasin
+        if arrivee not in ids_noeuds:
+            raise ValueError(f"« {magasin} » n'existe pas dans le centre « {centre} »")
+        return plus_court_chemin(graphe, source, arrivee)
+
+    distances, predecesseurs = dijkstra(graphe, source)
+    meilleure_sortie = None
+    for sortie in sorties:
+        if sortie in distances:
+            if meilleure_sortie is None or distances[sortie] < distances[meilleure_sortie]:
+                meilleure_sortie = sortie
+    if meilleure_sortie is None:
+        return None
+    chemin = reconstruire_chemin(predecesseurs, source, meilleure_sortie)
+    return distances[meilleure_sortie], chemin
