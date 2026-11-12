@@ -1,7 +1,4 @@
-"""Format JSON de la zone commerciale (PLAN.md § 2.2) et sa conversion en modèle.
-
-Python pur : les fichiers de centres sont lus par une fonction `charger` fournie par
-l'appelant (`chargement.charger_zone`), ce qui garde ce module testable sans disque.
+"""Lecture d'une zone commerciale au format JSON (PLAN.md § 2.2).
 
     {
       "centres": [{"id": "A", "fichier": "centres/A.json", "x": 0, "y": 0}],
@@ -11,133 +8,115 @@ l'appelant (`chargement.charger_zone`), ce qui garde ce module testable sans dis
                       "pmr": true}]
     }
 
-Une connexion a les champs d'une arête de centre ; ses extrémités sont une source ou
-la sortie d'un centre, désignée « <centre>:<id> ».
+Une connexion a les mêmes champs qu'une arête. Ses extrémités sont une source (« P1 »)
+ou la sortie d'un centre (« A:EA »). Ce module ne touche pas au disque : les centres
+sont lus par `chargement.py` et passés en paramètre.
 """
 
-from collections.abc import Callable
-from dataclasses import replace
+import copy
+from typing import Any
 
-from zc.format_centre import arete_depuis_dict
+from zc.format_centre import arete_depuis_dict, verifier_champs
 from zc.modele import (
     SEPARATEUR,
     TYPES_SOURCE,
     Centre,
     CentreZone,
+    ErreurFormat,
+    Noeud,
     Source,
     Zone,
-    identifiant_zone,
-)
-from zc.validation import (
-    ErreurFormat,
-    champs,
-    dans,
-    liste,
-    nombre_facultatif,
-    objet,
-    texte,
+    macro_noeud,
 )
 
 
-def prefixer(centre: Centre, cid: str) -> Centre:
-    """Copie du centre dont chaque identifiant de nœud devient « <cid>:<id> », pour que
-    deux centres puissent employer les mêmes noms internes. Complexité O(V + E)."""
-    return Centre(
-        noeuds=[replace(n, id=identifiant_zone(cid, n.id)) for n in centre.noeuds],
-        aretes=[replace(a, source=identifiant_zone(cid, a.source),
-                        cible=identifiant_zone(cid, a.cible)) for a in centre.aretes],
-    )
+def prefixer(centre: Centre, id_centre: str) -> Centre:
+    """Renvoie une copie du centre où chaque identifiant devient « A:S1 ».
+    Ainsi, deux centres peuvent utiliser les mêmes noms de nœuds."""
+    nouveau = Centre(noeuds=[], aretes=[])
+    for n in centre.noeuds:
+        copie_noeud = copy.copy(n)
+        copie_noeud.id = id_centre + SEPARATEUR + n.id
+        nouveau.noeuds.append(copie_noeud)
+    for a in centre.aretes:
+        copie_arete = copy.copy(a)
+        copie_arete.source = id_centre + SEPARATEUR + a.source
+        copie_arete.cible = id_centre + SEPARATEUR + a.cible
+        nouveau.aretes.append(copie_arete)
+    return nouveau
 
 
-def _identifiant_macro(d: dict[str, object], ou: str) -> str:
-    identifiant = texte(d, "id", ou)
-    if SEPARATEUR in identifiant:
-        raise ErreurFormat(f"{ou} : l'identifiant « {identifiant} » ne doit pas contenir "
-                           f"« {SEPARATEUR} », réservé aux nœuds des centres")
-    return identifiant
-
-
-def _centre(brut: object, rang: int, charger: Callable[[str], Centre]) -> CentreZone:
-    ou = f"centres[{rang}]"
-    d = objet(brut, ou)
-    champs(d, ("id", "fichier"), ("x", "y"), ou)
-    cid = _identifiant_macro(d, ou)
-    centre = charger(texte(d, "fichier", ou))
-    return CentreZone(id=cid, centre=prefixer(centre, cid),
-                      x=nombre_facultatif(d, "x", ou), y=nombre_facultatif(d, "y", ou))
-
-
-def _source(brut: object, rang: int) -> Source:
-    ou = f"sources[{rang}]"
-    d = objet(brut, ou)
-    champs(d, ("id", "type"), ("x", "y"), ou)
-    return Source(id=_identifiant_macro(d, ou),
-                  type=dans(texte(d, "type", ou), TYPES_SOURCE, "type", ou),
-                  x=nombre_facultatif(d, "x", ou), y=nombre_facultatif(d, "y", ou))
-
-
-def _verifier_extremite(extremite: str, centres: dict[str, CentreZone], sources: set[str],
-                        ou: str) -> None:
-    """Message explicite pour chaque façon de rater une extrémité de connexion."""
+def verifier_extremite(extremite: str, ids_sources: list[str], ids_centres: list[str],
+                       noeuds: dict[str, Noeud], ou: str) -> None:
+    """Vérifie qu'une extrémité de connexion est une source ou la sortie d'un centre."""
     if SEPARATEUR not in extremite:
-        if extremite not in sources:
+        if extremite not in ids_sources:
             raise ErreurFormat(f"{ou} : source « {extremite} » inconnue")
         return
-    cid = extremite.split(SEPARATEUR, 1)[0]
-    if cid not in centres:
-        raise ErreurFormat(f"{ou} : centre « {cid} » inconnu (extrémité « {extremite} »)")
-    try:
-        noeud = centres[cid].centre.noeud(extremite)
-    except KeyError:
+    id_centre = macro_noeud(extremite)
+    if id_centre not in ids_centres:
+        raise ErreurFormat(f"{ou} : centre « {id_centre} » inconnu")
+    if extremite not in noeuds:
         raise ErreurFormat(f"{ou} : sortie « {extremite} » inexistante dans le centre "
-                           f"« {cid} »") from None
+                           f"« {id_centre} »")
+    noeud = noeuds[extremite]
     if noeud.type != "sortie":
         raise ErreurFormat(f"{ou} : « {extremite} » n'est pas une sortie (type "
-                           f"{noeud.type}) ; une connexion n'entre dans un centre que par "
-                           "une sortie")
+                           f"{noeud.type}) ; une connexion entre dans un centre par une sortie")
 
 
-def depuis_dict(donnees: object, charger: Callable[[str], Centre]) -> Zone:
-    """Valide une zone et construit le modèle ; `charger(fichier)` renvoie le centre
-    décrit par le fichier, tel que cité dans « fichier ».
+def depuis_dict(donnees: dict[str, Any], centres_lus: dict[str, Centre]) -> Zone:
+    """Crée la zone à partir des données de son fichier JSON.
 
-    Règles : identifiants de centres et de sources uniques, sans « : » ; type de source
-    parmi parking, station, quartier ; chaque extrémité de connexion est une source ou
-    une sortie existante d'un centre, et les deux extrémités sont dans des macro-nœuds
-    distincts ; les connexions respectent les règles d'une arête.
-    Complexité O(V + E) sur l'ensemble des nœuds et arêtes des centres et connexions.
+    `centres_lus` associe chaque nom de fichier de centre au centre déjà lu.
+    Vérifie : identifiants de centres et de sources uniques et sans « : », type de
+    source connu, extrémités de connexions valides. Complexité O(V + E).
     """
-    racine = objet(donnees, "zone")
-    champs(racine, ("centres", "sources", "connexions"), (), "zone")
-    centres = [_centre(b, i, charger) for i, b in enumerate(liste(racine["centres"],
-                                                                   "zone.centres"))]
-    sources = [_source(b, i) for i, b in enumerate(liste(racine["sources"], "zone.sources"))]
+    verifier_champs(donnees, ["centres", "sources", "connexions"], "zone")
+    zone = Zone(centres=[], sources=[], connexions=[])
+    identifiants = []
 
-    vus: set[str] = set()
-    for identifiant in [c.id for c in centres] + [s.id for s in sources]:
-        if identifiant in vus:
+    for d in donnees["centres"]:
+        verifier_champs(d, ["id", "fichier"], "centre de la zone")
+        if SEPARATEUR in d["id"]:
+            raise ErreurFormat(f"centre « {d['id']} » : « {SEPARATEUR} » interdit "
+                               "dans un identifiant")
+        centre = prefixer(centres_lus[d["fichier"]], d["id"])
+        zone.centres.append(CentreZone(id=d["id"], centre=centre,
+                                       x=d.get("x"), y=d.get("y")))
+        identifiants.append(d["id"])
+
+    for d in donnees["sources"]:
+        verifier_champs(d, ["id", "type"], "source")
+        if SEPARATEUR in d["id"]:
+            raise ErreurFormat(f"source « {d['id']} » : « {SEPARATEUR} » interdit "
+                               "dans un identifiant")
+        if d["type"] not in TYPES_SOURCE:
+            raise ErreurFormat(f"source « {d['id']} » : type « {d['type']} » inconnu")
+        zone.sources.append(Source(id=d["id"], type=d["type"], x=d.get("x"), y=d.get("y")))
+        identifiants.append(d["id"])
+
+    # Un même identifiant ne peut pas servir deux fois (centre ou source).
+    deja_vus = set()
+    for identifiant in identifiants:
+        if identifiant in deja_vus:
             raise ErreurFormat(f"identifiant de centre ou de source en double : "
                                f"« {identifiant} »")
-        vus.add(identifiant)
+        deja_vus.add(identifiant)
 
-    par_id = {c.id: c for c in centres}
-    ids_sources = {s.id for s in sources}
-    points = ids_sources | {n.id for c in centres for n in c.centre.noeuds
-                            if n.type == "sortie"}
-    connexions = []
-    for i, brut in enumerate(liste(racine["connexions"], "zone.connexions")):
+    # Tous les nœuds de tous les centres, rangés par identifiant pour les retrouver vite.
+    noeuds = {}
+    for c in zone.centres:
+        for n in c.centre.noeuds:
+            noeuds[n.id] = n
+    ids_sources = [s.id for s in zone.sources]
+    ids_centres = [c.id for c in zone.centres]
+
+    for i, d in enumerate(donnees["connexions"]):
         ou = f"connexions[{i}]"
-        d = objet(brut, ou)
-        for cle in ("source", "cible"):
-            if isinstance(d.get(cle), str):
-                _verifier_extremite(str(d[cle]), par_id, ids_sources, ou)
-        connexion = arete_depuis_dict(d, ou, points)
-        # Consigne § 1 : une connexion relie des centres (ou des sources) entre eux. Deux
-        # sorties d'un même centre ne forment pas une zone de connexion, et donneraient
-        # une boucle dans la vue macro.
-        macro = Zone.macro_noeud(connexion.source)
-        if macro == Zone.macro_noeud(connexion.cible):
-            raise ErreurFormat(f"{ou} : les deux extrémités sont dans le centre « {macro} » ; "
-                               "une connexion relie deux centres ou sources distincts")
-        connexions.append(connexion)
-    return Zone(centres=centres, sources=sources, connexions=connexions)
+        connexion = arete_depuis_dict(d, ou)
+        verifier_extremite(connexion.source, ids_sources, ids_centres, noeuds, ou)
+        verifier_extremite(connexion.cible, ids_sources, ids_centres, noeuds, ou)
+        zone.connexions.append(connexion)
+
+    return zone

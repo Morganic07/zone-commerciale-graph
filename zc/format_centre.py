@@ -1,135 +1,152 @@
-"""Conversion entre le format JSON imposé d'un centre (consigne § 2.3) et le modèle.
+"""Lecture et écriture d'un centre au format JSON imposé (consigne § 2.3).
 
-Python pur, sans accès au disque : la lecture des fichiers est dans `chargement.py`.
-`depuis_dict` valide tout ce qu'il lit et lève ErreurFormat avec un message qui nomme
-l'élément fautif ; `vers_dict` réécrit les champs dans l'ordre du format imposé, sans
-ajouter les champs facultatifs absents, pour qu'un fichier se relise à l'identique.
+Ce module ne touche pas au disque : il travaille sur les données déjà lues
+(dictionnaires Python). La lecture des fichiers est dans `chargement.py`.
 """
 
+from typing import Any
+
 from zc.modele import (
-    FUMEE_MAX,
-    FUMEE_MIN,
     SENS,
     STATUTS_ARETE,
     STATUTS_NOEUD,
     TYPES,
     Arete,
     Centre,
+    ErreurFormat,
     Noeud,
 )
-from zc.validation import (
-    ErreurFormat,
-    booleen,
-    champs,
-    dans,
-    entier,
-    liste,
-    nombre,
-    nombre_facultatif,
-    objet,
-    texte,
-)
-
-__all__ = ["ErreurFormat", "arete_depuis_dict", "depuis_dict", "vers_dict"]
-
-CHAMPS_NOEUD = ("id", "type", "capacite_max", "occupation", "capteur_fumee", "niveau_fumee",
-                "statut")
-FACULTATIFS_NOEUD = ("x", "y", "nom")
-CHAMPS_ARETE = ("source", "cible", "capacite_max", "longueur", "statut", "sens", "pmr")
-FACULTATIFS_ARETE = ("largeur",)
 
 
-def _noeud(brut: object, rang: int) -> Noeud:
-    d = objet(brut, f"noeuds[{rang}]")
-    ou = f"nœud « {d['id']} »" if isinstance(d.get("id"), str) else f"noeuds[{rang}]"
-    champs(d, CHAMPS_NOEUD, FACULTATIFS_NOEUD, ou)
+def verifier_champs(d: dict[str, Any], champs: list[str], ou: str) -> None:
+    """Vérifie que tous les champs obligatoires sont présents."""
+    for champ in champs:
+        if champ not in d:
+            raise ErreurFormat(f"{ou} : champ « {champ} » manquant")
+
+
+def noeud_depuis_dict(d: dict[str, Any]) -> Noeud:
+    """Crée un nœud à partir de son dictionnaire, en vérifiant ses valeurs."""
+    ou = f"nœud « {d.get('id')} »"
+    verifier_champs(d, ["id", "type", "capacite_max", "occupation", "capteur_fumee",
+                        "niveau_fumee", "statut"], ou)
     noeud = Noeud(
-        id=texte(d, "id", ou),
-        type=dans(texte(d, "type", ou), TYPES, "type", ou),
-        capacite_max=entier(d, "capacite_max", ou),
-        occupation=entier(d, "occupation", ou),
-        capteur_fumee=booleen(d, "capteur_fumee", ou),
-        niveau_fumee=nombre(d, "niveau_fumee", ou),
-        statut=dans(texte(d, "statut", ou), STATUTS_NOEUD, "statut", ou),
-        x=nombre_facultatif(d, "x", ou),
-        y=nombre_facultatif(d, "y", ou),
-        nom=texte(d, "nom", ou) if "nom" in d else None,
+        id=d["id"],
+        type=d["type"],
+        capacite_max=d["capacite_max"],
+        occupation=d["occupation"],
+        capteur_fumee=d["capteur_fumee"],
+        niveau_fumee=d["niveau_fumee"],
+        statut=d["statut"],
+        x=d.get("x"),
+        y=d.get("y"),
+        nom=d.get("nom"),
     )
+    if noeud.type not in TYPES:
+        raise ErreurFormat(f"{ou} : type « {noeud.type} » inconnu")
+    if noeud.statut not in STATUTS_NOEUD:
+        raise ErreurFormat(f"{ou} : statut « {noeud.statut} » inconnu")
     if noeud.capacite_max <= 0:
-        raise ErreurFormat(f"{ou} : capacite_max doit être strictement positive")
-    if not 0 <= noeud.occupation <= noeud.capacite_max:
+        raise ErreurFormat(f"{ou} : capacite_max doit être positive")
+    if noeud.occupation < 0 or noeud.occupation > noeud.capacite_max:
         raise ErreurFormat(f"{ou} : occupation ({noeud.occupation}) hors de "
-                           f"[0, capacite_max = {noeud.capacite_max}]")
-    if not FUMEE_MIN <= noeud.niveau_fumee <= FUMEE_MAX:
-        raise ErreurFormat(f"{ou} : niveau_fumee ({noeud.niveau_fumee}) hors de "
-                           f"[{FUMEE_MIN}, {FUMEE_MAX}]")
-    # « sortie » est un statut réservé aux nœuds de type sortie ; une sortie peut en
-    # revanche devenir enfumée ou bloquée pendant un incendie.
-    if noeud.statut == "sortie" and noeud.type != "sortie":
-        raise ErreurFormat(f"{ou} : le statut « sortie » est réservé aux nœuds de type sortie")
+                           f"[0, {noeud.capacite_max}]")
+    if noeud.niveau_fumee < 0 or noeud.niveau_fumee > 100:
+        raise ErreurFormat(f"{ou} : niveau_fumee ({noeud.niveau_fumee}) hors de [0, 100]")
     return noeud
 
 
-def arete_depuis_dict(brut: object, ou: str, extremites: set[str]) -> Arete:
-    """Lit et valide une arête (couloir d'un centre ou connexion de la zone) dont les
-    deux extrémités doivent appartenir à `extremites`, et être distinctes."""
-    d = objet(brut, ou)
-    champs(d, CHAMPS_ARETE, FACULTATIFS_ARETE, ou)
+def arete_depuis_dict(d: dict[str, Any], ou: str) -> Arete:
+    """Crée une arête à partir de son dictionnaire, en vérifiant ses valeurs.
+    Les extrémités sont vérifiées par l'appelant (centre ou zone)."""
+    verifier_champs(d, ["source", "cible", "capacite_max", "longueur", "statut", "sens",
+                        "pmr"], ou)
     arete = Arete(
-        source=texte(d, "source", ou),
-        cible=texte(d, "cible", ou),
-        capacite_max=nombre(d, "capacite_max", ou),
-        longueur=nombre(d, "longueur", ou),
-        statut=dans(texte(d, "statut", ou), STATUTS_ARETE, "statut", ou),
-        sens=dans(texte(d, "sens", ou), SENS, "sens", ou),
-        pmr=booleen(d, "pmr", ou),
-        largeur=nombre_facultatif(d, "largeur", ou),
+        source=d["source"],
+        cible=d["cible"],
+        capacite_max=d["capacite_max"],
+        longueur=d["longueur"],
+        statut=d["statut"],
+        sens=d["sens"],
+        pmr=d["pmr"],
+        largeur=d.get("largeur"),
     )
-    ou = f"{ou} ({arete.source} → {arete.cible})"
-    for extremite in (arete.source, arete.cible):
-        if extremite not in extremites:
-            raise ErreurFormat(f"{ou} : extrémité « {extremite} » inexistante")
-    if arete.source == arete.cible:
-        raise ErreurFormat(f"{ou} : une arête ne peut pas relier un nœud à lui-même")
-    for cle in ("capacite_max", "longueur", "largeur"):
-        valeur = getattr(arete, cle)
-        if valeur is not None and valeur <= 0:
-            raise ErreurFormat(f"{ou} : {cle} doit être strictement positive")
+    if arete.statut not in STATUTS_ARETE:
+        raise ErreurFormat(f"{ou} : statut « {arete.statut} » inconnu")
+    if arete.sens not in SENS:
+        raise ErreurFormat(f"{ou} : sens « {arete.sens} » inconnu")
+    # Une longueur nulle ou négative fausserait les plus courts chemins (Dijkstra).
+    if arete.longueur <= 0 or arete.capacite_max <= 0:
+        raise ErreurFormat(f"{ou} : longueur et capacite_max doivent être positives")
     return arete
 
 
-def depuis_dict(donnees: object) -> Centre:
-    """Valide le contenu décodé d'un fichier de centre et construit le modèle.
+def depuis_dict(donnees: dict[str, Any]) -> Centre:
+    """Crée un centre à partir des données lues dans son fichier JSON.
 
-    Règles : champs imposés présents et sans champ inconnu ; identifiants de nœuds
-    uniques ; extrémités d'arêtes existantes et distinctes ; type, statut et sens dans
-    leurs ensembles ; 0 ≤ occupation ≤ capacite_max ; niveau_fumee dans [0, 100] ;
-    capacités et longueurs strictement positives. Complexité O(V + E).
+    Vérifie : identifiants de nœuds uniques, extrémités d'arêtes existantes, valeurs
+    autorisées pour type, statut et sens, occupation entre 0 et la capacité, fumée
+    entre 0 et 100. Complexité O(V + E).
     """
-    racine = objet(donnees, "centre")
-    champs(racine, ("noeuds", "aretes"), (), "centre")
-    noeuds = [_noeud(b, i) for i, b in enumerate(liste(racine["noeuds"], "centre.noeuds"))]
-    ids: set[str] = set()
-    for n in noeuds:
-        if n.id in ids:
-            raise ErreurFormat(f"identifiant de nœud en double : « {n.id} »")
-        ids.add(n.id)
-    aretes = [arete_depuis_dict(b, f"aretes[{i}]", ids)
-              for i, b in enumerate(liste(racine["aretes"], "centre.aretes"))]
+    verifier_champs(donnees, ["noeuds", "aretes"], "centre")
+
+    noeuds = []
+    ids = set()
+    for d in donnees["noeuds"]:
+        noeud = noeud_depuis_dict(d)
+        if noeud.id in ids:
+            raise ErreurFormat(f"identifiant de nœud en double : « {noeud.id} »")
+        ids.add(noeud.id)
+        noeuds.append(noeud)
+
+    aretes = []
+    for i, d in enumerate(donnees["aretes"]):
+        ou = f"aretes[{i}]"
+        arete = arete_depuis_dict(d, ou)
+        if arete.source not in ids:
+            raise ErreurFormat(f"{ou} : extrémité « {arete.source} » inexistante")
+        if arete.cible not in ids:
+            raise ErreurFormat(f"{ou} : extrémité « {arete.cible} » inexistante")
+        aretes.append(arete)
+
     return Centre(noeuds=noeuds, aretes=aretes)
 
 
-def vers_dict(centre: Centre) -> dict[str, object]:
-    """Réécrit un centre au format imposé, champs dans l'ordre de la consigne, champs
-    facultatifs seulement s'ils sont renseignés."""
-    noeuds: list[dict[str, object]] = []
+def vers_dict(centre: Centre) -> dict[str, Any]:
+    """Transforme un centre en dictionnaire, prêt à être écrit en JSON.
+    Les champs facultatifs ne sont écrits que s'ils ont une valeur."""
+    noeuds = []
     for n in centre.noeuds:
-        d: dict[str, object] = {c: getattr(n, c) for c in CHAMPS_NOEUD}
-        d.update({c: getattr(n, c) for c in FACULTATIFS_NOEUD if getattr(n, c) is not None})
+        d: dict[str, Any] = {
+            "id": n.id,
+            "type": n.type,
+            "capacite_max": n.capacite_max,
+            "occupation": n.occupation,
+            "capteur_fumee": n.capteur_fumee,
+            "niveau_fumee": n.niveau_fumee,
+            "statut": n.statut,
+        }
+        if n.x is not None:
+            d["x"] = n.x
+        if n.y is not None:
+            d["y"] = n.y
+        if n.nom is not None:
+            d["nom"] = n.nom
         noeuds.append(d)
-    aretes: list[dict[str, object]] = []
+
+    aretes = []
     for a in centre.aretes:
-        d = {c: getattr(a, c) for c in CHAMPS_ARETE}
-        d.update({c: getattr(a, c) for c in FACULTATIFS_ARETE if getattr(a, c) is not None})
+        d = {
+            "source": a.source,
+            "cible": a.cible,
+            "capacite_max": a.capacite_max,
+            "longueur": a.longueur,
+            "statut": a.statut,
+            "sens": a.sens,
+            "pmr": a.pmr,
+        }
+        if a.largeur is not None:
+            d["largeur"] = a.largeur
         aretes.append(d)
+
     return {"noeuds": noeuds, "aretes": aretes}
