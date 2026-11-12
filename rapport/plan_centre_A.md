@@ -1,14 +1,16 @@
-# Plan proposé pour le centre détaillé A
+# Plan de test du centre détaillé A
+
+> **Plan provisoire.** Ce plan sert à implémenter et tester la simulation. Ce n'est pas le plan définitif : celui-ci sera dessiné par le binôme (story 2.6 d'`AVANCEMENT.md`), puis remplacera `donnees/centres/A.json` et cette figure.
 
 ![Plan du centre A](figures/plan_A.svg)
 
-Centre de plain-pied d'environ 80 m × 40 m : une allée principale est–ouest, une galerie au nord et une galerie au sud. Les données sont dans `donnees/centres/A.json` ; la figure se régénère avec :
+Centre de plain-pied d'environ 80 m × 40 m : une allée principale est–ouest, une galerie au nord et une galerie au sud. Les données sont dans `donnees/centres/A.json` ; la figure se régénère avec la commande ci-dessous, depuis la racine du projet et avec l'environnement `.venv` activé (le script importe le moteur `zc`, installé par `pip install -e ".[test]"`, voir le README) :
 
 ```bash
 python rapport/dessiner_plan.py donnees/centres/A.json rapport/figures/plan_A.svg
 ```
 
-**C'est une proposition, à redessiner et à ajuster par le binôme.** Après toute modification du JSON, relancer `pytest tests/test_plan_A.py` : il vérifie que le plan contient toujours chacun des cas ci-dessous.
+Après toute modification du JSON, relancer `pytest tests/test_plan_A.py` : il vérifie que le plan contient toujours chacun des cas ci-dessous. Le plan définitif devra lui aussi les contenir.
 
 ## Les cas couverts (PLAN.md § 6)
 
