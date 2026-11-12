@@ -32,6 +32,7 @@ DANS_NOEUD = "dans_noeud"
 SUR_ARETE = "sur_arete"
 EN_ATTENTE = "en_attente"
 PARTI = "parti"  # revenu à sa source et reparti : il ne compte plus nulle part
+SAUVE = "sauvé"  # sorti d'un centre en feu : il ne compte plus nulle part
 
 
 @dataclass
@@ -51,11 +52,17 @@ class Simulation:
     """État d'une simulation sur toute la zone, avancé pas à pas par `pas()`."""
 
     def __init__(self, zone: Zone, parametres: ParametresPhysiques, graine: int,
-                 dt: float = 1.0) -> None:
+                 dt: float = 1.0, reduction_fumee: float = 0.5) -> None:
+        """`reduction_fumee` (k) : part de la vitesse et du débit perdue dans une fumée
+        à 100 ; l'effet est linéaire, facteur = 1 − k × fumée / 100 (PLAN.md § 5.3).
+        La valeur par défaut est à justifier dans le rapport."""
+        if not 0 <= reduction_fumee < 1:
+            raise ValueError(f"k doit être dans [0, 1[, reçu {reduction_fumee}")
         self.zone = zone
         self.parametres = parametres
         self.hasard = random.Random(graine)
         self.dt = dt
+        self.reduction_fumee = reduction_fumee
         self.temps = 0.0
         self.agents: list[Agent] = []
 
@@ -131,6 +138,14 @@ class Simulation:
             raise ValueError(f"l'agent {agent.id} n'est pas dans une source")
         agent.etat = PARTI
 
+    def sauver(self, agent: Agent) -> None:
+        """L'agent sort par une sortie pendant une évacuation : il quitte la simulation et
+        libère sa place dans le nœud."""
+        if agent.etat != DANS_NOEUD or agent.position not in self.noeuds:
+            raise ValueError(f"l'agent {agent.id} n'est pas dans un nœud de centre")
+        self.noeuds[agent.position].occupation -= 1
+        agent.etat = SAUVE
+
     def vitesse(self, agent: Agent) -> float:
         if agent.pmr:
             return self.parametres.vitesse_pmr
@@ -138,8 +153,20 @@ class Simulation:
 
     # --- un pas de temps ----------------------------------------------------------------
 
+    def facteur_fumee(self, i: int) -> float:
+        """Facteur de vitesse et de débit sur l'arête i : 1 sans fumée, 1 − k dans une
+        fumée à 100. La fumée réelle d'une arête est le maximum de ses extrémités (les
+        sources, à l'air libre, n'en ont pas)."""
+        a = self.aretes[i]
+        fumee = 0.0
+        for extremite in (a.source, a.cible):
+            if extremite in self.noeuds:
+                fumee = max(fumee, self.noeuds[extremite].niveau_fumee)
+        return 1 - self.reduction_fumee * fumee / 100
+
     def pas(self) -> None:
         """Avance la simulation de Δt secondes."""
+        self.reagir_aux_blocages()
         self.avancer_sur_les_aretes()
         self.entrer_dans_les_noeuds()
         self.entrer_sur_les_aretes()
@@ -158,11 +185,34 @@ class Simulation:
             if agent.etat == EN_ATTENTE and agent.arete is not None:
                 self.attente[agent.arete] += 1
 
+    def reagir_aux_blocages(self) -> None:
+        """Règle de la moitié (PLAN.md § 5.3) : un agent engagé sur une arête qui devient
+        bloquée continue s'il en a parcouru au moins la moitié, et fait demi-tour sinon.
+        Après un demi-tour, il revient à son nœud de départ ; son trajet, qui passe par
+        l'arête bloquée, sera alors recalculé (`Demande.verifier_le_trajet`).
+        Pas de risque de demi-tours en boucle : après un demi-tour décidé à a < L/2, il
+        repart avec une avancée L − a > L/2, donc la règle le fait ensuite continuer."""
+        for agent in self.agents:
+            if agent.etat != SUR_ARETE or agent.arete is None:
+                continue
+            a = self.aretes[agent.arete]
+            if a.statut != "bloqué":
+                continue
+            if agent.avancee >= a.longueur / 2:
+                continue  # il a passé la moitié : il continue
+            # Demi-tour : il repart vers son nœud de départ, à la distance déjà faite.
+            depart = agent.position
+            agent.position = agent.itineraire[0]
+            agent.itineraire.insert(0, depart)
+            agent.avancee = a.longueur - agent.avancee
+
     def avancer_sur_les_aretes(self) -> None:
-        """Les agents sur une arête marchent ; au bout, ils passent en attente."""
+        """Les agents sur une arête marchent, plus lentement dans la fumée ; au bout, ils
+        passent en attente."""
         for agent in self.agents:
             if agent.etat == SUR_ARETE and agent.arete is not None:
-                agent.avancee += self.vitesse(agent) * self.dt
+                agent.avancee += (self.vitesse(agent) * self.facteur_fumee(agent.arete)
+                                  * self.dt)
                 longueur = self.aretes[agent.arete].longueur
                 if agent.avancee >= longueur:
                     agent.avancee = longueur
@@ -212,7 +262,10 @@ class Simulation:
         for i in sorted(candidats):
             liste = candidats[i]
             self.hasard.shuffle(liste)
-            limite = int(self.aretes[i].capacite_max * self.dt)  # arrondi inférieur
+            # Arrondi inférieur, et débit réduit par la fumée ; au moins une personne par
+            # pas tant que l'arête n'est pas bloquée (garanti sans fumée à la création).
+            capacite = self.aretes[i].capacite_max * self.facteur_fumee(i)
+            limite = max(1, int(capacite * self.dt))
             for agent in liste[:limite]:
                 if agent.position not in self.sources:
                     self.noeuds[agent.position].occupation -= 1

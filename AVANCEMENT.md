@@ -59,15 +59,15 @@ Correspondance avec la consigne :
 
 ## Epic 5 — Incendie
 
-- [ ] **5.1 Diffusion de la fumée.** Règle de la consigne (α, terme source), voisins non orientés ; fumée d'arête = maximum de ses extrémités.
+- [x] **5.1 Diffusion de la fumée.** Règle de la consigne (α, terme source), voisins non orientés ; fumée d'arête = maximum de ses extrémités.
   *Critère :* sur un graphe de 4 nœuds, les valeurs des trois premiers pas sont égales à un calcul fait à la main ; la fumée ne dépasse jamais 100 ; elle ne diminue jamais ; un scénario à deux départs de feu simultanés à t = 0 se diffuse depuis les deux.
-- [ ] **5.2 Détection.** Seuils θ₁ et θ₂, retard δ pour les nœuds sans capteur ; état réel et statut connu séparés.
+- [x] **5.2 Détection.** Seuils θ₁ et θ₂, retard δ pour les nœuds sans capteur ; état réel et statut connu séparés.
   *Critère :* un nœud avec capteur change de statut au pas où il franchit le seuil ; un nœud sans capteur change exactement δ pas plus tard.
-- [ ] **5.3 Effets sur la circulation.** Vitesse et capacité réduites par la fumée ; éléments bloqués retirés du graphe de navigation ; règle de la moitié pour les personnes engagées sur une arête qui se bloque.
+- [x] **5.3 Effets sur la circulation.** Vitesse et capacité réduites par la fumée ; éléments bloqués retirés du graphe de navigation ; règle de la moitié pour les personnes engagées sur une arête qui se bloque.
   *Critère :* une personne à 40 % de l'arête fait demi-tour, une personne à 60 % continue ; la vitesse et le débit baissent quand la fumée augmente.
-- [ ] **5.4 Évacuation.** Alarme, cible = sortie la plus proche, recalcul à chaque mise à jour, sauvés, piégés, charge par sortie, courbe d'évacuation.
+- [x] **5.4 Évacuation.** Alarme, cible = sortie la plus proche, recalcul à chaque mise à jour, sauvés, piégés, charge par sortie, courbe d'évacuation.
   *Critère :* sur le scénario « incendie qui bloque une sortie », la sortie bloquée ne reçoit plus personne après son blocage ; à la fin, sauvés + piégés = présents au déclenchement.
-- [ ] **5.5 ⋆ Modes de connaissance global et local.** Paramètre de scénario, comparaison des temps d'évacuation.
+- [x] **5.5 ⋆ Modes de connaissance global et local.** Paramètre de scénario, comparaison des temps d'évacuation.
   *Critère :* sur un même incendie avec un nœud sans capteur placé sur le chemin d'évacuation, les deux modes donnent des résultats différents, et ces résultats sont exportés.
 
 ## Epic 6 — Interface web
