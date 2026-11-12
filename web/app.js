@@ -2,18 +2,30 @@
 
 const plan = creerPlan(document.getElementById("graphe"));
 let scenarios = [];
+const VALEUR_REFUSEE = "valeur refusée";
 
-// Appelle le serveur ; en cas d'erreur, lève une Error avec le message du serveur.
-async function appeler(methode, adresse) {
+// Appelle le serveur, avec un corps JSON facultatif ; en cas d'erreur, lève une Error
+// avec le message du serveur.
+async function appeler(methode, adresse, corps) {
+  const options = {method: methode};
+  if (corps !== undefined) {
+    options.headers = {"Content-Type": "application/json"};
+    options.body = JSON.stringify(corps);
+  }
   let reponse;
   try {
-    reponse = await fetch(adresse, {method: methode});
+    reponse = await fetch(adresse, options);
   } catch (erreur) {
     throw new Error("Le serveur ne répond pas : relancer « python -m serveur ».");
   }
   const contenu = await reponse.json();
   if (!reponse.ok) {
-    throw new Error(contenu.detail);
+    // Nos erreurs ont un message en français ; celles de la validation automatique
+    // (valeur hors bornes) sont une liste, on renvoie alors un message générique.
+    if (typeof contenu.detail === "string") {
+      throw new Error(contenu.detail);
+    }
+    throw new Error(VALEUR_REFUSEE);
   }
   return contenu;
 }
@@ -75,6 +87,8 @@ let numeroDeScenario = 0;
 function afficherNouveauScenario(etat) {
   numeroDeScenario = numeroDeScenario + 1;
   construirePlan(plan, etat);
+  remplirReglages(etat);
+  remplirItineraire(etat);
   effacerAgents();
   afficherEtat(etat, 0);
   activerLecture(true);
@@ -115,8 +129,9 @@ async function avancer(nombre, duree) {
     if (scenario !== numeroDeScenario) {
       return true;  // réponse de l'ancien scénario : on l'ignore, ce n'est pas une erreur
     }
+    // On n'efface pas le message ici : pendant la lecture, il disparaîtrait en 100 ms
+    // (« Feu allumé », ou un refus du serveur, ne serait jamais lu).
     afficherEtat(etat, duree);
-    afficherMessage("");
     return true;
   } catch (erreur) {
     afficherMessage(erreur.message);
@@ -150,6 +165,7 @@ async function boucleDeLecture(numero) {
 }
 
 function lancer() {
+  afficherMessage("");
   enLecture = true;
   numeroDeLecture = numeroDeLecture + 1;
   activerLecture(true);
@@ -164,12 +180,14 @@ function pause() {
 
 function pasAPas() {
   pause();
+  afficherMessage("");
   avancer(1, 300);
 }
 
 async function demarrer() {
   activerLecture(false);
   creerCalque(document.getElementById("agents"), plan);
+  brancherInteractions();
   try {
     scenarios = await appeler("GET", "/api/scenarios");
   } catch (erreur) {

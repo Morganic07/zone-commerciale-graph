@@ -25,6 +25,7 @@ from zc.evacuation import Evacuation
 from zc.incendie import Incendie
 from zc.indicateurs import Indicateurs
 from zc.modele import CentreZone, ErreurFormat, macro_noeud
+from zc.navigation import graphe_de_la_zone
 from zc.palette import niveau
 from zc.simulation import PARTI, SAUVE, Simulation
 
@@ -129,6 +130,24 @@ class Session:
             if c.id == centre_id:
                 return c
         raise KeyError(centre_id)
+
+    def aretes_du_chemin(self, chemin: list[str], critere: str) -> list[int]:
+        """Numéros (dans `sim.aretes`) des couloirs qu'emprunte un chemin. Entre deux nœuds
+        reliés par plusieurs couloirs, c'est l'arc le moins coûteux du graphe de navigation,
+        celui que Dijkstra a retenu."""
+        graphe = graphe_de_la_zone(self.zone, critere, self.demande.parametres.beta)
+        numeros = []
+        for i in range(len(chemin) - 1):
+            meilleur = None
+            for arc in graphe[chemin[i]]:
+                if arc.arrivee == chemin[i + 1]:
+                    if meilleur is None or arc.poids < meilleur.poids:
+                        meilleur = arc
+            if meilleur is not None:
+                for j in range(len(self.sim.aretes)):
+                    if self.sim.aretes[j] is meilleur.arete:
+                        numeros.append(j)
+        return numeros
 
     # --- état, pour la page --------------------------------------------------------------
 

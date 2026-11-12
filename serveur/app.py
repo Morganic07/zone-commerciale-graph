@@ -30,13 +30,17 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 app = FastAPI(title="Zone commerciale")
 
 # La session en cours (une seule : l'application tourne en local, pour une démo).
+# Les routes qui la lisent ou la modifient sont « async def » : FastAPI les exécute alors
+# une par une. Avec un simple « def », il les lancerait en parallèle dans plusieurs
+# threads, et un feu allumé pendant un pas de simulation laisserait un état incohérent.
 courante: dict[str, Session] = {}
 
 
 def session() -> Session:
     if "session" not in courante:
         raise HTTPException(status_code=409,
-                            detail="aucun scénario chargé : POST /api/scenarios/{id}")
+                            detail="aucun scénario chargé : choisir un scénario, "
+                                   "puis « Charger »")
     return courante["session"]
 
 
@@ -62,7 +66,7 @@ def scenarios() -> list[dict[str, str]]:
 
 
 @app.post("/api/scenarios/{scenario_id}")
-def charger(scenario_id: str) -> dict[str, Any]:
+async def charger(scenario_id: str) -> dict[str, Any]:
     try:
         courante["session"] = Session(scenario_id)
     except KeyError:
@@ -73,12 +77,12 @@ def charger(scenario_id: str) -> dict[str, Any]:
 
 
 @app.get("/api/etat")
-def etat() -> dict[str, Any]:
+async def etat() -> dict[str, Any]:
     return session().etat()
 
 
 @app.post("/api/pas")
-def pas(nombre: int = 1) -> dict[str, Any]:
+async def pas(nombre: int = 1) -> dict[str, Any]:
     if nombre < 1 or nombre > 100:
         raise HTTPException(status_code=422, detail="nombre de pas entre 1 et 100")
     s = session()
@@ -88,7 +92,7 @@ def pas(nombre: int = 1) -> dict[str, Any]:
 
 
 @app.put("/api/reglages")
-def regler(reglages: Reglages) -> dict[str, Any]:
+async def regler(reglages: Reglages) -> dict[str, Any]:
     s = session()
     theta1 = s.reglages_feu["theta1"]
     if reglages.theta1 is not None:
@@ -116,7 +120,7 @@ def regler(reglages: Reglages) -> dict[str, Any]:
 
 
 @app.post("/api/feu")
-def feu(demande: Feu) -> dict[str, Any]:
+async def feu(demande: Feu) -> dict[str, Any]:
     s = session()
     try:
         s.allumer(demande.noeud)
@@ -128,7 +132,7 @@ def feu(demande: Feu) -> dict[str, Any]:
 
 
 @app.get("/api/itineraire")
-def chemin(source: str, centre: str, critere: str = "court",
+async def chemin(source: str, centre: str, critere: str = "court",
            magasin: str | None = None) -> dict[str, Any]:
     if critere not in CRITERES:
         raise HTTPException(status_code=422, detail=f"critère parmi {CRITERES}")
@@ -139,8 +143,9 @@ def chemin(source: str, centre: str, critere: str = "court",
     except ValueError as erreur:
         raise HTTPException(status_code=404, detail=str(erreur))
     if resultat is None:
-        return {"cout": None, "chemin": []}
-    return {"cout": round(resultat[0], 1), "chemin": resultat[1]}
+        return {"cout": None, "chemin": [], "aretes": []}
+    return {"cout": round(resultat[0], 1), "chemin": resultat[1],
+            "aretes": s.aretes_du_chemin(resultat[1], critere)}
 
 
 @app.get("/")

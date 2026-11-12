@@ -12,6 +12,7 @@ const TRAIT = "#2B2F33";
 const FOND = "#F5F7F6";
 const FEU = "#C8102E";
 const FUMEE = "#7A808A";
+const ITINERAIRE = "#A87400";
 
 const PICTO_SORTIE = "/web/pictos/sortie.svg";
 const PICTO_FLAMME = "/web/pictos/flamme.svg";
@@ -133,6 +134,24 @@ const STYLE_PLAN = [
     },
   },
   {
+    // Itinéraire tracé : trait épais ambre foncé ; placé avant la fumée et le blocage
+    // pour que leurs motifs restent visibles par-dessus.
+    selector: "edge.itineraire",
+    style: {
+      "width": 14,
+      "line-color": ITINERAIRE,
+      "line-outline-color": TRAIT,
+      "z-index": 10,
+    },
+  },
+  {
+    selector: "node.itineraire",
+    style: {
+      "border-width": 5,
+      "border-color": ITINERAIRE,
+    },
+  },
+  {
     selector: "edge.enfume",
     style: {
       "line-style": "dashed",
@@ -216,6 +235,21 @@ function construirePlan(cy, etat) {
   cy.add(elements);
   mettreAJourPlan(cy, etat);
   cy.fit(undefined, 30);
+}
+
+// Surligne un itinéraire : ses nœuds et les couloirs (numéros) qu'il emprunte.
+function tracerItineraire(cy, chemin, aretes) {
+  effacerItineraire(cy);
+  for (const id of chemin) {
+    cy.getElementById(id).addClass("itineraire");
+  }
+  for (const numero of aretes) {
+    cy.getElementById("arete-" + numero).addClass("itineraire");
+  }
+}
+
+function effacerItineraire(cy) {
+  cy.elements().removeClass("itineraire");
 }
 
 // Met à jour les couleurs et les motifs à chaque pas, sans reconstruire le plan.

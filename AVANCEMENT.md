@@ -80,7 +80,7 @@ Correspondance avec la consigne :
   *Critère :* `/run` : le scénario « journée normale » s'affiche ; les couleurs changent d'un pas à l'autre ; un nœud enfumé se distingue sans recourir à la couleur.
 - [x] **6.3 Lecture et calque d'agents.** Mode automatique, pas à pas, vitesse réglable ; agents dessinés sur un `<canvas>` qui suit le zoom et le déplacement de la vue.
   *Critère :* `/run` sur « pic d'affluence » : l'animation reste fluide (sinon, bascule vers un compteur par nœud et par arête, décision consignée) ; pause et pas à pas fonctionnent.
-- [ ] **6.4 Interactions.** Réglage des paramètres, choix du scénario, ⋆ feu au clic, tracé d'un itinéraire avec son coût selon le critère choisi.
+- [x] **6.4 Interactions.** Réglage des paramètres, choix du scénario, ⋆ feu au clic, tracé d'un itinéraire avec son coût selon le critère choisi.
   *Critère :* `/run` : chaque contrôle agit sur la simulation ; l'itinéraire tracé est le même que celui que renvoie le moteur.
 - [ ] **6.5 Scénarios de démonstration.** Journée normale, pic d'affluence, incendie qui bloque une sortie.
   *Critère :* sur une machine propre, l'installation et le lancement en suivant le README suffisent ; les trois scénarios se jouent jusqu'au bout sans erreur.
