@@ -27,16 +27,30 @@ def dijkstra(graphe: dict[str, list[Arc]],
     - `predecesseurs[n]` : le nœud juste avant `n` sur ce chemin.
     Un nœud inaccessible n'apparaît dans aucun des deux. `depart` doit être un nœud du
     graphe (pour un départ peut-être bloqué, passer par `plus_court_chemin`).
+    Complexité : O((V + E) log V), voir `dijkstra_plusieurs_departs`.
+    """
+    return dijkstra_plusieurs_departs(graphe, [depart])
+
+
+def dijkstra_plusieurs_departs(graphe: dict[str, list[Arc]],
+                               departs: list[str]) -> tuple[dict[str, float], dict[str, str]]:
+    """Comme `dijkstra`, mais tous les nœuds de `departs` partent à distance 0 en même
+    temps : `distances[n]` est le coût depuis le départ le plus proche de `n`.
 
     Principe : on traite les nœuds par distance croissante. Le tas (file de priorité)
     donne à chaque tour le nœud non traité le plus proche ; sa distance est alors
     définitive, et on essaie d'améliorer celle de ses voisins.
-    Complexité : O((V + E) log V) avec un tas binaire, pour V nœuds et E arcs.
+    Complexité : O((V + E) log V) avec un tas binaire, pour V nœuds et E arcs, quel
+    que soit le nombre de départs.
     """
-    distances = {depart: 0.0}
+    distances = {}
+    tas = []
+    for depart in departs:
+        distances[depart] = 0.0
+        tas.append((0.0, depart))
+    heapq.heapify(tas)
     predecesseurs: dict[str, str] = {}
     traites = set()
-    tas = [(0.0, depart)]
 
     while len(tas) > 0:
         distance, noeud = heapq.heappop(tas)
@@ -53,6 +67,50 @@ def dijkstra(graphe: dict[str, list[Arc]],
                 heapq.heappush(tas, (nouvelle_distance, voisin))
 
     return distances, predecesseurs
+
+
+def inverser(graphe: dict[str, list[Arc]]) -> dict[str, list[Arc]]:
+    """Graphe inversé : chaque arc u → v devient v → u, avec le même poids.
+    Un chemin de n vers une sortie dans le graphe devient un chemin de la sortie vers n
+    dans le graphe inversé. Complexité O(V + E)."""
+    inverse: dict[str, list[Arc]] = {}
+    for noeud in graphe:
+        inverse[noeud] = []
+    for noeud in graphe:
+        for arc in graphe[noeud]:
+            inverse[arc.arrivee].append(Arc(arc.arrivee, arc.depart, arc.poids, arc.arete))
+    return inverse
+
+
+def distances_d_evacuation(graphe: dict[str, list[Arc]],
+                           sorties: list[str]) -> tuple[dict[str, float], dict[str, str]]:
+    """Distance de chaque nœud à la sortie la plus proche, en un seul calcul.
+
+    On lance Dijkstra depuis toutes les sorties à la fois sur le graphe inversé, au lieu
+    d'un Dijkstra par nœud. Renvoie :
+    - `distances[n]` : coût du meilleur chemin de `n` vers une sortie ;
+    - `suivants[n]` : le nœud où aller depuis `n` pour suivre ce chemin.
+    Un nœud sans aucun chemin vers une sortie (piégé) n'apparaît pas dans `distances`.
+    Les sorties absentes du graphe (bloquées) sont ignorées.
+    Complexité : O((V + E) log V), comme un seul Dijkstra.
+    """
+    sorties_ouvertes = []
+    for s in sorties:
+        if s in graphe:
+            sorties_ouvertes.append(s)
+    # Dans le graphe inversé, le prédécesseur de n est le nœud suivant vers la sortie.
+    return dijkstra_plusieurs_departs(inverser(graphe), sorties_ouvertes)
+
+
+def chemin_d_evacuation(suivants: dict[str, str], sorties: list[str],
+                        noeud: str) -> list[str]:
+    """Suit les `suivants` depuis `noeud` jusqu'à une sortie. Complexité O(V).
+    `noeud` doit pouvoir évacuer, c'est-à-dire figurer dans les `distances` renvoyées
+    par `distances_d_evacuation` ; un nœud piégé n'a pas de chemin à suivre."""
+    chemin = [noeud]
+    while chemin[-1] not in sorties:
+        chemin.append(suivants[chemin[-1]])
+    return chemin
 
 
 def reconstruire_chemin(predecesseurs: dict[str, str], depart: str,
