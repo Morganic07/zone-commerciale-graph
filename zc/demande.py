@@ -6,8 +6,10 @@ source et repart. Une part réglable des visiteurs est PMR : leurs trajets n'emp
 que des arêtes praticables en fauteuil.
 
 Les trajets sont calculés par Dijkstra (`zc/chemins.py`) : critère « moins encombré »
-pour les visiteurs valides, « pmr » pour les autres. Tout le hasard passe par le
-générateur de la simulation : même graine, même journée.
+pour les visiteurs valides, « pmr » pour les autres. Un trajet est recalculé quand la
+destination change (magasin suivant, retour) ou quand il n'est plus praticable (un nœud
+ou une arête est devenu bloqué). Tout le hasard passe par le générateur de la
+simulation : même graine, même journée.
 """
 
 from dataclasses import dataclass
@@ -35,6 +37,24 @@ class Visite:
     source: str  # d'où il vient, et où il reviendra
     programme: list[str]  # magasins qu'il lui reste à visiter (le premier : en cours)
     fin_visite: float | None = None  # instant où il quittera le magasin où il est
+
+
+def trajet_praticable(graphe: dict[str, list[Arc]], depart: str,
+                      itineraire: list[str]) -> bool:
+    """Chaque pas du trajet correspond-il encore à un arc du graphe de navigation ?
+    (Un nœud ou une arête bloqués n'y figurent plus.)"""
+    precedent = depart
+    for noeud in itineraire:
+        if precedent not in graphe:
+            return False
+        existe = False
+        for arc in graphe[precedent]:
+            if arc.arrivee == noeud:
+                existe = True
+        if not existe:
+            return False
+        precedent = noeud
+    return True
 
 
 class Demande:
@@ -104,8 +124,11 @@ class Demande:
         """Pour chaque visiteur arrivé au bout de son trajet : visiter, repartir vers le
         magasin suivant ou vers sa source, ou quitter la zone."""
         for agent in self.sim.agents:
-            if agent.etat != DANS_NOEUD or len(agent.itineraire) > 0:
-                continue  # en route : rien à décider
+            if agent.etat != DANS_NOEUD:
+                continue  # sur une arête ou en attente : rien à décider
+            if len(agent.itineraire) > 0:
+                self.verifier_le_trajet(agent, encombre, pmr)
+                continue
             visite = self.visites[agent.id]
 
             if len(visite.programme) == 0:
@@ -123,6 +146,21 @@ class Demande:
 
             if self.sim.temps >= visite.fin_visite:
                 self.partir_vers_la_suite(agent, visite, encombre, pmr)
+
+    def verifier_le_trajet(self, agent: Agent, encombre: dict[str, list[Arc]],
+                           pmr: dict[str, list[Arc]]) -> None:
+        """Si le reste du trajet n'est plus praticable (un nœud ou une arête est devenu
+        bloqué), l'agent recalcule son chemin vers la même destination. S'il n'y en a
+        aucun, il garde l'ancien et réessaiera au pas suivant."""
+        graphe = encombre
+        if agent.pmr:
+            graphe = pmr
+        if trajet_praticable(graphe, agent.position, agent.itineraire):
+            return
+        destination = agent.itineraire[-1]
+        chemin = self.trajet(agent.pmr, agent.position, destination, encombre, pmr)
+        if chemin is not None:
+            agent.itineraire = chemin
 
     def partir_vers_la_suite(self, agent: Agent, visite: Visite,
                              encombre: dict[str, list[Arc]],

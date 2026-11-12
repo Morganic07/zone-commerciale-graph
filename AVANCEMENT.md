@@ -50,7 +50,7 @@ Correspondance avec la consigne :
   *Critère :* sur 1000 pas, `o_v ≤ c_v` et `φ_e ≤ c_e·Δt` sont vrais à chaque pas ; deux exécutions avec la même graine donnent le même état.
 - [x] **4.2 Demande.** Arrivées par source, choix d'un centre puis de 1 à 3 magasins, visite aléatoire, retour ; part de PMR.
   *Critère :* conservation (créés = présents + repartis) à chaque pas ; la part de PMR observée est conforme au paramètre, à une tolérance près.
-- [ ] **4.3 Routage des agents.** Critère « moins encombré » par défaut, contrainte PMR, recalcul quand l'objectif ou le graphe change.
+- [x] **4.3 Routage des agents.** Critère « moins encombré » par défaut, contrainte PMR, recalcul quand l'objectif ou le graphe change.
   *Critère :* aucun agent PMR ne se trouve jamais sur une arête non PMR ; un agent se réoriente quand son arête suivante devient indisponible.
 - [ ] **4.4 Taux d'occupation et palette.** `τ_v`, `τ_e = φ_e / (c_e·Δt)`, niveau 1 à 5 avec les bornes 0,2 / 0,4 / 0,6 / 0,8.
   *Critère :* tests aux bornes exactes (0,2 → niveau 2, etc.) ; la file d'attente au bout d'une arête est exposée à part.
