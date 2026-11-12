@@ -60,32 +60,116 @@ function afficherDescription() {
   }
 }
 
+// Affiche un nouvel état ; les agents glissent vers leur place pendant `duree` ms.
+function afficherEtat(etat, duree) {
+  mettreAJourPlan(plan, etat);
+  mettreAJourBandeau(etat);
+  placerAgents(etat, duree);
+}
+
+// Augmente à chaque chargement : une réponse demandée avant le dernier chargement
+// (pas en cours au moment du clic sur « Charger ») ne doit pas être affichée.
+let numeroDeScenario = 0;
+
+// Un scénario vient d'être chargé (ou repris) : on redessine tout.
+function afficherNouveauScenario(etat) {
+  numeroDeScenario = numeroDeScenario + 1;
+  construirePlan(plan, etat);
+  effacerAgents();
+  afficherEtat(etat, 0);
+  activerLecture(true);
+}
+
 async function charger() {
+  pause();
   const choisi = document.getElementById("scenario").value;
   try {
     const etat = await appeler("POST", "/api/scenarios/" + choisi);
-    construirePlan(plan, etat);
-    mettreAJourBandeau(etat);
-    document.getElementById("un-pas").disabled = false;
+    afficherNouveauScenario(etat);
     afficherMessage("");
   } catch (erreur) {
     afficherMessage(erreur.message);
   }
 }
 
-async function avancerDUnPas() {
+// --- Lecture --------------------------------------------------------------------------
+// C'est la page qui fait avancer l'horloge : en lecture, elle demande des pas au serveur
+// à la vitesse choisie. Pause = plus de demandes ; pas à pas = une seule demande.
+
+let enLecture = false;
+let minuterie = null;
+let numeroDeLecture = 0;
+
+function activerLecture(scenarioCharge) {
+  document.getElementById("lancer").disabled = !scenarioCharge || enLecture;
+  document.getElementById("pause").disabled = !scenarioCharge || !enLecture;
+  document.getElementById("un-pas").disabled = !scenarioCharge;
+}
+
+// Demande `nombre` pas au serveur et affiche le résultat. Renvoie false en cas d'erreur
+// (la lecture s'arrête alors).
+async function avancer(nombre, duree) {
+  const scenario = numeroDeScenario;
   try {
-    const etat = await appeler("POST", "/api/pas?nombre=1");
-    mettreAJourPlan(plan, etat);
-    mettreAJourBandeau(etat);
+    const etat = await appeler("POST", "/api/pas?nombre=" + nombre);
+    if (scenario !== numeroDeScenario) {
+      return true;  // réponse de l'ancien scénario : on l'ignore, ce n'est pas une erreur
+    }
+    afficherEtat(etat, duree);
     afficherMessage("");
+    return true;
   } catch (erreur) {
     afficherMessage(erreur.message);
+    return false;
   }
+}
+
+// `numero` : la lecture à laquelle appartient cette boucle. Après une pause puis une
+// relance, l'ancienne boucle (dont une demande était peut-être en cours) s'arrête seule.
+async function boucleDeLecture(numero) {
+  if (!enLecture || numero !== numeroDeLecture) {
+    return;
+  }
+  // Au plus 10 demandes par seconde : aux grandes vitesses, chaque demande fait
+  // plusieurs pas (× 60 : 6 pas toutes les 100 ms).
+  const vitesse = Number(document.getElementById("vitesse").value);
+  const nombre = Math.max(1, Math.round(vitesse / 10));
+  const delai = 1000 * nombre / vitesse;
+  const debut = performance.now();
+  const reussi = await avancer(nombre, delai);
+  if (numero !== numeroDeLecture) {
+    return;  // une autre lecture a été lancée pendant la demande
+  }
+  if (!reussi) {
+    pause();
+    return;
+  }
+  // Le temps de la demande est déjà écoulé : on attend seulement le reste.
+  const ecoule = performance.now() - debut;
+  minuterie = setTimeout(boucleDeLecture, Math.max(0, delai - ecoule), numero);
+}
+
+function lancer() {
+  enLecture = true;
+  numeroDeLecture = numeroDeLecture + 1;
+  activerLecture(true);
+  boucleDeLecture(numeroDeLecture);
+}
+
+function pause() {
+  enLecture = false;
+  clearTimeout(minuterie);
+  activerLecture(plan.nodes().length > 0);
+}
+
+function pasAPas() {
+  pause();
+  avancer(1, 300);
 }
 
 async function demarrer() {
-  document.getElementById("un-pas").disabled = true;
+  activerLecture(false);
+  creerCalque(document.getElementById("agents"), plan);
   try {
     scenarios = await appeler("GET", "/api/scenarios");
   } catch (erreur) {
@@ -110,9 +194,7 @@ async function demarrer() {
     const etat = await appeler("GET", "/api/etat");
     liste.value = etat.scenario;
     afficherDescription();
-    construirePlan(plan, etat);
-    mettreAJourBandeau(etat);
-    document.getElementById("un-pas").disabled = false;
+    afficherNouveauScenario(etat);
   } catch (erreur) {
     afficherMessage("Choisir un scénario, puis « Charger ».");
   }
@@ -120,5 +202,7 @@ async function demarrer() {
 
 document.getElementById("scenario").addEventListener("change", afficherDescription);
 document.getElementById("charger").addEventListener("click", charger);
-document.getElementById("un-pas").addEventListener("click", avancerDUnPas);
+document.getElementById("lancer").addEventListener("click", lancer);
+document.getElementById("pause").addEventListener("click", pause);
+document.getElementById("un-pas").addEventListener("click", pasAPas);
 demarrer();

@@ -78,7 +78,7 @@ Correspondance avec la consigne :
   *Critère :* un test par route avec le client de test ; une requête invalide reçoit une erreur 4xx explicite.
 - [x] **6.2 Affichage du graphe.** Cytoscape : zone et centres en nœuds composés, positions du plan, palette à 5 niveaux, bordure et icône pour la fumée et le blocage, légende.
   *Critère :* `/run` : le scénario « journée normale » s'affiche ; les couleurs changent d'un pas à l'autre ; un nœud enfumé se distingue sans recourir à la couleur.
-- [ ] **6.3 Lecture et calque d'agents.** Mode automatique, pas à pas, vitesse réglable ; agents dessinés sur un `<canvas>` qui suit le zoom et le déplacement de la vue.
+- [x] **6.3 Lecture et calque d'agents.** Mode automatique, pas à pas, vitesse réglable ; agents dessinés sur un `<canvas>` qui suit le zoom et le déplacement de la vue.
   *Critère :* `/run` sur « pic d'affluence » : l'animation reste fluide (sinon, bascule vers un compteur par nœud et par arête, décision consignée) ; pause et pas à pas fonctionnent.
 - [ ] **6.4 Interactions.** Réglage des paramètres, choix du scénario, ⋆ feu au clic, tracé d'un itinéraire avec son coût selon le critère choisi.
   *Critère :* `/run` : chaque contrôle agit sur la simulation ; l'itinéraire tracé est le même que celui que renvoie le moteur.
