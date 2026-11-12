@@ -78,9 +78,7 @@ class Demande:
     def pas(self) -> None:
         """Un pas de la journée : visites en cours, nouvelles arrivées, puis déplacements."""
         # On refait les graphes à chaque pas, car les poids « moins encombré » dépendent
-        # du taux τ des arêtes. Attention : τ n'est mis à jour par la simulation qu'à
-        # partir de la story 4.4 ; d'ici là, il vaut 0 et « moins encombré » donne le
-        # plus court chemin.
+        # du taux τ des arêtes, mis à jour par la simulation au pas précédent.
         encombre = graphe_de_la_zone(self.sim.zone, "encombre", self.parametres.beta)
         pmr = graphe_de_la_zone(self.sim.zone, "pmr")
         self.faire_avancer_les_visites(encombre, pmr)
