@@ -53,6 +53,9 @@ class Arete:
     sens: str
     pmr: bool  # praticable en fauteuil roulant
     largeur: float | None = None  # en mètres (facultatif)
+    # Taux d'occupation τ = φ / (c × Δt), mis à jour par la simulation. Valeur
+    # calculée : il n'est jamais écrit dans les fichiers JSON.
+    taux: float = 0.0
 
 
 @dataclass
