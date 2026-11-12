@@ -54,7 +54,7 @@ Correspondance avec la consigne :
   *Critère :* aucun agent PMR ne se trouve jamais sur une arête non PMR ; un agent se réoriente quand son arête suivante devient indisponible.
 - [x] **4.4 Taux d'occupation et palette.** `τ_v`, `τ_e = φ_e / (c_e·Δt)`, niveau 1 à 5 avec les bornes 0,2 / 0,4 / 0,6 / 0,8.
   *Critère :* tests aux bornes exactes (0,2 → niveau 2, etc.) ; la file d'attente au bout d'une arête est exposée à part.
-- [ ] **4.5 Indicateurs de fréquentation.** Occupation moyenne et maximale, temps de trajet moyen, goulots ; export CSV.
+- [x] **4.5 Indicateurs de fréquentation.** Occupation moyenne et maximale, temps de trajet moyen, goulots ; export CSV.
   *Critère :* sur un scénario minimal calculé à la main, les valeurs exportées sont exactes.
 
 ## Epic 5 — Incendie
