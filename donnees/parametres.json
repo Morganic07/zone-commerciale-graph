@@ -1,0 +1,26 @@
+{
+  "vitesse_marche": {
+    "valeur": 1.34,
+    "unite": "m/s",
+    "source": "U. Weidmann, Transporttechnik der Fussgänger, IVT, ETH Zürich (vitesse libre moyenne des piétons), https://research-collection.ethz.ch/handle/20.500.11850/242008",
+    "annee": 1993
+  },
+  "vitesse_pmr": {
+    "valeur": 0.69,
+    "unite": "m/s",
+    "source": "K. E. Boyce, T. J. Shields, G. W. H. Silcock, Toward the Characterization of Building Occupancies for Fire Safety Engineering: Capabilities of Disabled People Moving Horizontally and on an Incline, Fire Technology 35(1), 51-67 (fauteuil manuel sans assistance, plan horizontal), doi:10.1023/A:1015339216366",
+    "annee": 1999
+  },
+  "debit_specifique_max": {
+    "valeur": 1.316,
+    "unite": "pers/(m.s)",
+    "source": "Méthode SFPE (Society of Fire Protection Engineers) : débit spécifique maximal d'une porte, tel qu'appliqué dans Thunderhead Engineering, Pathfinder Verification and Validation, https://www.thunderheadeng.com/docs/2024-1/pathfinder/verification-validation/",
+    "annee": 2024
+  },
+  "densite_max": {
+    "valeur": 5.4,
+    "unite": "pers/m2",
+    "source": "U. Weidmann, Transporttechnik der Fussgänger, IVT, ETH Zürich (densité de blocage), https://research-collection.ethz.ch/handle/20.500.11850/242008",
+    "annee": 1993
+  }
+}

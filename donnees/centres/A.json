@@ -1,0 +1,41 @@
+{
+  "noeuds": [
+    {"id": "EO", "type": "sortie", "capacite_max": 300, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie", "x": 0, "y": 20, "nom": "Sortie ouest"},
+    {"id": "C1", "type": "carrefour", "capacite_max": 150, "occupation": 0, "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre", "x": 12, "y": 20, "nom": "Carrefour ouest"},
+    {"id": "C2", "type": "carrefour", "capacite_max": 200, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 40, "y": 20, "nom": "Place centrale"},
+    {"id": "C3", "type": "carrefour", "capacite_max": 150, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 68, "y": 20, "nom": "Carrefour est"},
+    {"id": "EE", "type": "sortie", "capacite_max": 300, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie", "x": 80, "y": 20, "nom": "Sortie est"},
+    {"id": "N", "type": "carrefour", "capacite_max": 120, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 40, "y": 6, "nom": "Galerie nord"},
+    {"id": "S", "type": "carrefour", "capacite_max": 120, "occupation": 0, "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre", "x": 40, "y": 34, "nom": "Galerie sud"},
+    {"id": "M1", "type": "magasin", "capacite_max": 80, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 12, "y": 6, "nom": "Librairie"},
+    {"id": "M2", "type": "magasin", "capacite_max": 120, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 28, "y": 2, "nom": "Vêtements"},
+    {"id": "M3", "type": "magasin", "capacite_max": 100, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 52, "y": 2, "nom": "Sport"},
+    {"id": "M4", "type": "magasin", "capacite_max": 100, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 68, "y": 6, "nom": "Électronique"},
+    {"id": "M5", "type": "magasin", "capacite_max": 60, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 12, "y": 34, "nom": "Pharmacie"},
+    {"id": "M6", "type": "magasin", "capacite_max": 70, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 28, "y": 38, "nom": "Chaussures"},
+    {"id": "M7", "type": "magasin", "capacite_max": 90, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 52, "y": 38, "nom": "Restaurant"},
+    {"id": "M8", "type": "magasin", "capacite_max": 200, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 68, "y": 34, "nom": "Supermarché"},
+    {"id": "SA", "type": "sanitaire", "capacite_max": 15, "occupation": 0, "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre", "x": 40, "y": 40, "nom": "Sanitaires"}
+  ],
+  "aretes": [
+    {"source": "EO", "cible": "C1", "capacite_max": 3.16, "longueur": 12.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 2.4},
+    {"source": "C1", "cible": "C2", "capacite_max": 5.26, "longueur": 28.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 4.0},
+    {"source": "C2", "cible": "C3", "capacite_max": 1.58, "longueur": 28.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2},
+    {"source": "C3", "cible": "EE", "capacite_max": 3.16, "longueur": 12.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 2.4},
+    {"source": "C2", "cible": "N", "capacite_max": 3.95, "longueur": 14.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 3.0},
+    {"source": "C2", "cible": "S", "capacite_max": 3.95, "longueur": 14.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 3.0},
+    {"source": "C1", "cible": "N", "capacite_max": 3.95, "longueur": 31.3, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 3.0},
+    {"source": "N", "cible": "C3", "capacite_max": 3.95, "longueur": 31.3, "statut": "libre", "sens": "bidirectionnel", "pmr": false, "largeur": 3.0},
+    {"source": "C1", "cible": "S", "capacite_max": 3.95, "longueur": 31.3, "statut": "libre", "sens": "unique", "pmr": true, "largeur": 3.0},
+    {"source": "S", "cible": "C3", "capacite_max": 3.95, "longueur": 31.3, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 3.0},
+    {"source": "M1", "cible": "C1", "capacite_max": 2.37, "longueur": 14.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "M5", "cible": "C1", "capacite_max": 2.37, "longueur": 14.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "M2", "cible": "N", "capacite_max": 2.37, "longueur": 12.6, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "M3", "cible": "N", "capacite_max": 2.37, "longueur": 12.6, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "M4", "cible": "C3", "capacite_max": 2.37, "longueur": 14.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "M8", "cible": "C3", "capacite_max": 2.37, "longueur": 14.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "M6", "cible": "S", "capacite_max": 2.37, "longueur": 12.6, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "M7", "cible": "S", "capacite_max": 2.37, "longueur": 12.6, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "SA", "cible": "S", "capacite_max": 1.58, "longueur": 6.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2}
+  ]
+}
