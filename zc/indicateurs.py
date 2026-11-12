@@ -13,7 +13,49 @@ C'est, avec `chargement.py`, le seul module du moteur qui écrit sur le disque.
 import csv
 from pathlib import Path
 
+from zc.evacuation import Evacuation
 from zc.simulation import EN_ATTENTE, PARTI, SUR_ARETE, Simulation
+
+
+def exporter_evacuations(evacuations: dict[str, Evacuation], dossier: Path) -> None:
+    """Compare plusieurs évacuations (par exemple les modes « local » et « global ») :
+    écrit evacuations.csv (un bilan par évacuation) et courbes_evacuation.csv (personnes
+    encore dans le centre, pas à pas, une colonne par évacuation)."""
+    dossier.mkdir(parents=True, exist_ok=True)
+    noms = sorted(evacuations)
+
+    with open(dossier / "evacuations.csv", "w", newline="", encoding="utf-8") as f:
+        ecriture = csv.writer(f)
+        ecriture.writerow(["evacuation", "presents", "sauves", "pieges",
+                           "temps_d_evacuation_s", "charge_des_sorties"])
+        for nom in noms:
+            e = evacuations[nom]
+            charges = []
+            for sortie in sorted(e.charge):
+                charges.append(f"{sortie}={e.charge[sortie]}")
+            temps: object = e.temps_d_evacuation()
+            if temps is None:
+                temps = "non terminée"  # pas d'alarme, ou évacuation pas encore finie
+            ecriture.writerow([nom, len(e.presents_au_declenchement), e.sauves(),
+                               len(e.pieges), temps, " ".join(charges)])
+
+    with open(dossier / "courbes_evacuation.csv", "w", newline="", encoding="utf-8") as f:
+        ecriture = csv.writer(f)
+        ecriture.writerow(["pas_depuis_l_alarme"] + noms)
+        longueur = 0
+        for nom in noms:
+            longueur = max(longueur, len(evacuations[nom].courbe))
+        for i in range(longueur):
+            ligne: list[object] = [i + 1]
+            for nom in noms:
+                courbe = evacuations[nom].courbe
+                if i < len(courbe):
+                    ligne.append(courbe[i][1])
+                elif len(courbe) > 0:
+                    ligne.append(courbe[-1][1])  # évacuation finie : la valeur reste
+                else:
+                    ligne.append("")  # pas d'alarme : pas de courbe
+            ecriture.writerow(ligne)
 
 
 class Indicateurs:

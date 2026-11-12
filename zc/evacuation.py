@@ -23,17 +23,31 @@ sauvés et de piégés, charge de chaque sortie.
 from zc.chemins import chemin_d_evacuation, distances_d_evacuation
 from zc.incendie import Incendie
 from zc.modele import CentreZone
-from zc.navigation import graphe_du_centre
+from zc.navigation import Arc, construire
 from zc.simulation import DANS_NOEUD, PARTI, SAUVE, Agent, Simulation
+
+MODES = ["local", "global"]
 
 
 class Evacuation:
-    """Fait avancer ensemble l'incendie, l'évacuation et la simulation."""
+    """Fait avancer ensemble l'incendie, l'évacuation et la simulation.
 
-    def __init__(self, sim: Simulation, centre: CentreZone, incendie: Incendie) -> None:
+    Ce que savent les occupants (`connaissance`, PLAN.md § 5.3) :
+    - « local » : ils évacuent à l'alarme et suivent les statuts qu'elle a détectés
+      (capteurs, retard δ sans capteur), plus ce qu'ils voient autour d'eux : un voisin
+      dont la fumée réelle dépasse θ₂ est évité, même si l'alarme l'ignore encore ;
+    - « global » : ils connaissent l'état réel de tout le bâtiment ; ils évacuent dès que
+      la fumée réelle franchit θ₁ quelque part, et évitent tout nœud réellement bloqué.
+    """
+
+    def __init__(self, sim: Simulation, centre: CentreZone, incendie: Incendie,
+                 connaissance: str = "local") -> None:
+        if connaissance not in MODES:
+            raise ValueError(f"connaissance « {connaissance} » inconnue, attendu parmi {MODES}")
         self.sim = sim
         self.centre = centre
         self.incendie = incendie
+        self.connaissance = connaissance
         self.noeuds_du_centre = set()
         self.sorties = []
         for n in centre.centre.noeuds:
@@ -81,24 +95,51 @@ class Evacuation:
             self.courbe.append((self.sim.temps, restants))
 
     def detection_en_cours(self) -> bool:
+        """Le feu est-il connu des occupants ? En mode « local », quand l'alarme a détecté
+        un nœud (avec le retard δ des nœuds sans capteur) ; en mode « global », dès que la
+        fumée réelle franchit θ₁ quelque part."""
         for n in self.centre.centre.noeuds:
             if n.statut == "enfumé" or n.statut == "bloqué":
                 return True
+            if self.connaissance == "global" and n.niveau_fumee >= self.incendie.theta1:
+                return True
         return False
+
+    def reellement_bloque(self, noeud: str) -> bool:
+        """La fumée réelle du nœud dépasse-t-elle θ₂ ?"""
+        return self.sim.noeuds[noeud].niveau_fumee >= self.incendie.theta2
+
+    def graphe(self, critere: str, bloques_en_plus: set[str]) -> dict[str, list[Arc]]:
+        """Graphe de navigation du centre : sans les nœuds connus comme bloqués, ni ceux
+        de `bloques_en_plus` (ceux que l'on sait bloqués autrement que par l'alarme)."""
+        identifiants = []
+        bloques = set(bloques_en_plus)
+        for n in self.centre.centre.noeuds:
+            identifiants.append(n.id)
+            if n.statut == "bloqué":
+                bloques.add(n.id)
+        return construire(identifiants, self.centre.centre.aretes, bloques, critere)
 
     def guider(self) -> None:
         """Chaque agent présent dans un nœud du centre reçoit le chemin vers la sortie
-        ouverte la plus proche ; sans chemin, il est piégé."""
-        valides = graphe_du_centre(self.centre.centre, "court")
-        pmr = graphe_du_centre(self.centre.centre, "pmr")
-        distances_valides, suivants_valides = distances_d_evacuation(valides, self.sorties)
-        distances_pmr, suivants_pmr = distances_d_evacuation(pmr, self.sorties)
+        ouverte la plus proche, selon ce qu'il sait ; sans chemin, il est piégé."""
+        connus = set()
+        if self.connaissance == "global":
+            for n in self.centre.centre.noeuds:
+                if self.reellement_bloque(n.id):
+                    connus.add(n.id)
         for agent in self.sim.agents:
             if agent.etat != DANS_NOEUD or not self.dans_le_centre(agent):
                 continue
-            distances, suivants = distances_valides, suivants_valides
-            if agent.pmr:
-                distances, suivants = distances_pmr, suivants_pmr
+            bloques = set(connus)
+            if self.connaissance == "local":
+                # Ce qu'il voit : les voisins réellement bloqués.
+                for voisin in self.incendie.voisins[agent.position]:
+                    if self.reellement_bloque(voisin):
+                        bloques.add(voisin)
+            critere = "pmr" if agent.pmr else "court"
+            distances, suivants = distances_d_evacuation(self.graphe(critere, bloques),
+                                                         self.sorties)
             if agent.position not in distances:
                 self.pieges.add(agent.id)  # plus aucun chemin vers une sortie ouverte
                 agent.itineraire = []
@@ -108,11 +149,14 @@ class Evacuation:
             agent.itineraire = chemin[1:]
 
     def sauver_aux_sorties(self) -> None:
-        """Les agents arrivés dans une sortie non bloquée sont sauvés."""
+        """Les agents arrivés dans une sortie ouverte sont sauvés. Une sortie réellement
+        bloquée (ou connue comme telle) ne sauve personne, que l'alarme le sache ou non."""
         for agent in self.sim.agents:
             if agent.etat != DANS_NOEUD or agent.position not in self.charge:
                 continue
             if self.sim.noeuds[agent.position].statut == "bloqué":
+                continue
+            if self.reellement_bloque(agent.position):
                 continue
             self.charge[agent.position] += 1
             self.sim.sauver(agent)
