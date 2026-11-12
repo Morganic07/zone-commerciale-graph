@@ -48,7 +48,7 @@ Correspondance avec la consigne :
 
 - [x] **4.1 Pas de temps et contraintes.** Agents dans un nœud, sur une arête ou en attente ; avancée à vitesse `v·Δt` ; admission tirée au sort avec une graine.
   *Critère :* sur 1000 pas, `o_v ≤ c_v` et `φ_e ≤ c_e·Δt` sont vrais à chaque pas ; deux exécutions avec la même graine donnent le même état.
-- [ ] **4.2 Demande.** Arrivées par source, choix d'un centre puis de 1 à 3 magasins, visite aléatoire, retour ; part de PMR.
+- [x] **4.2 Demande.** Arrivées par source, choix d'un centre puis de 1 à 3 magasins, visite aléatoire, retour ; part de PMR.
   *Critère :* conservation (créés = présents + repartis) à chaque pas ; la part de PMR observée est conforme au paramètre, à une tolérance près.
 - [ ] **4.3 Routage des agents.** Critère « moins encombré » par défaut, contrainte PMR, recalcul quand l'objectif ou le graphe change.
   *Critère :* aucun agent PMR ne se trouve jamais sur une arête non PMR ; un agent se réoriente quand son arête suivante devient indisponible.
