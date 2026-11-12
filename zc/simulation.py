@@ -185,7 +185,7 @@ class Simulation:
         candidats: dict[int, list[Agent]] = {}
         for agent in self.agents:
             if agent.etat == DANS_NOEUD and len(agent.itineraire) > 0:
-                i = self.choisir_arete(agent.position, agent.itineraire[0])
+                i = self.choisir_arete(agent.position, agent.itineraire[0], agent.pmr)
                 if i is not None:
                     if i not in candidats:
                         candidats[i] = []
@@ -204,12 +204,15 @@ class Simulation:
                 agent.avancee = 0.0
                 self.flux[i] += 1
 
-    def choisir_arete(self, depart: str, arrivee: str) -> int | None:
+    def choisir_arete(self, depart: str, arrivee: str, pmr: bool = False) -> int | None:
         """Une arête praticable de `depart` vers `arrivee` (la plus courte s'il y en a
-        plusieurs), ou None si toutes sont bloquées."""
+        plusieurs), ou None si aucune ne convient. Un agent PMR ne prend que des arêtes
+        PMR, même si une arête parallèle avec des marches est plus courte."""
         meilleure = None
         for i in self.aretes_vers[(depart, arrivee)]:
             if self.aretes[i].statut == "bloqué":
+                continue
+            if pmr and not self.aretes[i].pmr:
                 continue
             if meilleure is None or self.aretes[i].longueur < self.aretes[meilleure].longueur:
                 meilleure = i
