@@ -46,7 +46,7 @@ Correspondance avec la consigne :
 
 ## Epic 4 — Simulation
 
-- [ ] **4.1 Pas de temps et contraintes.** Agents dans un nœud, sur une arête ou en attente ; avancée à vitesse `v·Δt` ; admission tirée au sort avec une graine.
+- [x] **4.1 Pas de temps et contraintes.** Agents dans un nœud, sur une arête ou en attente ; avancée à vitesse `v·Δt` ; admission tirée au sort avec une graine.
   *Critère :* sur 1000 pas, `o_v ≤ c_v` et `φ_e ≤ c_e·Δt` sont vrais à chaque pas ; deux exécutions avec la même graine donnent le même état.
 - [ ] **4.2 Demande.** Arrivées par source, choix d'un centre puis de 1 à 3 magasins, visite aléatoire, retour ; part de PMR.
   *Critère :* conservation (créés = présents + repartis) à chaque pas ; la part de PMR observée est conforme au paramètre, à une tolérance près.
