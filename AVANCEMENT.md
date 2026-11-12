@@ -41,7 +41,7 @@ Correspondance avec la consigne :
   *Critère :* sur la zone complète, le chemin PMR n'emprunte aucune arête non PMR et son coût est supérieur ou égal à celui du plus court chemin.
 - [x] **3.4 Distances d'évacuation.** Dijkstra multi-sources depuis toutes les sorties, sur le graphe inversé.
   *Critère :* pour chaque nœud, la distance obtenue égale le minimum des distances calculées sortie par sortie.
-- [ ] **3.5 Connexité, articulations, composantes fortement connexes.** Parcours en largeur, Hopcroft–Tarjan, Tarjan, graphe réduit et tri topologique.
+- [x] **3.5 Connexité, articulations, composantes fortement connexes.** Parcours en largeur, Hopcroft–Tarjan, Tarjan, graphe réduit et tri topologique.
   *Critère :* résultats identiques à `connected_components`, `articulation_points`, `strongly_connected_components` et `condensation` de `networkx`, sur 50 graphes aléatoires.
 
 ## Epic 4 — Simulation
