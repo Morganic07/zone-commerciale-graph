@@ -1,0 +1,17 @@
+{
+  "noeuds": [
+    {"id": "EB1", "type": "sortie", "capacite_max": 200, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie", "x": 0, "y": 10, "nom": "Sortie ouest"},
+    {"id": "CB", "type": "carrefour", "capacite_max": 100, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 20, "y": 10, "nom": "Allée"},
+    {"id": "EB2", "type": "sortie", "capacite_max": 200, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie", "x": 40, "y": 10, "nom": "Sortie est"},
+    {"id": "B1", "type": "magasin", "capacite_max": 150, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 10, "y": 0, "nom": "Bricolage"},
+    {"id": "B2", "type": "magasin", "capacite_max": 120, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 30, "y": 0, "nom": "Jardinerie"},
+    {"id": "B3", "type": "magasin", "capacite_max": 60, "occupation": 0, "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre", "x": 20, "y": 22, "nom": "Animalerie"}
+  ],
+  "aretes": [
+    {"source": "EB1", "cible": "CB", "capacite_max": 3.16, "longueur": 20.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 2.4},
+    {"source": "CB", "cible": "EB2", "capacite_max": 3.16, "longueur": 20.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 2.4},
+    {"source": "B1", "cible": "CB", "capacite_max": 2.37, "longueur": 14.1, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "B2", "cible": "CB", "capacite_max": 2.37, "longueur": 14.1, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "B3", "cible": "CB", "capacite_max": 2.37, "longueur": 12.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8}
+  ]
+}

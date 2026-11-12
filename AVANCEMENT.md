@@ -26,10 +26,10 @@ Correspondance avec la consigne :
   *Critère :* une zone de test se charge ; une connexion vers une sortie inexistante, ou vers un nœud qui n'est pas une sortie, produit une erreur explicite ; la vue macro compte un nœud par centre et par source.
 - [x] **2.4 Plan de test du centre détaillé.** Proposition de plan (figure dans `rapport/`) et `donnees/centres/A.json`. Ce plan est **provisoire** : il sert à implémenter la suite ; le plan définitif est la story 2.6.
   *Critère :* un test vérifie la liste des cas de `PLAN.md` § 6 (sorties, magasins, cycle, goulot, arête non PMR contournable, sens unique, nœuds sans capteur).
-- [ ] **2.5 Centres simples et zone complète.** `B.json`, `C.json` et `zone.json` : 3 centres, au moins 3 sources.
+- [x] **2.5 Centres simples et zone complète.** `B.json`, `C.json` et `zone.json` : 3 centres, au moins 3 sources.
   *Critère :* tout se charge ; le graphe de navigation complet est fortement connexe, vérifié avec `networkx`.
 - [ ] **2.6 Plan définitif du centre A, dessiné par le binôme.** Remplace le plan de test par le plan dessiné par le groupe (consigne § 5), à faire quand le reste est implémenté.
-  *Critère :* `tests/test_plan_A.py` passe sur le nouveau `A.json` ; la figure `rapport/figures/plan_A.svg` est régénérée et la notice `rapport/plan_centre_A.md` décrit le nouveau plan ; tous les tests du projet passent encore.
+  *Critère :* `tests/test_plan_A.py` passe sur le nouveau `A.json` ; la figure `rapport/figures/plan_A.svg` est régénérée et la notice `rapport/plan_centre_A.md` décrit le nouveau plan ; `donnees/zone.json` est mis à jour si les identifiants des sorties de A changent (il relie la zone à `A:EO` et `A:EE`) ; tous les tests du projet passent encore.
 
 ## Epic 3 — Algorithmes
 
