@@ -179,7 +179,8 @@ class Session:
         alarme = None
         if self.evacuation is not None:
             e = self.evacuation
-            alarme = {"centre": e.centre.id, "debut": e.alarme,
+            alarme = {"centre": e.centre.id, "foyers": list(e.incendie.foyers),
+                      "debut": e.alarme,
                       "sauves": e.sauves(), "pieges": len(e.pieges),
                       "presents": len(e.presents_au_declenchement),
                       "charge": e.charge, "courbe": e.courbe}

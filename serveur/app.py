@@ -145,11 +145,7 @@ def chemin(source: str, centre: str, critere: str = "court",
 
 @app.get("/")
 def accueil() -> FileResponse:
-    page = WEB / "index.html"
-    if not page.is_file():
-        raise HTTPException(status_code=404, detail="la page n'est pas encore écrite")
-    return FileResponse(page)
+    return FileResponse(WEB / "index.html")
 
 
-if WEB.is_dir():
-    app.mount("/web", StaticFiles(directory=WEB), name="web")
+app.mount("/web", StaticFiles(directory=WEB), name="web")
