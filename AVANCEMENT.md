@@ -37,7 +37,7 @@ Correspondance avec la consigne :
   *Critère :* une arête `unique` donne un seul arc, une arête `bidirectionnel` en donne deux ; aucun arc non PMR dans la vue PMR ; aucun élément bloqué.
 - [x] **3.2 Dijkstra et les trois fonctions de coût.** Plus court, moins encombré (`longueur × (1 + β·τ)`), PMR ; reconstruction du chemin ; complexité indiquée dans la docstring.
   *Critère :* distances identiques à celles de `networkx` sur 50 graphes aléatoires (graine fixée) et sur la zone ; β = 0 redonne le plus court chemin ; une destination inaccessible renvoie « aucun chemin ».
-- [ ] **3.3 Itinéraire d'une région vers un centre.** De la source à la sortie d'entrée du centre, avec un prolongement possible jusqu'à un magasin, pour chacun des trois critères.
+- [x] **3.3 Itinéraire d'une région vers un centre.** De la source à la sortie d'entrée du centre, avec un prolongement possible jusqu'à un magasin, pour chacun des trois critères.
   *Critère :* sur la zone complète, le chemin PMR n'emprunte aucune arête non PMR et son coût est supérieur ou égal à celui du plus court chemin.
 - [ ] **3.4 Distances d'évacuation.** Dijkstra multi-sources depuis toutes les sorties, sur le graphe inversé.
   *Critère :* pour chaque nœud, la distance obtenue égale le minimum des distances calculées sortie par sortie.
