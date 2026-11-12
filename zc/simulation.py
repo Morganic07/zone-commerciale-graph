@@ -31,6 +31,7 @@ from zc.parametres import ParametresPhysiques
 DANS_NOEUD = "dans_noeud"
 SUR_ARETE = "sur_arete"
 EN_ATTENTE = "en_attente"
+PARTI = "parti"  # revenu à sa source et reparti : il ne compte plus nulle part
 
 
 @dataclass
@@ -118,6 +119,13 @@ class Simulation:
                       itineraire=list(itineraire))
         self.agents.append(agent)
         return agent
+
+    def retirer(self, agent: Agent) -> None:
+        """L'agent quitte la zone. Il doit être dans une source (qui n'a pas d'occupation
+        à mettre à jour)."""
+        if agent.etat != DANS_NOEUD or agent.position not in self.sources:
+            raise ValueError(f"l'agent {agent.id} n'est pas dans une source")
+        agent.etat = PARTI
 
     def vitesse(self, agent: Agent) -> float:
         if agent.pmr:
