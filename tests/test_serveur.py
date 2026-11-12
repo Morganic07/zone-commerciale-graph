@@ -2,6 +2,7 @@
 erreur 4xx explicite pour chaque requête invalide."""
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -202,8 +203,27 @@ def test_itineraire_invalide(requete: str, code: int) -> None:
     assert client.get(f"/api/itineraire?{requete}").status_code == code
 
 
-def test_page_pas_encore_ecrite() -> None:
-    # La page arrive avec la story 6.2 : d'ici là, une 404 qui le dit.
+def test_page() -> None:
     reponse = client.get("/")
-    assert reponse.status_code == 404
-    assert "pas encore écrite" in reponse.json()["detail"]
+    assert reponse.status_code == 200
+    assert "cytoscape.min.js" in reponse.text
+
+
+def test_fichiers_de_la_page_servis() -> None:
+    # Chaque fichier cité par la page (scripts, feuille de style, pictogrammes) et par la
+    # feuille de style (polices) est bien servi : rien ne vient d'Internet.
+    page = client.get("/").text
+    style = client.get("/web/style.css").text
+    adresses = re.findall(r'(?:src|href)="(/web/[^"]+)"', page)
+    adresses = adresses + re.findall(r'url\("(/web/[^"]+)"\)', style)
+    assert len(adresses) >= 8
+    for adresse in adresses:
+        assert client.get(adresse).status_code == 200, adresse
+    assert "http" not in page
+
+
+def test_foyers_dans_l_etat() -> None:
+    charger()
+    foyer = un_noeud("magasin")
+    etat = client.post("/api/feu", json={"noeud": foyer}).json()
+    assert etat["alarme"]["foyers"] == [foyer]
