@@ -63,7 +63,7 @@ Correspondance avec la consigne :
   *Critère :* sur un graphe de 4 nœuds, les valeurs des trois premiers pas sont égales à un calcul fait à la main ; la fumée ne dépasse jamais 100 ; elle ne diminue jamais ; un scénario à deux départs de feu simultanés à t = 0 se diffuse depuis les deux.
 - [x] **5.2 Détection.** Seuils θ₁ et θ₂, retard δ pour les nœuds sans capteur ; état réel et statut connu séparés.
   *Critère :* un nœud avec capteur change de statut au pas où il franchit le seuil ; un nœud sans capteur change exactement δ pas plus tard.
-- [ ] **5.3 Effets sur la circulation.** Vitesse et capacité réduites par la fumée ; éléments bloqués retirés du graphe de navigation ; règle de la moitié pour les personnes engagées sur une arête qui se bloque.
+- [x] **5.3 Effets sur la circulation.** Vitesse et capacité réduites par la fumée ; éléments bloqués retirés du graphe de navigation ; règle de la moitié pour les personnes engagées sur une arête qui se bloque.
   *Critère :* une personne à 40 % de l'arête fait demi-tour, une personne à 60 % continue ; la vitesse et le débit baissent quand la fumée augmente.
 - [ ] **5.4 Évacuation.** Alarme, cible = sortie la plus proche, recalcul à chaque mise à jour, sauvés, piégés, charge par sortie, courbe d'évacuation.
   *Critère :* sur le scénario « incendie qui bloque une sortie », la sortie bloquée ne reçoit plus personne après son blocage ; à la fin, sauvés + piégés = présents au déclenchement.
