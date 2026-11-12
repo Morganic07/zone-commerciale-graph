@@ -74,7 +74,7 @@ Correspondance avec la consigne :
 
 À précéder de l'étape C du workflow (design), dont le résultat est figé dans `CLAUDE.md`.
 
-- [ ] **6.1 Serveur.** FastAPI : liste et chargement des scénarios, état, pas, paramètres, feu, itinéraire. Lancement par `python -m serveur`.
+- [x] **6.1 Serveur.** FastAPI : liste et chargement des scénarios, état, pas, paramètres, feu, itinéraire. Lancement par `python -m serveur`.
   *Critère :* un test par route avec le client de test ; une requête invalide reçoit une erreur 4xx explicite.
 - [ ] **6.2 Affichage du graphe.** Cytoscape : zone et centres en nœuds composés, positions du plan, palette à 5 niveaux, bordure et icône pour la fumée et le blocage, légende.
   *Critère :* `/run` : le scénario « journée normale » s'affiche ; les couleurs changent d'un pas à l'autre ; un nœud enfumé se distingue sans recourir à la couleur.

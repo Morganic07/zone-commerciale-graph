@@ -1,0 +1,11 @@
+{
+  "nom": "Journée normale",
+  "description": "Affluence ordinaire dans la zone, sans incendie.",
+  "graine": 2026,
+  "arrivees_par_minute": {"P1": 12.0, "T1": 8.0, "Q1": 5.0},
+  "part_pmr": 0.1,
+  "visite_min_s": 60.0,
+  "visite_max_s": 300.0,
+  "beta": 2.0,
+  "incendie": null
+}

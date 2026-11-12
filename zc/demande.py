@@ -77,13 +77,18 @@ class Demande:
 
     def pas(self) -> None:
         """Un pas de la journée : visites en cours, nouvelles arrivées, puis déplacements."""
+        self.preparer_pas()
+        self.sim.pas()
+
+    def preparer_pas(self) -> None:
+        """Visites en cours et nouvelles arrivées, sans déplacer personne. Sert quand un
+        autre module (l'évacuation) fait avancer la simulation lui-même."""
         # On refait les graphes à chaque pas, car les poids « moins encombré » dépendent
         # du taux τ des arêtes, mis à jour par la simulation au pas précédent.
         encombre = graphe_de_la_zone(self.sim.zone, "encombre", self.parametres.beta)
         pmr = graphe_de_la_zone(self.sim.zone, "pmr")
         self.faire_avancer_les_visites(encombre, pmr)
         self.faire_arriver(encombre, pmr)
-        self.sim.pas()
 
     def trajet(self, agent_pmr: bool, depart: str, arrivee: str,
                encombre: dict[str, list[Arc]], pmr: dict[str, list[Arc]]) -> list[str] | None:
