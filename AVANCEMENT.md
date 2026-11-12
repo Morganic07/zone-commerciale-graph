@@ -24,7 +24,7 @@ Correspondance avec la consigne :
   *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique. Un test par règle de validation : identifiants uniques ; extrémités existantes ; `type`, `statut` et `sens` dans leurs ensembles ; `occupation ≤ capacite_max` ; `niveau_fumee ∈ [0, 100]`.
 - [x] **2.3 Format zone.** Chargement de `zone.json`, préfixage des identifiants par centre, rattachement des connexions aux sorties, vue macro.
   *Critère :* une zone de test se charge ; une connexion vers une sortie inexistante, ou vers un nœud qui n'est pas une sortie, produit une erreur explicite ; la vue macro compte un nœud par centre et par source.
-- [ ] **2.4 Plan du centre détaillé.** Proposition de plan (figure dans `rapport/`), puis `donnees/centres/A.json`, redessiné et ajusté par le binôme.
+- [x] **2.4 Plan du centre détaillé.** Proposition de plan (figure dans `rapport/`), puis `donnees/centres/A.json`, redessiné et ajusté par le binôme.
   *Critère :* un test vérifie la liste des cas de `PLAN.md` § 6 (sorties, magasins, cycle, goulot, arête non PMR contournable, sens unique, nœuds sans capteur).
 - [ ] **2.5 Centres simples et zone complète.** `B.json`, `C.json` et `zone.json` : 3 centres, au moins 3 sources.
   *Critère :* tout se charge ; le graphe de navigation complet est fortement connexe, vérifié avec `networkx`.
