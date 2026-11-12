@@ -1,0 +1,17 @@
+{
+  "noeuds": [
+    {"id": "EC1", "type": "sortie", "capacite_max": 150, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie", "x": 0, "y": 10, "nom": "Sortie nord"},
+    {"id": "CC", "type": "carrefour", "capacite_max": 80, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 15, "y": 10, "nom": "Hall"},
+    {"id": "EC2", "type": "sortie", "capacite_max": 150, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie", "x": 30, "y": 10, "nom": "Sortie sud"},
+    {"id": "K1", "type": "magasin", "capacite_max": 40, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 7, "y": 0, "nom": "Boulangerie"},
+    {"id": "K2", "type": "magasin", "capacite_max": 50, "occupation": 0, "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre", "x": 23, "y": 0, "nom": "Café"},
+    {"id": "KS", "type": "sanitaire", "capacite_max": 10, "occupation": 0, "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre", "x": 15, "y": 20, "nom": "Sanitaires"}
+  ],
+  "aretes": [
+    {"source": "EC1", "cible": "CC", "capacite_max": 3.16, "longueur": 15.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 2.4},
+    {"source": "CC", "cible": "EC2", "capacite_max": 3.16, "longueur": 15.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 2.4},
+    {"source": "K1", "cible": "CC", "capacite_max": 2.37, "longueur": 12.8, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "K2", "cible": "CC", "capacite_max": 2.37, "longueur": 12.8, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.8},
+    {"source": "KS", "cible": "CC", "capacite_max": 1.58, "longueur": 10.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2}
+  ]
+}
