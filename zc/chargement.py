@@ -4,10 +4,10 @@ indicateurs, à toucher au disque (CLAUDE.md)."""
 import json
 from pathlib import Path
 
-from zc import format_centre, parametres
-from zc.format_centre import ErreurFormat
-from zc.modele import Centre
+from zc import format_centre, format_zone, parametres
+from zc.modele import Centre, Zone
 from zc.parametres import ErreurParametres, ParametresPhysiques
+from zc.validation import ErreurFormat
 
 
 def _lire_json(chemin: Path, erreur: type[ValueError]) -> object:
@@ -41,6 +41,30 @@ def charger_centre(chemin: Path) -> Centre:
         return format_centre.depuis_dict(donnees)
     except ErreurFormat as e:
         raise ErreurFormat(f"{chemin} : {e}") from e
+
+
+def charger_zone(chemin: Path) -> Zone:
+    """Charge une zone et ses centres. Les chemins « fichier » des centres sont relatifs
+    au dossier de `chemin`. Lève ErreurFormat avec le chemin du fichier fautif."""
+    donnees = _lire_json(chemin, ErreurFormat)
+
+    def charger(fichier: str) -> Centre:
+        try:
+            return charger_centre(chemin.parent / fichier)
+        except ErreurFormat as e:
+            raise _ErreurFichierCentre(str(e)) from e
+
+    try:
+        return format_zone.depuis_dict(donnees, charger)
+    except _ErreurFichierCentre:
+        raise  # porte déjà le chemin du fichier de centre fautif
+    except ErreurFormat as e:
+        raise ErreurFormat(f"{chemin} : {e}") from e
+
+
+class _ErreurFichierCentre(ErreurFormat):
+    """Erreur venue d'un fichier de centre lu pendant le chargement d'une zone : son
+    message nomme déjà ce fichier, il ne faut pas le préfixer par celui de la zone."""
 
 
 def ecrire_centre(centre: Centre, chemin: Path) -> None:

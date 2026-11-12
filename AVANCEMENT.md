@@ -22,7 +22,7 @@ Correspondance avec la consigne :
   *Critère :* chaque valeur cite son organisme ou son texte, avec l'année ; le chargement refuse une valeur dont la source est absente.
 - [x] **2.2 Modèle et format centre.** Modèle de données, lecture et écriture JSON au format imposé, validation.
   *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique. Un test par règle de validation : identifiants uniques ; extrémités existantes ; `type`, `statut` et `sens` dans leurs ensembles ; `occupation ≤ capacite_max` ; `niveau_fumee ∈ [0, 100]`.
-- [ ] **2.3 Format zone.** Chargement de `zone.json`, préfixage des identifiants par centre, rattachement des connexions aux sorties, vue macro.
+- [x] **2.3 Format zone.** Chargement de `zone.json`, préfixage des identifiants par centre, rattachement des connexions aux sorties, vue macro.
   *Critère :* une zone de test se charge ; une connexion vers une sortie inexistante, ou vers un nœud qui n'est pas une sortie, produit une erreur explicite ; la vue macro compte un nœud par centre et par source.
 - [ ] **2.4 Plan du centre détaillé.** Proposition de plan (figure dans `rapport/`), puis `donnees/centres/A.json`, redessiné et ajusté par le binôme.
   *Critère :* un test vérifie la liste des cas de `PLAN.md` § 6 (sorties, magasins, cycle, goulot, arête non PMR contournable, sens unique, nœuds sans capteur).
