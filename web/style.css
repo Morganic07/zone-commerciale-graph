@@ -35,7 +35,8 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  /* La page tient dans l'écran : le plan ne défile jamais, seul le panneau le peut. */
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--fond);
@@ -96,6 +97,7 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: 7fr 3fr;
+  grid-template-rows: minmax(0, 1fr);  /* sans quoi le panneau étirerait la ligne */
   min-height: 0;
 }
 
@@ -121,11 +123,23 @@ body {
 .panneau {
   padding: 1rem 1.5rem;
   font-size: 14px;
+  overflow-y: auto;
 }
 
 @media (max-width: 1000px) {
+  /* Le panneau passe sous le plan, et c'est alors la page entière qui défile. */
+  body {
+    height: auto;
+    min-height: 100vh;
+  }
+
   .page {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .panneau {
+    overflow-y: visible;
   }
 
   .plan {
@@ -138,7 +152,7 @@ body {
 /* --- Panneau : groupes séparés par l'espacement et leur titre ------------------------ */
 
 .groupe {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .groupe h2 {
@@ -184,6 +198,40 @@ select:focus-visible,
 button:focus-visible {
   outline: 3px solid var(--itineraire);
   outline-offset: 2px;
+}
+
+/* Deux champs par ligne : le panneau tient sur la hauteur d'un écran 16:9. */
+.champs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid var(--trait);
+  background: #FFFFFF;
+  font: inherit;
+  color: var(--trait);
+  font-variant-numeric: tabular-nums;
+}
+
+input:focus-visible {
+  outline: 3px solid var(--itineraire);
+  outline-offset: 2px;
+}
+
+.aide {
+  margin: 0.25rem 0 0.5rem;
+}
+
+/* Mode « feu au clic » enclenché : le bouton reste enfoncé, en rouge de sécurité. */
+button[aria-pressed="true"] {
+  background: var(--feu);
+  border-color: var(--feu);
+  color: #FFFFFF;
 }
 
 .boutons {

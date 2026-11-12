@@ -199,6 +199,15 @@ def test_itineraire() -> None:
     assert reponse.status_code == 200
     resultat = reponse.json()
     assert resultat["chemin"][0] == "P1" and resultat["cout"] > 0
+    # Les couloirs renvoyés relient les nœuds du chemin dans l'ordre, et sont tous
+    # praticables en fauteuil.
+    aretes = client.get("/api/etat").json()["aretes"]
+    chemin = resultat["chemin"]
+    assert len(resultat["aretes"]) == len(chemin) - 1
+    for i in range(len(chemin) - 1):
+        arete = aretes[resultat["aretes"][i]]
+        assert {arete["source"], arete["cible"]} == {chemin[i], chemin[i + 1]}
+        assert arete["pmr"]
 
 
 @pytest.mark.parametrize("requete, code", [
