@@ -113,6 +113,15 @@ def test_entree_qui_n_est_pas_un_objet_refusee() -> None:
         depuis_dict(donnees)
 
 
+def test_erreur_de_validation_porte_le_chemin(tmp_path: Path) -> None:
+    donnees = valide()
+    donnees["densite_max"]["source"] = ""
+    fichier = tmp_path / "parametres.json"
+    fichier.write_text(json.dumps(donnees), encoding="utf-8")
+    with pytest.raises(ErreurParametres, match="parametres.json.*densite_max.*source"):
+        charger_parametres(fichier)
+
+
 def test_fichier_absent_ou_non_json(tmp_path: Path) -> None:
     with pytest.raises(ErreurParametres, match="illisible"):
         charger_parametres(tmp_path / "absent.json")
