@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from zc.chargement import charger_parametres, charger_zone
-from zc.demande import Demande, ParametresDemande
-from zc.simulation import DANS_NOEUD, PARTI, SUR_ARETE, Simulation
+from zc.demande import Demande, ParametresDemande, Visite
+from zc.simulation import DANS_NOEUD, PARTI, SUR_ARETE, Agent, Simulation
 
 RACINE = Path(__file__).resolve().parent.parent
 PARAMETRES = charger_parametres(RACINE / "donnees" / "parametres.json")
@@ -125,3 +125,96 @@ def test_meme_graine_meme_journee() -> None:
             demande.pas()
         etats.append(sim.etat())
     assert etats[0] == etats[1]
+
+
+# --- centre fermé par un incendie -----------------------------------------------------
+# Le plan du centre A est provisoire : on ne cite aucun nœud, on les cherche.
+
+def sans_arrivees() -> tuple[Simulation, Demande]:
+    zone = charger_zone(RACINE / "donnees" / "zone.json")
+    sim = Simulation(zone, PARAMETRES, graine=5)
+    demande = Demande(sim, ParametresDemande(
+        arrivees_par_minute={}, part_pmr=0.0, visite_min=30.0, visite_max=180.0))
+    return sim, demande
+
+
+def en_route_vers_la_porte() -> tuple[Simulation, Demande, str, str, str, Agent]:
+    """Un visiteur parti d'une source reliée directement à une sortie (la porte) d'un
+    centre, vers un magasin de ce centre ; il marche sur la connexion vers la porte.
+    Renvoie la simulation, la demande, le centre, la source, la porte et le visiteur."""
+    sim, demande = sans_arrivees()
+    centre = sim.zone.centres[0]
+    sorties = []
+    for n in centre.centre.noeuds:
+        if n.type == "sortie":
+            sorties.append(n.id)
+    source = None
+    porte = None
+    for a in sim.zone.connexions:
+        if a.source in sim.sources and a.cible in sorties:
+            source, porte = a.source, a.cible
+        if a.cible in sim.sources and a.source in sorties:
+            source, porte = a.cible, a.source
+    assert source is not None and porte is not None
+    magasin = demande.magasins[centre.id][0]
+    encombre, pmr = demande.graphes()
+    chemin = demande.trajet(False, source, magasin, encombre, pmr)
+    assert chemin is not None and chemin[0] == porte
+    agent = sim.ajouter_agent(source, chemin)
+    demande.visites[agent.id] = Visite(source=source, programme=[magasin])
+    sim.pas()
+    assert agent.etat == SUR_ARETE  # il marche vers la porte
+    return sim, demande, centre.id, source, porte, agent
+
+
+def test_en_route_vers_un_centre_ferme_il_fait_demi_tour_a_la_porte() -> None:
+    sim, demande, centre_id, source, porte, agent = en_route_vers_la_porte()
+    demande.fermer(centre_id, [])
+    assert agent.itineraire[0] == porte and agent.itineraire[-1] == source
+    assert demande.visites[agent.id].programme == []  # sa visite est annulée
+    assert centre_id not in demande.magasins  # plus de nouvelles visites
+    for _ in range(1000):
+        demande.pas()
+        assert agent.position not in demande.fermes
+        if agent.etat == PARTI:
+            break
+    assert agent.etat == PARTI  # revenu à sa source, il est reparti
+
+
+def test_porte_bloquee_il_s_arrete_sans_entrer() -> None:
+    # La porte se bloque : plus aucun chemin de retour par elle. Il ne doit pas pour
+    # autant entrer dans le centre.
+    sim, demande, centre_id, _, porte, agent = en_route_vers_la_porte()
+    sim.noeuds[porte].statut = "bloqué"
+    demande.fermer(centre_id, [])
+    assert agent.itineraire == [porte]  # il finit son arête, et s'arrête là
+    for _ in range(300):
+        demande.pas()
+        assert agent.position not in demande.fermes
+
+
+def test_un_centre_ferme_n_est_plus_traverse() -> None:
+    sim, demande = sans_arrivees()
+    centre = sim.zone.centres[0]
+    interieur = set()
+    for n in centre.centre.noeuds:
+        if n.type != "sortie":
+            interieur.add(n.id)
+    # Un trajet d'une source vers un magasin d'un autre centre qui traverse ce centre.
+    encombre, pmr = demande.graphes()
+    trouve = None
+    for source in sorted(sim.sources):
+        for autre in sim.zone.centres[1:]:
+            for magasin in demande.magasins[autre.id]:
+                chemin = demande.trajet(False, source, magasin, encombre, pmr)
+                if chemin is not None and len(interieur & set(chemin)) > 0:
+                    trouve = (source, magasin, chemin)
+    assert trouve is not None, "aucun trajet ne traverse le centre : test sans objet"
+    source, magasin, chemin = trouve
+    agent = sim.ajouter_agent(source, chemin)
+    demande.visites[agent.id] = Visite(source=source, programme=[magasin])
+
+    demande.fermer(centre.id, [])
+    assert agent.itineraire[-1] == magasin  # même destination, par un autre chemin
+    assert len(interieur & set(agent.itineraire)) == 0
+    assert demande.visites[agent.id].programme == [magasin]

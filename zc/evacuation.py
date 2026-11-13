@@ -8,7 +8,9 @@ couloir connu comme bloqué n'y figure plus), avec le critère « pmr » pour le
 - L'alarme est donnée à la première détection (un nœud connu comme enfumé ou bloqué).
 - Un agent qui atteint une sortie non bloquée est sauvé : il quitte la simulation.
 - Un agent dans un nœud sans aucun chemin vers une sortie ouverte est piégé.
-- L'incendie est limité au centre : on ne fait pas entrer de nouveaux visiteurs.
+- L'incendie est limité au centre, qui est fermé à l'alarme (`Demande.fermer`) : les
+  visiteurs qui allaient y entrer font demi-tour à la porte. L'évacuation ne concerne
+  donc que les présents à l'alarme, et tous ses chiffres portent sur eux.
 
 Choix de modèle, à discuter dans le rapport : un nœud connu comme bloqué est retiré du
 graphe avec tous ses couloirs (consigne § 3.4). Une personne qui s'y trouve quand il se
@@ -21,6 +23,7 @@ sauvés et de piégés, charge de chaque sortie.
 """
 
 from zc.chemins import chemin_d_evacuation, distances_d_evacuation
+from zc.demande import Demande
 from zc.incendie import Incendie
 from zc.modele import CentreZone
 from zc.navigation import Arc, construire
@@ -41,10 +44,13 @@ class Evacuation:
     """
 
     def __init__(self, sim: Simulation, centre: CentreZone, incendie: Incendie,
-                 connaissance: str = "local") -> None:
+                 connaissance: str = "local", demande: Demande | None = None) -> None:
+        """`demande` : celle des visiteurs, s'il y en a une ; à l'alarme, le centre y est
+        fermé."""
         if connaissance not in MODES:
             raise ValueError(f"connaissance « {connaissance} » inconnue, attendu parmi {MODES}")
         self.sim = sim
+        self.demande = demande
         self.centre = centre
         self.incendie = incendie
         self.connaissance = connaissance
@@ -55,6 +61,7 @@ class Evacuation:
             if n.type == "sortie":
                 self.sorties.append(n.id)
         self.alarme: float | None = None  # instant de l'alarme
+        self.fin: float | None = None  # instant où l'évacuation s'est terminée
         self.presents_au_declenchement: list[int] = []
         self.charge: dict[str, int] = {}
         for s in self.sorties:
@@ -83,16 +90,20 @@ class Evacuation:
             for agent in self.sim.agents:
                 if self.dans_le_centre(agent):
                     self.presents_au_declenchement.append(agent.id)
+            if self.demande is not None:
+                self.demande.fermer(self.centre.id, self.presents_au_declenchement)
         if self.alarme is not None:
             self.guider()
         self.sim.pas()
         if self.alarme is not None:
             self.sauver_aux_sorties()
             restants = 0
-            for agent in self.sim.agents:
-                if self.dans_le_centre(agent):
+            for agent_id in self.presents_au_declenchement:
+                if self.dans_le_centre(self.sim.agents[agent_id]):
                     restants += 1
             self.courbe.append((self.sim.temps, restants))
+            if self.fin is None and self.termine():
+                self.fin = self.sim.temps
 
     def detection_en_cours(self) -> bool:
         """Le feu est-il connu des occupants ? En mode « local », quand l'alarme a détecté
@@ -121,15 +132,22 @@ class Evacuation:
         return construire(identifiants, self.centre.centre.aretes, bloques, critere)
 
     def guider(self) -> None:
-        """Chaque agent présent dans un nœud du centre reçoit le chemin vers la sortie
-        ouverte la plus proche, selon ce qu'il sait ; sans chemin, il est piégé."""
+        """Chaque présent à l'alarme encore dans un nœud du centre reçoit le chemin vers la
+        sortie ouverte la plus proche, selon ce qu'il sait ; sans chemin, il est piégé."""
         connus = set()
         if self.connaissance == "global":
             for n in self.centre.centre.noeuds:
                 if self.reellement_bloque(n.id):
                     connus.add(n.id)
-        for agent in self.sim.agents:
-            if agent.etat != DANS_NOEUD or not self.dans_le_centre(agent):
+        for agent_id in self.presents_au_declenchement:
+            agent = self.sim.agents[agent_id]
+            if not self.dans_le_centre(agent):
+                continue
+            if agent.etat != DANS_NOEUD:
+                # En chemin sur un couloir : il ne sera guidé qu'au prochain nœud. Si son
+                # trajet passe par une sortie, il s'y arrête ; sinon, la simulation le ferait
+                # ressortir dans le même pas, sans qu'il soit compté parmi les sauvés.
+                self.arreter_a_la_premiere_sortie(agent)
                 continue
             bloques = set(connus)
             if self.connaissance == "local":
@@ -148,10 +166,19 @@ class Evacuation:
             chemin = chemin_d_evacuation(suivants, self.sorties, agent.position)
             agent.itineraire = chemin[1:]
 
+    def arreter_a_la_premiere_sortie(self, agent: Agent) -> None:
+        """Coupe le trajet de l'agent après la première sortie du centre qu'il atteint."""
+        for i in range(len(agent.itineraire)):
+            if agent.itineraire[i] in self.charge:  # les clés de `charge` sont les sorties
+                agent.itineraire = agent.itineraire[:i + 1]
+                return
+
     def sauver_aux_sorties(self) -> None:
-        """Les agents arrivés dans une sortie ouverte sont sauvés. Une sortie réellement
-        bloquée (ou connue comme telle) ne sauve personne, que l'alarme le sache ou non."""
-        for agent in self.sim.agents:
+        """Les présents arrivés dans une sortie ouverte sont sauvés. Une sortie réellement
+        bloquée (ou connue comme telle) ne sauve personne, que l'alarme le sache ou non.
+        Un visiteur refoulé à la porte n'est pas compté : il n'était pas dans le centre."""
+        for agent_id in self.presents_au_declenchement:
+            agent = self.sim.agents[agent_id]
             if agent.etat != DANS_NOEUD or agent.position not in self.charge:
                 continue
             if self.sim.noeuds[agent.position].statut == "bloqué":
@@ -180,7 +207,8 @@ class Evacuation:
         return True
 
     def temps_d_evacuation(self) -> float | None:
-        """Durée entre l'alarme et la fin de l'évacuation, ou None si elle n'est pas finie."""
-        if self.alarme is None or not self.termine():
+        """Durée entre l'alarme et la fin de l'évacuation, ou None si elle n'est pas finie.
+        La fin est notée par `pas` : la durée ne grandit plus si la simulation continue."""
+        if self.alarme is None or self.fin is None:
             return None
-        return self.sim.temps - self.alarme
+        return self.fin - self.alarme

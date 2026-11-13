@@ -81,11 +81,16 @@ def graphe_du_centre(centre: Centre, critere: str, beta: float = 0.0) -> dict[st
     return construire(identifiants, centre.aretes, bloques, critere, beta)
 
 
-def graphe_de_la_zone(zone: Zone, critere: str, beta: float = 0.0) -> dict[str, list[Arc]]:
+def graphe_de_la_zone(zone: Zone, critere: str, beta: float = 0.0,
+                      fermes: set[str] | None = None) -> dict[str, list[Arc]]:
     """Graphe de navigation de toute la zone : nœuds des centres, sources, couloirs et
-    connexions. Les sources ne sont jamais bloquées."""
+    connexions. Les sources ne sont jamais bloquées. `fermes` : nœuds retirés en plus des
+    nœuds bloqués (ceux d'un centre en feu, fermé aux visiteurs)."""
     identifiants = []
     bloques = set()
+    if fermes is not None:
+        for identifiant in fermes:
+            bloques.add(identifiant)
     aretes = []
     for c in zone.centres:
         for n in c.centre.noeuds:
