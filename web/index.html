@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zone commerciale</title>
+  <link rel="icon" href="/web/pictos/sortie.svg">
+  <link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+  <header id="bandeau" class="bandeau">
+    <h1>Zone commerciale</h1>
+    <p class="horloge">t = <span id="horloge">00:00:00</span></p>
+    <p id="etat-alarme" class="etat-alarme">Aucun scénario chargé</p>
+  </header>
+
+  <main class="page">
+    <section class="plan" aria-label="Plan de la zone">
+      <div id="graphe" class="graphe"></div>
+      <canvas id="agents" class="agents"></canvas>
+
+      <div class="legende" aria-label="Légende">
+        <p class="legende-titre">Occupation</p>
+        <ul>
+          <li><span class="pastille niveau-1"></span> très faible, moins de 20 %</li>
+          <li><span class="pastille niveau-2"></span> faible, 20 à 40 %</li>
+          <li><span class="pastille niveau-3"></span> moyen, 40 à 60 %</li>
+          <li><span class="pastille niveau-4"></span> élevé, 60 à 80 %</li>
+          <li><span class="pastille niveau-5"></span> très élevé, 80 % et plus</li>
+        </ul>
+        <ul>
+          <li><span class="pastille fumee"></span> enfumé (tirets gris)</li>
+          <li><span class="pastille bloque"></span> bloqué (rouge, croix)</li>
+          <li><img class="picto" src="/web/pictos/flamme.svg" alt=""> foyer</li>
+          <li><img class="picto" src="/web/pictos/sortie.svg" alt=""> sortie</li>
+          <li><span class="pastille pmr"></span> personne à mobilité réduite</li>
+        </ul>
+      </div>
+    </section>
+
+    <aside class="panneau" aria-label="Réglages">
+      <section class="groupe">
+        <h2>Scénario</h2>
+        <label for="scenario">Choisir un scénario</label>
+        <select id="scenario"></select>
+        <p id="description" class="description"></p>
+        <button id="charger" type="button">Charger</button>
+      </section>
+
+      <section class="groupe">
+        <h2>Lecture</h2>
+        <div class="boutons">
+          <button id="lancer" type="button">Lancer</button>
+          <button id="pause" type="button">Pause</button>
+          <button id="un-pas" type="button">Pas à pas</button>
+        </div>
+        <label for="vitesse">Vitesse (secondes simulées par seconde)</label>
+        <select id="vitesse">
+          <option value="1">× 1</option>
+          <option value="2">× 2</option>
+          <option value="5" selected>× 5</option>
+          <option value="10">× 10</option>
+          <option value="30">× 30</option>
+          <option value="60">× 60</option>
+        </select>
+      </section>
+
+      <section class="groupe">
+        <h2>Affluence</h2>
+        <div class="champs">
+          <div>
+            <label for="beta">Évitement de la foule β</label>
+            <input id="beta" class="reglage" type="number" min="0" step="0.5"
+                   data-aide="β : un nombre positif ou nul.">
+          </div>
+          <div>
+            <label for="part_pmr">Part de PMR (0 à 1)</label>
+            <input id="part_pmr" class="reglage" type="number" min="0" max="1" step="0.05"
+                   data-aide="Part de PMR : un nombre entre 0 et 1.">
+          </div>
+        </div>
+      </section>
+
+      <section class="groupe">
+        <h2>Incendie</h2>
+        <div class="champs">
+          <div>
+            <label for="alpha">Diffusion α</label>
+            <input id="alpha" class="reglage" type="number" min="0.01" max="0.99" step="0.01"
+                   data-aide="α : un nombre strictement entre 0 et 1.">
+          </div>
+          <div>
+            <label for="delai">Retard δ (pas)</label>
+            <input id="delai" class="reglage" type="number" min="0" step="1"
+                   data-aide="δ : un nombre entier de pas, positif ou nul.">
+          </div>
+          <div>
+            <label for="theta1">Seuil enfumé θ₁</label>
+            <input id="theta1" class="reglage" type="number" min="1" max="100" step="1"
+                   data-aide="θ₁ : entre 0 et 100, et plus petit que θ₂.">
+          </div>
+          <div>
+            <label for="theta2">Seuil bloqué θ₂</label>
+            <input id="theta2" class="reglage" type="number" min="1" max="100" step="1"
+                   data-aide="θ₂ : entre 0 et 100, et plus grand que θ₁.">
+          </div>
+        </div>
+        <label for="connaissance">Connaissance de l'incendie</label>
+        <select id="connaissance" class="reglage" data-aide="Choisir local ou global.">
+          <option value="local">Locale (capteurs et voisinage)</option>
+          <option value="global">Globale (tout le centre)</option>
+        </select>
+        <p class="aide">Ces réglages valent pour le prochain feu allumé.</p>
+        <button id="mode-feu" type="button" aria-pressed="false">Allumer un feu</button>
+      </section>
+
+      <section class="groupe">
+        <h2>Itinéraire</h2>
+        <div class="champs">
+          <div>
+            <label for="depart">Depuis</label>
+            <select id="depart"></select>
+          </div>
+          <div>
+            <label for="centre">Vers le centre</label>
+            <select id="centre"></select>
+          </div>
+          <div>
+            <label for="magasin">Jusqu'au magasin</label>
+            <select id="magasin"></select>
+          </div>
+          <div>
+            <label for="critere">Critère</label>
+            <select id="critere">
+              <option value="court">Plus court</option>
+              <option value="encombre">Moins encombré</option>
+              <option value="pmr">Accessible PMR</option>
+            </select>
+          </div>
+        </div>
+        <div class="boutons">
+          <button id="tracer" type="button">Tracer</button>
+          <button id="effacer" type="button">Effacer</button>
+        </div>
+        <p id="resultat-itineraire" class="description"></p>
+      </section>
+
+      <p id="message" class="message" role="status"></p>
+    </aside>
+  </main>
+
+  <script src="/web/vendor/cytoscape.min.js"></script>
+  <script src="/web/plan.js"></script>
+  <script src="/web/agents.js"></script>
+  <script src="/web/interactions.js"></script>
+  <script src="/web/app.js"></script>
+</body>
+</html>

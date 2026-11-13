@@ -1,0 +1,19 @@
+{
+  "nom": "Incendie qui bloque une sortie",
+  "description": "Après 3 minutes d'une journée normale, un feu prend près de la sortie est du centre A : la fumée la bloque en pleine évacuation, qui se termine par la sortie ouest.",
+  "graine": 2026,
+  "arrivees_par_minute": {"P1": 12.0, "T1": 8.0, "Q1": 5.0},
+  "part_pmr": 0.1,
+  "visite_min_s": 60.0,
+  "visite_max_s": 300.0,
+  "beta": 2.0,
+  "incendie": {
+    "debut_s": 180,
+    "foyers": {"A:C3": 5.0},
+    "alpha": 0.01,
+    "theta1": 20,
+    "theta2": 50,
+    "delai": 15,
+    "connaissance": "local"
+  }
+}

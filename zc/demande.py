@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 from zc.chemins import plus_court_chemin
 from zc.navigation import Arc, graphe_de_la_zone
-from zc.simulation import DANS_NOEUD, PARTI, Agent, Simulation
+from zc.simulation import DANS_NOEUD, PARTI, SAUVE, Agent, Simulation
 
 
 @dataclass
@@ -66,6 +66,8 @@ class Demande:
         self.visites: dict[int, Visite] = {}
         self.crees = 0
         self.repartis = 0
+        self.fermes: set[str] = set()  # nœuds d'un centre en feu, sauf ses sorties
+        self.evacues: set[int] = set()  # agents laissés à l'évacuation
 
         # Pour chaque centre, la liste de ses magasins.
         self.magasins: dict[str, list[str]] = {}
@@ -77,13 +79,84 @@ class Demande:
 
     def pas(self) -> None:
         """Un pas de la journée : visites en cours, nouvelles arrivées, puis déplacements."""
+        self.preparer_pas()
+        self.sim.pas()
+
+    def preparer_pas(self) -> None:
+        """Visites en cours et nouvelles arrivées, sans déplacer personne. Sert quand un
+        autre module (l'évacuation) fait avancer la simulation lui-même."""
         # On refait les graphes à chaque pas, car les poids « moins encombré » dépendent
         # du taux τ des arêtes, mis à jour par la simulation au pas précédent.
-        encombre = graphe_de_la_zone(self.sim.zone, "encombre", self.parametres.beta)
-        pmr = graphe_de_la_zone(self.sim.zone, "pmr")
+        encombre, pmr = self.graphes()
+        self.eviter_les_centres_fermes(encombre, pmr)
         self.faire_avancer_les_visites(encombre, pmr)
         self.faire_arriver(encombre, pmr)
-        self.sim.pas()
+
+    def graphes(self) -> tuple[dict[str, list[Arc]], dict[str, list[Arc]]]:
+        """Graphes de navigation des visiteurs valides (« moins encombré ») et PMR, sans
+        les nœuds bloqués ni ceux d'un centre fermé."""
+        encombre = graphe_de_la_zone(self.sim.zone, "encombre", self.parametres.beta,
+                                     self.fermes)
+        pmr = graphe_de_la_zone(self.sim.zone, "pmr", 0.0, self.fermes)
+        return encombre, pmr
+
+    def fermer(self, centre_id: str, evacues: list[int]) -> None:
+        """Le centre prend feu : il ne reçoit plus personne. Plus de nouvelles visites, et
+        ses nœuds, sauf ses sorties, sont retirés des trajets : un visiteur qui allait y
+        entrer fait demi-tour à la porte (une sortie) et rentre à sa source ; un visiteur
+        qui ne faisait que le traverser le contourne. Les `evacues`, présents dans le
+        centre à l'alarme, sont laissés à l'évacuation."""
+        self.magasins.pop(centre_id, None)
+        for c in self.sim.zone.centres:
+            if c.id == centre_id:
+                for n in c.centre.noeuds:
+                    if n.type != "sortie":
+                        self.fermes.add(n.id)
+        for agent_id in evacues:
+            self.evacues.add(agent_id)
+        # Tout de suite, et pas au pas suivant : sinon un visiteur sur le point d'entrer
+        # passerait la porte pendant ce pas.
+        encombre, pmr = self.graphes()
+        self.eviter_les_centres_fermes(encombre, pmr)
+
+    def eviter_les_centres_fermes(self, encombre: dict[str, list[Arc]],
+                                  pmr: dict[str, list[Arc]]) -> None:
+        """Recalcule le trajet de chaque visiteur qui passe par un nœud fermé. Si sa visite
+        était dans le centre fermé, elle est annulée : il rentre à sa source. Un visiteur
+        engagé sur une arête la finit d'abord (son nœud d'arrivée reste dans le trajet)."""
+        for agent in self.sim.agents:
+            if agent.etat == PARTI or agent.etat == SAUVE or agent.id in self.evacues:
+                continue
+            passe_par_un_ferme = False
+            for noeud in agent.itineraire:
+                if noeud in self.fermes:
+                    passe_par_un_ferme = True
+            visite = self.visites[agent.id]
+            annulee = len(visite.programme) > 0 and visite.programme[0] in self.fermes
+            if not passe_par_un_ferme and not annulee:
+                continue
+            if annulee:
+                destination = visite.source
+            else:
+                destination = agent.itineraire[-1]
+            if agent.etat == DANS_NOEUD:
+                depart = agent.position
+                debut = []
+            else:
+                depart = agent.itineraire[0]
+                debut = [depart]
+            chemin = self.trajet(agent.pmr, depart, destination, encombre, pmr)
+            if chemin is None:
+                # Aucun chemin pour l'instant (porte bloquée, par exemple) : celui qui
+                # allait au centre fermé s'arrête au bout de son arête, sans entrer, et
+                # réessaiera au pas suivant.
+                if annulee:
+                    agent.itineraire = debut
+                continue
+            agent.itineraire = debut + chemin
+            if annulee:
+                visite.programme = []
+                visite.fin_visite = None
 
     def trajet(self, agent_pmr: bool, depart: str, arrivee: str,
                encombre: dict[str, list[Arc]], pmr: dict[str, list[Arc]]) -> list[str] | None:
@@ -124,6 +197,8 @@ class Demande:
         for agent in self.sim.agents:
             if agent.etat != DANS_NOEUD:
                 continue  # sur une arête ou en attente : rien à décider
+            if agent.id in self.evacues:
+                continue  # l'évacuation décide de son trajet
             if len(agent.itineraire) > 0:
                 self.verifier_le_trajet(agent, encombre, pmr)
                 continue

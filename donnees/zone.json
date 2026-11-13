@@ -1,13 +1,13 @@
 {
   "centres": [
     {"id": "A", "fichier": "centres/A.json", "x": 0, "y": 0},
-    {"id": "B", "fichier": "centres/B.json", "x": 300, "y": 0},
-    {"id": "C", "fichier": "centres/C.json", "x": 150, "y": 200}
+    {"id": "B", "fichier": "centres/B.json", "x": 125, "y": 10},
+    {"id": "C", "fichier": "centres/C.json", "x": 85, "y": 70}
   ],
   "sources": [
-    {"id": "P1", "type": "parking", "x": -150, "y": 20},
-    {"id": "T1", "type": "station", "x": 450, "y": 10},
-    {"id": "Q1", "type": "quartier", "x": 150, "y": 350}
+    {"id": "P1", "type": "parking", "x": -22, "y": 20},
+    {"id": "T1", "type": "station", "x": 187, "y": 20},
+    {"id": "Q1", "type": "quartier", "x": 60, "y": 115}
   ],
   "connexions": [
     {"source": "P1", "cible": "A:EO", "capacite_max": 7.9, "longueur": 150.0, "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 6.0},
