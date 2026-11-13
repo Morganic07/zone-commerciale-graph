@@ -28,6 +28,8 @@ Correspondance avec la consigne :
   *Critère :* un test vérifie la liste des cas de `PLAN.md` § 6 (sorties, magasins, cycle, goulot, arête non PMR contournable, sens unique, nœuds sans capteur).
 - [x] **2.5 Centres simples et zone complète.** `B.json`, `C.json` et `zone.json` : 3 centres, au moins 3 sources.
   *Critère :* tout se charge ; le graphe de navigation complet est fortement connexe, vérifié avec `networkx`.
+- [x] **2.7 Plans agrandis, provisoires.** En attendant le plan définitif, des plans beaucoup plus grands pour les trois centres : A passe à 38 nœuds (dont une issue de secours), B à 17, C à 16 ; la zone est redisposée pour que les connexions ne traversent aucun centre.
+  *Critère :* `tests/test_plan_A.py` passe ; les centres simples ont au moins 12 nœuds et 2 sorties ; le graphe de navigation complet reste fortement connexe ; la figure et la notice du plan A sont à jour ; les trois scénarios se jouent jusqu'au bout et l'incendie bloque toujours une sortie pendant l'évacuation ; tous les tests passent.
 - [ ] **2.6 Plan définitif du centre A, dessiné par le binôme.** Remplace le plan de test par le plan dessiné par le groupe (consigne § 5), à faire quand le reste est implémenté.
   *Critère :* `tests/test_plan_A.py` passe sur le nouveau `A.json` ; la figure `rapport/figures/plan_A.svg` est régénérée et la notice `rapport/plan_centre_A.md` décrit le nouveau plan ; `donnees/zone.json` est mis à jour si les identifiants des sorties de A changent (il relie la zone à `A:EO` et `A:EE`) ; le foyer de `donnees/scenarios/incendie_sortie.json` (`A:C3`, voisin de la sortie est) est remplacé par un nœud voisin d'une sortie du nouveau plan ; tous les tests du projet passent encore.
 

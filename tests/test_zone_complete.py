@@ -53,14 +53,32 @@ def test_trois_centres_et_au_moins_trois_sources(zone: Zone) -> None:
     assert "parking" in types and "station" in types and "quartier" in types
 
 
-def test_centres_simples_de_4_a_6_noeuds_et_2_sorties(zone: Zone) -> None:
+def test_centres_simples_d_au_moins_12_noeuds_et_2_sorties(zone: Zone) -> None:
+    # Story 2.7 : les centres simples ont été agrandis (PLAN.md § 6).
     for c in zone.centres[1:]:
         sorties = 0
         for n in c.centre.noeuds:
             if n.type == "sortie":
                 sorties += 1
-        assert 4 <= len(c.centre.noeuds) <= 6, c.id
+        assert len(c.centre.noeuds) >= 12, c.id
         assert sorties == 2, c.id
+
+
+def test_une_issue_de_secours_ne_se_traverse_pas(zone: Zone) -> None:
+    # Une sortie reliée à aucune connexion de la zone est une issue de secours : un seul
+    # couloir y mène, sinon les visiteurs l'emprunteraient comme un passage.
+    reliees = set()
+    for a in zone.connexions:
+        reliees.add(a.source)
+        reliees.add(a.cible)
+    for c in zone.centres:
+        for n in c.centre.noeuds:
+            if n.type == "sortie" and n.id not in reliees:
+                couloirs = 0
+                for a in c.centre.aretes:
+                    if n.id in (a.source, a.cible):
+                        couloirs += 1
+                assert couloirs == 1, n.id
 
 
 def test_graphe_de_navigation_fortement_connexe(zone: Zone) -> None:
