@@ -14,13 +14,37 @@ python3 -m venv .venv
 pip install -e ".[test]"
 ```
 
+`pip install -e .` suffit pour lancer l'application ; `[test]` ajoute les outils de
+vérification. La page n'appelle aucun service en ligne : Cytoscape.js et la police sont
+copiés dans `web/vendor/`.
+
 ## Lancement
 
 ```bash
+. .venv/bin/activate
 python -m serveur
 ```
 
-Puis ouvrir http://localhost:8000. *Disponible à partir de la story 6.1 : le serveur n'est pas encore écrit.*
+Puis ouvrir http://localhost:8000 dans un navigateur. Pour un autre port :
+`ZC_PORT=8080 python -m serveur`.
+
+## Démonstration
+
+1. Choisir un scénario, puis « Charger ».
+2. « Lancer » fait avancer la simulation à la vitesse choisie (× 1 à × 60) ; « Pause »
+   l'arrête, « Pas à pas » avance d'une seconde.
+3. Les réglages du panneau s'appliquent aussitôt (ceux de l'incendie, au prochain feu).
+   « Allumer un feu », puis un clic sur un nœud d'un centre, déclenche un incendie.
+   « Tracer » dessine l'itinéraire d'une source vers un centre, avec son coût.
+
+| Scénario | Ce qu'il montre |
+|---|---|
+| Journée normale | affluence ordinaire, sans incendie |
+| Pic d'affluence | cinq fois plus d'arrivées : files d'attente aux entrées |
+| Incendie qui bloque une sortie | feu à 3 min près de la sortie est du centre A ; elle se bloque pendant l'évacuation, qui se termine par la sortie ouest |
+
+Les scénarios sont dans `donnees/scenarios/`, un fichier JSON chacun (format décrit en
+tête de `serveur/session.py`).
 
 ## Vérifications
 

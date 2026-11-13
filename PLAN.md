@@ -175,6 +175,7 @@ On distingue l'**état réel** et le **statut connu** :
 - **Cible** : la sortie la plus proche, obtenue par le Dijkstra multi-sources (§ 3).
 - **Recalcul** à chaque mise à jour du graphe de navigation.
 - **Agent piégé** : un agent qui n'a plus aucun chemin vers une sortie (distance infinie).
+- **Centre fermé** (décidé à la story 6.5) : à l'alarme, le centre en feu ne reçoit plus personne. Ses nœuds, sauf ses sorties, sont retirés des trajets des visiteurs : qui allait y entrer fait demi-tour à la porte et rentre à sa source, qui ne faisait que le traverser le contourne. Sauvés, piégés, courbe et charge des sorties ne portent donc que sur les présents à l'alarme : sauvés + piégés = présents.
 
 **Indicateurs :**
 - temps d'évacuation total, et courbe des personnes encore à l'intérieur ;

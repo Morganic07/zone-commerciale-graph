@@ -29,7 +29,7 @@ Correspondance avec la consigne :
 - [x] **2.5 Centres simples et zone complète.** `B.json`, `C.json` et `zone.json` : 3 centres, au moins 3 sources.
   *Critère :* tout se charge ; le graphe de navigation complet est fortement connexe, vérifié avec `networkx`.
 - [ ] **2.6 Plan définitif du centre A, dessiné par le binôme.** Remplace le plan de test par le plan dessiné par le groupe (consigne § 5), à faire quand le reste est implémenté.
-  *Critère :* `tests/test_plan_A.py` passe sur le nouveau `A.json` ; la figure `rapport/figures/plan_A.svg` est régénérée et la notice `rapport/plan_centre_A.md` décrit le nouveau plan ; `donnees/zone.json` est mis à jour si les identifiants des sorties de A changent (il relie la zone à `A:EO` et `A:EE`) ; tous les tests du projet passent encore.
+  *Critère :* `tests/test_plan_A.py` passe sur le nouveau `A.json` ; la figure `rapport/figures/plan_A.svg` est régénérée et la notice `rapport/plan_centre_A.md` décrit le nouveau plan ; `donnees/zone.json` est mis à jour si les identifiants des sorties de A changent (il relie la zone à `A:EO` et `A:EE`) ; le foyer de `donnees/scenarios/incendie_sortie.json` (`A:C3`, voisin de la sortie est) est remplacé par un nœud voisin d'une sortie du nouveau plan ; tous les tests du projet passent encore.
 
 ## Epic 3 — Algorithmes
 
@@ -82,7 +82,7 @@ Correspondance avec la consigne :
   *Critère :* `/run` sur « pic d'affluence » : l'animation reste fluide (sinon, bascule vers un compteur par nœud et par arête, décision consignée) ; pause et pas à pas fonctionnent.
 - [x] **6.4 Interactions.** Réglage des paramètres, choix du scénario, ⋆ feu au clic, tracé d'un itinéraire avec son coût selon le critère choisi.
   *Critère :* `/run` : chaque contrôle agit sur la simulation ; l'itinéraire tracé est le même que celui que renvoie le moteur.
-- [ ] **6.5 Scénarios de démonstration.** Journée normale, pic d'affluence, incendie qui bloque une sortie.
+- [x] **6.5 Scénarios de démonstration.** Journée normale, pic d'affluence, incendie qui bloque une sortie.
   *Critère :* sur une machine propre, l'installation et le lancement en suivant le README suffisent ; les trois scénarios se jouent jusqu'au bout sans erreur.
 
 ## Epic 7 — Graphe des propriétés

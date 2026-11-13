@@ -113,6 +113,7 @@ def test_arriver_dans_une_sortie_bloquee_ne_sauve_pas() -> None:
     sim, evac, menacee = scenario(personnes_par_noeud=0)
     sortie = sim.noeuds[menacee]
     agent = sim.ajouter_agent(menacee, [])
+    evac.presents_au_declenchement.append(agent.id)  # seuls les présents sont sauvés
     sortie.statut = "bloqué"
     evac.sauver_aux_sorties()
     assert agent.etat != SAUVE and evac.charge[menacee] == 0
@@ -120,6 +121,58 @@ def test_arriver_dans_une_sortie_bloquee_ne_sauve_pas() -> None:
     evac.sauver_aux_sorties()
     assert agent.etat == SAUVE and evac.charge[menacee] == 1
     assert sortie.occupation == 0  # sa place est libérée
+
+
+def test_en_chemin_vers_une_sortie_il_s_y_arrete_et_est_sauve() -> None:
+    # À l'alarme, un visiteur marche vers une sortie et son trajet continue au-delà, hors
+    # du centre. Il doit s'arrêter à la sortie et compter parmi les sauvés : sinon il
+    # quitterait le centre sans être compté, et l'évacuation ne finirait jamais.
+    zone = charger_zone(RACINE / "donnees" / "zone.json")
+    sim = Simulation(zone, PARAMETRES, graine=12)
+    centre = zone.centres[0]
+    dans_le_centre = set()
+    sorties = []
+    for n in centre.centre.noeuds:
+        dans_le_centre.add(n.id)
+        if n.type == "sortie":
+            sorties.append(n.id)
+    # Une sortie, le nœud du centre qui y mène, et le nœud hors du centre qui la suit.
+    sortie = None
+    avant = None
+    apres = None
+    for a in sim.aretes:
+        for x, y in [(a.source, a.cible), (a.cible, a.source)]:
+            if x in sorties and y not in dans_le_centre:
+                sortie = x
+                apres = y
+    for a in centre.centre.aretes:
+        if a.sens == "bidirectionnel" and sortie in (a.source, a.cible):
+            autre = a.cible if a.source == sortie else a.source
+            if autre not in sorties:
+                avant = autre
+    assert sortie is not None and avant is not None and apres is not None
+
+    agent = sim.ajouter_agent(avant, [sortie, apres])
+    sim.pas()  # il s'engage sur le couloir qui mène à la sortie
+    assert agent.etat == "sur_arete"
+
+    # Un feu loin de cette sortie, détecté tout de suite (mode global, θ₁ très bas).
+    foyer = None
+    for n in centre.centre.noeuds:
+        if n.id not in (sortie, avant) and n.type != "sortie":
+            foyer = n.id
+    incendie = Incendie(centre.centre, alpha=0.05, foyers={foyer: 1.0}, theta1=0.5,
+                        theta2=50, delai=3)
+    evac = Evacuation(sim, centre, incendie, connaissance="global")
+    for _ in range(100):
+        evac.pas()
+        if evac.termine():
+            break
+    assert evac.alarme is not None
+    assert agent.id in evac.presents_au_declenchement
+    assert agent.etat == SAUVE and agent.position == sortie
+    assert evac.charge[sortie] == 1
+    assert evac.termine()
 
 
 def test_avant_l_alarme_personne_n_evacue() -> None:

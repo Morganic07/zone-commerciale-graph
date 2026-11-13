@@ -97,10 +97,7 @@ class Session:
         if self.evacuation is None:
             self.sim.pas()
         else:
-            self.evacuation.pas()
-            if self.evacuation.alarme is not None:
-                # Le centre en feu ne reçoit plus de nouveaux visiteurs.
-                self.demande.magasins.pop(self.evacuation.centre.id, None)
+            self.evacuation.pas()  # à l'alarme, il ferme le centre en feu aux visiteurs
         self.indicateurs.relever()
 
     def allumer(self, noeud: str, source: float | None = None) -> None:
@@ -123,7 +120,8 @@ class Session:
                             theta2=self.reglages_feu["theta2"],
                             delai=self.reglages_feu["delai"])
         self.evacuation = Evacuation(self.sim, centre, incendie,
-                                     connaissance=self.reglages_feu["connaissance"])
+                                     connaissance=self.reglages_feu["connaissance"],
+                                     demande=self.demande)
 
     def centre(self, centre_id: str) -> CentreZone:
         for c in self.zone.centres:
@@ -199,7 +197,7 @@ class Session:
         if self.evacuation is not None:
             e = self.evacuation
             alarme = {"centre": e.centre.id, "foyers": list(e.incendie.foyers),
-                      "debut": e.alarme,
+                      "debut": e.alarme, "duree": e.temps_d_evacuation(),
                       "sauves": e.sauves(), "pieges": len(e.pieges),
                       "presents": len(e.presents_au_declenchement),
                       "charge": e.charge, "courbe": e.courbe}

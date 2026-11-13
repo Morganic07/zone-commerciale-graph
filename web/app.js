@@ -51,7 +51,11 @@ function mettreAJourBandeau(etat) {
   const texte = document.getElementById("etat-alarme");
   if (etat.alarme !== null && etat.alarme.debut !== null) {
     bandeau.classList.add("alarme");
-    texte.textContent = "Évacuation en cours, centre " + etat.alarme.centre + " : "
+    let debut = "Évacuation en cours";
+    if (etat.alarme.duree !== null) {
+      debut = "Évacuation terminée en " + Math.round(etat.alarme.duree) + " s";
+    }
+    texte.textContent = debut + ", centre " + etat.alarme.centre + " : "
       + etat.alarme.sauves + " sauvés, " + etat.alarme.pieges + " piégés";
   } else {
     bandeau.classList.remove("alarme");

@@ -10,6 +10,8 @@ from fastapi.testclient import TestClient
 
 import serveur.session as session_module
 from serveur.app import app, courante
+from serveur.session import Session, lister_scenarios
+from zc.simulation import PARTI
 
 client = TestClient(app)
 
@@ -88,6 +90,44 @@ def test_chaque_scenario_se_joue() -> None:
             reponse = client.post("/api/pas?nombre=100")
             assert reponse.status_code == 200, scenario["id"]
         assert reponse.json()["temps"] == 300.0
+
+
+def test_les_scenarios_d_incendie_vont_jusqu_au_bout() -> None:
+    # Chaque scénario avec un incendie : l'évacuation se termine, en sauvant du monde,
+    # et une sortie du centre en feu est bloquée (story 6.5, « incendie qui bloque une
+    # sortie »). On ne cite aucun nœud : le plan du centre A est provisoire.
+    avec_incendie = 0
+    for scenario in lister_scenarios():
+        session = Session(scenario["id"])
+        if session.scenario["incendie"] is None:
+            continue
+        avec_incendie += 1
+        for _ in range(1800):
+            session.pas()
+            if session.evacuation is not None and session.evacuation.termine():
+                break
+        evac = session.evacuation
+        assert evac is not None and evac.termine(), scenario["id"]
+        assert evac.sauves() > 0
+        # Le bandeau : sauvés et piégés comptent les présents à l'alarme, et n'en
+        # bougent plus quand la simulation continue, puisque le centre est fermé.
+        bilan = (evac.sauves(), len(evac.pieges), evac.temps_d_evacuation())
+        assert bilan[0] + bilan[1] == len(evac.presents_au_declenchement)
+        assert sum(evac.charge.values()) == bilan[0]
+        presents = set(evac.presents_au_declenchement)
+        for _ in range(600):
+            session.pas()
+            for agent in session.sim.agents:
+                if agent.id not in presents and agent.etat != PARTI:
+                    assert agent.position not in session.demande.fermes
+        assert (evac.sauves(), len(evac.pieges), evac.temps_d_evacuation()) == bilan
+        assert session.etat()["alarme"]["duree"] == bilan[2]  # pour le bandeau
+        bloquees = []
+        for n in evac.centre.centre.noeuds:
+            if n.type == "sortie" and n.statut == "bloqué":
+                bloquees.append(n.id)
+        assert len(bloquees) > 0, scenario["id"]
+    assert avec_incendie >= 1
 
 
 def test_scenario_inconnu() -> None:
