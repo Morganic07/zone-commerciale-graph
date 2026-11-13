@@ -41,7 +41,7 @@ Puis ouvrir http://localhost:8000 dans un navigateur. Pour un autre port :
 |---|---|
 | Journée normale | affluence ordinaire, sans incendie |
 | Pic d'affluence | cinq fois plus d'arrivées : files d'attente aux entrées |
-| Incendie qui bloque une sortie | feu à 3 min près de la sortie est du centre A ; elle se bloque pendant l'évacuation, qui se termine par la sortie ouest |
+| Incendie qui bloque une sortie | feu à 3 min près de la sortie est du centre A ; elle se bloque pendant l'évacuation, qui se termine par l'issue de secours et la sortie ouest |
 
 Les scénarios sont dans `donnees/scenarios/`, un fichier JSON chacun (format décrit en
 tête de `serveur/session.py`).

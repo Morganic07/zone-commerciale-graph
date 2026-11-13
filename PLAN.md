@@ -199,7 +199,7 @@ Il doit contenir, et un test le vérifie :
 - au moins 2 nœuds sans capteur, dont un sur un chemin d'évacuation ;
 - un départ de feu possible près d'une sortie, pour le scénario de démonstration.
 
-Les deux centres simples se limitent à 4 à 6 nœuds et 2 sorties chacun. La zone comporte 3 centres et au moins 3 sources : parking, station, quartier.
+Les deux centres simples comptent au moins 12 nœuds et 2 sorties chacun (agrandis à la story 2.7 : 17 nœuds pour B, 16 pour C ; le plan de test de A en compte 38, dont une issue de secours reliée à aucune connexion). La zone comporte 3 centres et au moins 3 sources : parking, station, quartier.
 
 ## 7. Graphe des propriétés (partie 4)
 
