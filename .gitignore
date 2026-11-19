@@ -1,0 +1,37 @@
+# Outillage local
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.mcp.json
+
+# Secrets
+.env
+.env.local
+
+# Carnets de revue (étape E du workflow)
+CLAUDE-SECURITY-*
+review-pr.md
+ui-ux.md
+security.md
+
+# Couverture et caches
+coverage/
+htmlcov/
+coverage.json
+.coverage
+.nyc_output/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+
+# Environnement Python
+.venv/
+*.egg-info/
+
+# Sorties générées (rapport, exports de simulation)
+rapport/build/
+sorties/
+
+
+graph-satellites.code-workspace

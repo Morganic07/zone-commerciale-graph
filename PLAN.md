@@ -283,5 +283,5 @@ Il contient :
 - les fonctions de coût et les complexités ;
 - les preuves (clique, borne) ;
 - les sources des valeurs physiques, et la liste des hypothèses ;
-- les réponses aux trois questions de l'incendie, appuyées sur des résultats chiffrés ;
+e- les réponses aux trois questions de l'incendie, appuyées sur des résultats chiffrés ;
 - les résultats de la partie 4.
