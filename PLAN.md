@@ -1,17 +1,40 @@
-# PLAN — Modélisation et simulation d'une zone commerciale
+# PLAN — Modélisation et simulation d'un réseau de stations spatiales
 
-Projet de théorie des graphes, 4e année. Sujet : `consignes.pdf`. Binôme, rendu dans 2 à 4 semaines : rapport PDF et soutenance avec démonstration.
+Projet de théorie des graphes, 4e année. Sujet : `consignes.pdf`. Travail de groupe, rendu dans 2 à 4 semaines : rapport PDF et soutenance avec démonstration.
 
 Ce document fixe l'architecture, les formats et les décisions de modélisation, chacune avec sa justification. Le découpage du travail est dans `AVANCEMENT.md`.
+
+## 0. Transposition du sujet
+
+La consigne porte sur une zone commerciale. Le groupe la transpose à un réseau de trois stations spatiales habitées, du type de l'ISS, avec l'accord de l'enseignante. La consigne le permet : les choix doivent « rester cohérents avec le socle commun et être clairement justifiés ».
+
+**Principe : on change l'habillage, pas la structure.** Chaque élément imposé par la consigne garde un équivalent, et le rapport donne cette correspondance en toutes lettres.
+
+| Consigne | Transposition |
+|---|---|
+| Zone commerciale | Réseau de trois stations en orbite |
+| Centre commercial (macro-nœud) | Station |
+| Zone de connexion entre centres | Tunnel de transfert pressurisé entre deux stations |
+| Nœud source (quartier, parking, station de transport) | Point d'arrivée : spatioport (touristes venus de la Terre), habitat (où loge l'équipage), relais (transit vers d'autres orbites) |
+| Magasin | Module : laboratoire, serre, observatoire, quartiers d'équipage, salon |
+| Sanitaire | Module d'hygiène |
+| Couloir-carrefour | Nœud de jonction (sur l'ISS, le module Unity) |
+| Sortie | Sas de jonction vers un tunnel, ou capsule de sauvetage amarrée |
+| Couloir, passage | Passage entre deux modules, à travers une écoutille |
+| Visiteurs | Équipage, scientifiques et touristes spatiaux |
+| Personne à mobilité réduite | Personne transportée sur civière (§ 4.2) |
+| Propriétaires | Agences spatiales et opérateurs privés (§ 7) |
+
+**Pourquoi des tunnels et pas des navettes entre les stations.** Une navette transporte des groupes à heures fixes : elle casserait le modèle de flux continu de la consigne (capacité par unité de temps, longueur). Un tunnel pressurisé se modélise exactement comme une zone de connexion. C'est la part fantaisiste du sujet, assumée dans le rapport.
 
 ## 1. Architecture
 
 Trois couches, dépendantes dans un seul sens : moteur ← serveur ← page.
 
 ```
-zone-commerciale/
-├── zc/                  moteur, Python pur : aucune dépendance web ni graphe
-│   ├── modele.py        nœuds, arêtes, centres, zone, statuts
+graph-satellites/
+├── moteur/              Python pur : aucune dépendance web ni graphe
+│   ├── modele.py        nœuds, arêtes, stations, réseau, statuts
 │   ├── chargement.py    JSON ↔ modèle, validation
 │   ├── navigation.py    graphe orienté de navigation : sens, filtres PMR et blocage, poids
 │   ├── chemins.py       Dijkstra, fonctions de coût, itinéraires, distances d'évacuation
@@ -24,16 +47,16 @@ zone-commerciale/
 │   └── proprietes.py    graphe des propriétés (partie 4)
 ├── serveur/             FastAPI : expose le moteur à la page
 ├── web/                 page : index.html, JS, CSS, vendor/cytoscape.min.js
-├── donnees/             centres/*.json, zone.json, simulation.json, parametres.json
+├── donnees/             stations/*.json, reseau.json, simulation.json, parametres.json, proprietaires.json
 ├── tests/
 └── rapport/             rapport.md, figures générées, construction PDF (pandoc)
 ```
 
 **Pourquoi un moteur pur.** Les algorithmes doivent être codés à la main et testés unitairement. Isolés de toute interface, ils se testent sans serveur, et le rapport peut produire ses figures en appelant directement le moteur.
 
-**Stack.** Choix issu de la recherche d'antériorité (étape B1).
+**Stack.** Choix issu de la recherche d'antériorité.
 - **Python ≥ 3.11.** Dépendances d'exécution : `fastapi`, `uvicorn`. Dépendances de test : `pytest`, `httpx` (pour le client de test FastAPI), `networkx`, `ruff`, `mypy`.
-- **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit que `zc/` ne l'importe jamais.
+- **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit que `moteur/` ne l'importe jamais.
 - **Page.** Cytoscape.js (MIT), copié dans `web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
 - **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
 - **Lancement en une commande** : `python -m serveur`, puis on ouvre la page indiquée.
@@ -42,41 +65,44 @@ zone-commerciale/
 
 ## 2. Formats de données
 
-### 2.1 Centre
+### 2.1 Station
 
 On reprend **exactement le format imposé** (section 2.3 de la consigne) : liste `noeuds` et liste `aretes`, avec les champs imposés. L'exemple de la consigne doit se charger puis se réécrire à l'identique.
 
+**Les valeurs imposées restent celles de la consigne.** `type` vaut toujours `magasin`, `sanitaire`, `carrefour` ou `sortie`, selon la correspondance du § 0 : un laboratoire est un nœud de type `magasin`. Le champ `nom` porte le libellé spatial affiché (« Laboratoire Columbus »). Ainsi, un fichier écrit au format de la consigne reste lisible par notre programme, et inversement.
+
 Champs facultatifs ajoutés, tous justifiés :
 - `x`, `y` sur les nœuds : la position sur le plan, pour l'affichage ;
-- `nom` sur les nœuds : un libellé lisible ;
-- `largeur` sur les arêtes : prévu par la consigne, sert à dériver la capacité à partir d'un débit par mètre sourcé (§ 4.1).
+- `nom` sur les nœuds : le libellé lisible ;
+- `largeur` sur les arêtes : prévu par la consigne. Ici, c'est la largeur de l'écoutille ou du passage ; elle sert à dériver la capacité (§ 4.1).
 
 **Ce qui n'entre pas dans le JSON** : les valeurs calculées (taux d'occupation, coût, trafic, fumée des arêtes). Les stocker les ferait diverger de la simulation.
 
-### 2.2 Zone
+### 2.2 Réseau
 
 ```json
 {
-  "centres": [{"id": "A", "fichier": "centres/A.json", "x": 0, "y": 0}],
-  "sources": [{"id": "P1", "type": "parking", "x": -300, "y": 0}],
+  "stations": [{"id": "A", "fichier": "stations/A.json", "x": 0, "y": 0}],
+  "sources": [{"id": "P1", "type": "spatioport", "x": -300, "y": 0}],
   "connexions": [
-    {"source": "P1", "cible": "A:EA", "capacite_max": 8, "longueur": 120.0,
+    {"source": "P1", "cible": "A:SAS1", "capacite_max": 2, "longueur": 120.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true}
   ]
 }
 ```
 
-- Au chargement, chaque nœud d'un centre est **préfixé par l'identifiant du centre** (`A:S1`) : deux centres peuvent ainsi employer les mêmes noms internes sans collision.
-- Une connexion relie une source, ou la **sortie** d'un centre, à une autre source ou une autre sortie. Les sorties servent d'interface entre le graphe intérieur et la zone, comme sur le whiteboard.
+- Ce fichier n'est pas imposé par la consigne : ses noms suivent le sujet transposé.
+- Au chargement, chaque nœud d'une station est **préfixé par l'identifiant de la station** (`A:LAB1`) : deux stations peuvent ainsi employer les mêmes noms internes sans collision.
+- Une connexion (un tunnel) relie une source, ou la **sortie** d'une station, à une autre source ou une autre sortie. Les sas servent d'interface entre le graphe intérieur et le réseau.
 - Les attributs exigés par la consigne pour une connexion (capacité, longueur, accessibilité) sont `capacite_max`, `longueur` et `pmr`.
-- **Vue macro** : on contracte chaque centre en un seul nœud. Elle sert à l'affichage de la zone et à la discussion du rapport.
-- Les **sources** (parkings, stations, quartiers) ont une capacité illimitée. C'est d'elles que partent les visiteurs.
+- **Vue macro** : on contracte chaque station en un seul nœud. Elle sert à l'affichage du réseau et à la discussion du rapport.
+- Les **sources** (spatioport, habitat, relais) ont une capacité illimitée. C'est d'elles que partent les visiteurs.
 
 ### 2.3 Réglages de la simulation et paramètres
 
-- `donnees/parametres.json` : les valeurs physiques, chacune avec sa source (§ 4.1).
+- `donnees/parametres.json` : les valeurs physiques, chacune avec sa source ou sa justification (§ 4.1).
 - `donnees/simulation.json` : réglages de départ (graine aléatoire, rythme d'arrivée par source, part de PMR, durée des visites, β).
-- Pas de scénarios (retirés à la story 6.6, à la demande de l'utilisateur) : la page démarre une simulation unique, dont l'affluence se règle au curseur (visiteurs par minute pour toute la zone, répartis entre les sources dans les proportions de départ). Le feu se déclenche au clic, avec α, θ₁, θ₂, δ et le mode de connaissance réglés dans le panneau.
+- La page démarre une simulation unique, dont l'affluence se règle au curseur (visiteurs par minute pour tout le réseau, répartis entre les sources dans les proportions de départ). Le feu se déclenche au clic, avec α, θ₁, θ₂, δ et le mode de connaissance réglés dans le panneau.
 
 ## 3. Algorithmes (codés à la main)
 
@@ -95,21 +121,29 @@ Champs facultatifs ajoutés, tous justifiés :
 - **Les arêtes et nœuds bloqués** (statut connu) sont retirés du graphe de navigation.
 - **Critère « moins encombré ».** C'est une longueur pénalisée : la foule ralentit, et β règle à quel point. Avec β = 0, on retrouve le plus court chemin.
 - **Alternative écartée : le goulot le plus large.** On maximiserait la capacité restante du tronçon le plus chargé. Rejeté parce que ce critère ignore la distance et peut imposer des détours absurdes. Il est cité dans le rapport avec ce motif.
-- **Une somme des τ seule est rejetée** : son résultat dépendrait du découpage des couloirs en arêtes, pas du bâtiment.
-- **Itinéraire d'une région vers un centre** : depuis la source jusqu'à la sortie d'entrée du centre, sur la vue détaillée. On peut le prolonger jusqu'à un magasin.
+- **Une somme des τ seule est rejetée** : son résultat dépendrait du découpage des passages en arêtes, pas de la station.
+- **Itinéraire d'une région vers une station** : depuis la source jusqu'au sas d'entrée de la station, sur la vue détaillée. On peut le prolonger jusqu'à un module.
 
 ## 4. Modèle de simulation
 
 ### 4.1 Temps et valeurs physiques
 
 - **Δt = 1 s.** Les capacités d'arête de la consigne sont des débits (personnes par unité de temps) : une arête admet au plus `c_e · Δt` entrées par pas.
-- **Valeurs physiques** : vitesse de marche d'une personne valide, vitesse PMR, débit par mètre de largeur de passage, densité maximale. Elles sont **tirées de sources publiées et citées** (réglementation de sécurité incendie des ERP, manuels d'évacuation), recherchées dans la story 2.1. Aucune valeur n'est inventée.
+- **Valeurs physiques**, toutes propres à l'apesanteur : la marche et les débits de foule au sol ne s'appliquent pas.
+  - vitesse de déplacement d'une personne valide, qui se tire le long des mains courantes ;
+  - vitesse d'une personne transportée sur civière ;
+  - débit de passage par mètre de largeur d'écoutille ;
+  - volume habitable par personne, d'où la capacité des modules.
+- **Où les chercher** (story 2.1) : documentation de la NASA sur la conception des habitats spatiaux et les dimensions des écoutilles et passages de l'ISS, publications de l'ESA, retours d'expérience des équipages.
+- **Règle** : chaque valeur cite sa source. Quand aucune source publiée n'existe (le débit à travers une écoutille, probablement), la valeur est marquée **hypothèse** dans `parametres.json`, avec son raisonnement (un ordre de grandeur tiré d'une valeur sourcée). Le rapport liste ces hypothèses à part. Aucune valeur n'est donnée sans l'une ou l'autre.
 
 ### 4.2 Agents (extension ⋆)
 
-Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'origine, un centre, une liste de 1 à 3 magasins, un temps de visite aléatoire, et un itinéraire.
+Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'origine, une station, une liste de 1 à 3 modules, un temps de visite aléatoire, et un itinéraire.
 
 **Pourquoi des agents.** La consigne demande de « suivre leurs déplacements » et de calculer des itinéraires par profil. Avec des effectifs agrégés, il faudrait suivre la destination de chaque groupe. Les contraintes du modèle minimal restent respectées à l'identique.
+
+**Accessibilité en apesanteur** (définition validée par l'enseignante). Il n'y a ni escalier ni fauteuil roulant dans une station. Le profil « à mobilité réduite » désigne une personne qui ne se déplace pas seule : un blessé ou un malade transporté sur civière. Une arête est `pmr: false` quand une civière n'y passe pas : écoutille trop étroite, passage coudé, ou passage encombré d'équipements. Un tel passage reste praticable par une personne valide.
 
 **États d'un agent :**
 1. **Dans un nœud**, où il compte dans l'occupation `o_v`.
@@ -125,7 +159,7 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'orig
 
 **Invariants vérifiés à chaque pas** par les tests : `o_v ≤ c_v` et `φ_e ≤ c_e · Δt`. **Conservation** : agents créés = agents présents + agents repartis + agents sauvés.
 
-**Demande** : arrivée à une source, choix d'un centre puis de 1 à 3 magasins, visite d'une durée aléatoire, retour à la source d'origine. La part de PMR est réglable.
+**Demande** : arrivée à une source, choix d'une station puis de 1 à 3 modules, visite d'une durée aléatoire, retour à la source d'origine. La part de PMR est réglable.
 
 **Routage** : par défaut, le critère « moins encombré ». Un agent PMR n'emprunte que des arêtes `pmr`. L'itinéraire est recalculé quand l'objectif change ou que le graphe de navigation est modifié.
 
@@ -134,13 +168,13 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'orig
 - **Taux d'un nœud** : `τ_v = o_v / c_v`.
 - **Taux d'une arête** : `τ_e = φ_e / (c_e · Δt)`, la définition de la consigne, où `φ_e` est le nombre d'entrées sur l'arête pendant le pas. La contrainte de débit en découle directement.
 - **Limite assumée, à discuter dans le rapport.** Une arête saturée en aval, où plus personne n'entre, paraît peu chargée. La file d'attente au bout de l'arête est donc affichée à part.
-- **Palette à 5 niveaux partout**, bornes 0,2 / 0,4 / 0,6 / 0,8. Les seuils imposés de 0,4 et 0,8 tombent sur des bornes : la lecture vert / orange / rouge de la consigne reste possible. Le dégradé répond à la palette « graduelle » de la zone.
-- Les couleurs sont choisies à l'étape C (design), avec un contrôle de lisibilité pour les daltoniens.
+- **Palette à 5 niveaux partout**, bornes 0,2 / 0,4 / 0,6 / 0,8. Les seuils imposés de 0,4 et 0,8 tombent sur des bornes : la lecture vert / orange / rouge de la consigne reste possible. Le dégradé répond à la palette « graduelle » demandée pour les connexions.
+- Les couleurs sont choisies à l'étape de design, avec un contrôle de lisibilité pour les daltoniens.
 - **La fumée et le blocage** passent par un autre canal que la couleur (bordure, icône), pour ne jamais être confondus avec l'occupation.
 
 ## 5. Incendie
 
-Il est limité à un centre. Un agent qui atteint une sortie est **sauvé** et quitte la simulation.
+Il est limité à une station. Un agent qui atteint une sortie est **sauvé** et quitte la simulation : soit il a franchi un sas vers un tunnel, donc quitté la station en feu ; soit il a rejoint une capsule de sauvetage. C'est la procédure réelle de l'ISS, où l'équipage se regroupe dans les vaisseaux amarrés. Le rapport peut citer l'incendie de la station Mir en 1997.
 
 ### 5.1 Diffusion de la fumée
 
@@ -151,7 +185,8 @@ On applique la règle de la consigne :
 - `N(v)` désigne les voisins **non orientés** : la fumée ignore le sens de circulation.
 - `s_v > 0` seulement pour les nœuds en feu.
 - La règle ne fait qu'augmenter la fumée, qui finit à 100 partout où elle diffuse. Le rapport le signale.
-- **Fumée d'une arête** = le maximum de ses deux extrémités : un couloir est aussi dangereux que son bout le plus enfumé. Le format JSON n'a pas besoin d'être étendu.
+- **Fumée d'une arête** = le maximum de ses deux extrémités : un passage est aussi dangereux que son bout le plus enfumé. Le format JSON n'a pas besoin d'être étendu.
+- **Limite à discuter dans le rapport** : en apesanteur, il n'y a pas de convection et la fumée suit la ventilation. La règle de la consigne, symétrique, ne le représente pas. Une diffusion orientée selon la ventilation est une extension possible, non prévue.
 
 ### 5.2 Détection
 
@@ -166,52 +201,67 @@ On distingue l'**état réel** et le **statut connu** :
 - **La fumée réduit à la fois la vitesse et la capacité**, en proportion de son niveau. Moins de visibilité veut dire moins de vitesse, donc moins de débit. Les coefficients sont justifiés dans le rapport.
 - **Une personne engagée sur une arête qui devient bloquée** continue si elle a dépassé la moitié, et fait demi-tour sinon. Dans les deux cas, elle recalcule ensuite son chemin.
 - **La connaissance des occupants** est un paramètre, comparé dans le rapport :
-  - **global** : chacun connaît l'état réel de tout le bâtiment ;
+  - **global** : chacun connaît l'état réel de toute la station ;
   - **local** : chacun connaît les statuts détectés (capteurs et retard δ) et la fumée réelle de son nœud et de ses voisins.
 
 ### 5.4 Évacuation
 
-- **Déclenchement** : à la première détection, tous les agents du centre passent en évacuation.
+- **Déclenchement** : à la première détection, tous les agents de la station passent en évacuation.
 - **Cible** : la sortie la plus proche, obtenue par le Dijkstra multi-sources (§ 3).
 - **Recalcul** à chaque mise à jour du graphe de navigation.
 - **Agent piégé** : un agent qui n'a plus aucun chemin vers une sortie (distance infinie).
-- **Centre fermé** (décidé à la story 6.5) : à l'alarme, le centre en feu ne reçoit plus personne. Ses nœuds, sauf ses sorties, sont retirés des trajets des visiteurs : qui allait y entrer fait demi-tour à la porte et rentre à sa source, qui ne faisait que le traverser le contourne. Sauvés, piégés, courbe et charge des sorties ne portent donc que sur les présents à l'alarme : sauvés + piégés = présents.
+- **Station fermée** : à l'alarme, la station en feu ne reçoit plus personne. Ses nœuds, sauf ses sorties, sont retirés des trajets des visiteurs : qui allait y entrer fait demi-tour au sas et rentre à sa source, qui ne faisait que la traverser la contourne. Sauvés, piégés, courbe et charge des sorties ne portent donc que sur les présents à l'alarme : sauvés + piégés = présents.
 
 **Indicateurs :**
-- temps d'évacuation total, et courbe des personnes encore à l'intérieur ;
+- temps d'évacuation total, et courbe des personnes encore à bord ;
 - nombre de personnes piégées ;
 - charge de chaque sortie ;
 - hors incendie : occupation moyenne et maximale, temps de trajet moyen, goulots récurrents.
 
 Tous s'exportent en CSV pour le rapport.
 
-## 6. Plan du bâtiment
+## 6. Plan des stations
 
-**Le centre détaillé est de plain-pied.** Il n'y a donc pas d'ascenseur, et les arêtes non PMR viennent de marches ou de passages étroits. Le plan est proposé, puis redessiné et ajusté par le binôme.
+**Le plan de la station détaillée A est dessiné par le groupe** (consigne § 5). Une station est en trois dimensions, mais son plan est dessiné à plat (positions `x`, `y`) : seules comptent les liaisons entre modules, pas leur disposition dans l'espace. Les arêtes non PMR viennent d'écoutilles étroites ou de passages encombrés (§ 4.2).
 
-Il doit contenir, et un test le vérifie :
-- au moins 2 sorties, situées sur deux côtés opposés ;
-- au moins 6 magasins et 1 sanitaire ;
+Le plan de A doit contenir, et un test le vérifie :
+- au moins 2 sorties, situées aux deux extrémités de la station ;
+- au moins 6 modules (type `magasin`) et 1 module d'hygiène (type `sanitaire`) ;
 - au moins un cycle, pour qu'il existe des chemins alternatifs ;
-- au moins un goulot : un couloir de faible capacité sur un passage fréquenté ;
+- au moins un goulot : une écoutille étroite sur un passage fréquenté ;
 - au moins une arête non PMR, contournable par un chemin PMR plus long ;
-- au moins une arête à sens unique ;
+- au moins une arête à sens unique (par exemple un passage à circulation imposée pour croiser sans se gêner) ;
 - au moins 2 nœuds sans capteur, dont un sur un chemin d'évacuation ;
+- au moins une capsule de sauvetage, reliée à la station mais à aucun tunnel ;
 - un départ de feu possible près d'une sortie, pour la démonstration.
 
-Les deux centres simples comptent au moins 12 nœuds et 2 sorties chacun (agrandis à la story 2.7 : 17 nœuds pour B, 16 pour C ; le plan de test de A en compte 38, dont une issue de secours reliée à aucune connexion). La zone comporte 3 centres et au moins 3 sources : parking, station, quartier.
+Les deux stations simples, B et C, comptent au moins 12 nœuds et 2 sorties chacune. Le réseau comporte 3 stations et au moins 3 sources : spatioport, habitat, relais.
 
 ## 7. Graphe des propriétés (partie 4)
 
-`proprietaires.json` **n'est pas encore fourni** : il faut le demander à l'enseignant. Son contenu décide de la définition de « majoritaire » ; avec des parts en pourcentage, ce serait strictement plus de 50 %. En attendant, cette partie est planifiée en dernier.
+**`proprietaires.json` est écrit par le groupe**, à la demande de l'enseignante.
+
+**Problème : avec 3 stations, G_P n'a que 3 sommets.** Connexité, cliques et articulations y deviennent triviales, et la partie 4 ne démontrerait rien. Décision : le fichier décrit une **flotte plus large**, d'une douzaine de stations en orbite, dont les 3 simulées. La partie 4 est une analyse du réseau de propriété, indépendante de la simulation : elle n'a pas besoin des plans des autres stations.
+
+**Contenu du fichier :**
+- les propriétaires : agences spatiales (NASA, ESA, Roscosmos, JAXA, CSA…) et opérateurs privés ;
+- les stations ;
+- les parts de chaque propriétaire dans chaque station, en pourcentage, dont la somme vaut 100 par station.
+
+« Majoritaire » veut alors dire strictement plus de 50 %.
+
+**Le jeu de données est construit pour que chaque question ait une réponse intéressante**, et le rapport le dit :
+- au moins deux composantes connexes, ou une seule composante justifiée ;
+- au moins une station articulation, et un propriétaire articulation ;
+- dans G⃗_P, au moins un cycle de contrôle (donc une composante fortement connexe de plus d'un sommet) et une chaîne de contrôle de longueur au moins 3.
 
 Ce qui est prévu :
 - **Connexité de G_P** par parcours en largeur, avec ses composantes.
-- **Preuve que les centres d'un même propriétaire forment une clique**, d'où la borne `|E_P| ≤ Σ_p C(k_p, 2)`.
+- **Preuve que les stations d'un même propriétaire forment une clique**, d'où la borne `|E_P| ≤ Σ_p C(k_p, 2)`.
 - **Points d'articulation** (Hopcroft–Tarjan), à deux niveaux :
-  - les centres articulation de G_P ;
-  - les propriétaires articulation, dans le graphe biparti propriétaires–centres. La disparition d'un propriétaire retire une clique d'arêtes et non un sommet de G_P : c'est pourquoi il faut ce second graphe.
-- **G⃗_P**, sans les arcs d'un centre vers lui-même, puis ses composantes fortement connexes (Tarjan) et son graphe réduit.
+  - les stations articulation de G_P ;
+  - les propriétaires articulation, dans le graphe biparti propriétaires–stations. La disparition d'un propriétaire retire une clique d'arêtes et non un sommet de G_P : c'est pourquoi il faut ce second graphe.
+- **G⃗_P**, sans les arcs d'une station vers elle-même, puis ses composantes fortement connexes (Tarjan) et son graphe réduit.
   - Le graphe réduit est toujours acyclique : la réponse découle d'un théorème. L'analyse porte donc sur sa structure : sources, puits, chaînes de contrôle (plus long chemin dans l'ordre topologique).
 
 ## 8. Priorités en cas de retard
@@ -228,9 +278,10 @@ Le socle commun de la consigne passe toujours en premier.
 Il est rédigé en Markdown dans `rapport/`, converti en PDF par pandoc. Figures et tableaux sont générés par des scripts qui appellent le moteur.
 
 Il contient :
+- la transposition du sujet et sa table de correspondance (§ 0) ;
 - la justification de chaque choix ;
 - les fonctions de coût et les complexités ;
 - les preuves (clique, borne) ;
-- les sources des valeurs physiques ;
+- les sources des valeurs physiques, et la liste des hypothèses ;
 - les réponses aux trois questions de l'incendie, appuyées sur des résultats chiffrés ;
 - les résultats de la partie 4.
