@@ -35,9 +35,17 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 # B904 imposerait `raise ... from erreur` dans chaque `except` : une syntaxe de plus
-# pour un débutant, sans utilité pour ce projet (CLAUDE.md, « Code débutant »).
+# pour un débutant, sans utilité pour ce projet, dont le code vise un niveau lycée.
 ignore = ["B904"]
 
 [tool.mypy]
 python_version = "3.11"
 strict = true
+# Sans __init__.py, mypy verrait moteur/modele.py à la fois comme « modele » et comme
+# « moteur.modele ». Cette option lui fait déduire le nom depuis la racine du projet.
+explicit_package_bases = true
+
+# networkx ne fournit pas d'annotations de type ; il ne sert que d'oracle dans les tests.
+[[tool.mypy.overrides]]
+module = ["networkx", "networkx.*"]
+ignore_missing_imports = true

@@ -15,11 +15,11 @@ La consigne porte sur une zone commerciale. Le groupe la transpose à un réseau
 | Zone commerciale | Réseau de trois stations en orbite |
 | Centre commercial (macro-nœud) | Station |
 | Zone de connexion entre centres | Tunnel de transfert pressurisé entre deux stations |
-| Nœud source (quartier, parking, station de transport) | Point d'arrivée : spatioport (touristes venus de la Terre), habitat (où loge l'équipage), relais (transit vers d'autres orbites) |
-| Magasin | Module : laboratoire, serre, observatoire, quartiers d'équipage, salon |
+| Nœud source (quartier, parking, station de transport) | Les deux sas de chaque station : les visiteurs y arrivent en s'amarrant (décision du 2026-11-20) |
+| Magasin | Module (type `module` dans les fichiers) : laboratoire, serre, observatoire, quartiers d'équipage, salon |
 | Sanitaire | Module d'hygiène |
 | Couloir-carrefour | Nœud de jonction (sur l'ISS, le module Unity) |
-| Sortie | Sas de jonction vers un tunnel, ou capsule de sauvetage amarrée |
+| Sortie | Sas, à la fois entrée et sortie de la station |
 | Couloir, passage | Passage entre deux modules, à travers une écoutille |
 | Visiteurs | Équipage, scientifiques et touristes spatiaux |
 | Personne à mobilité réduite | Personne transportée sur civière (§ 4.2) |
@@ -35,7 +35,7 @@ Trois couches, dépendantes dans un seul sens : moteur ← serveur ← page.
 graph-satellites/
 ├── moteur/              Python pur : aucune dépendance web ni graphe
 │   ├── modele.py        nœuds, arêtes, stations, réseau, statuts
-│   ├── chargement.py    JSON ↔ modèle, validation
+│   ├── chargement.py    JSON ↔ modèle (sans validation, décision du 2026-11-20)
 │   ├── navigation.py    graphe orienté de navigation : sens, filtres PMR et blocage, poids
 │   ├── chemins.py       Dijkstra, fonctions de coût, itinéraires, distances d'évacuation
 │   ├── connexite.py     composantes, points d'articulation, Tarjan, graphe réduit
@@ -61,6 +61,10 @@ graph-satellites/
 - **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
 - **Lancement en une commande** : `python -m serveur`, puis on ouvre la page indiquée.
 
+**Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires et articulations, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `serveur/` et `web/` grandissent.
+
+**Design super simple** (même décision) : une page claire et sobre, sans recherche graphique. L'ancien design system de l'autre projet n'est pas repris.
+
 **Écartés.** Dash Cytoscape : plus maintenu depuis 2 ans. sigma.js : son rendu WebGL et sa compilation sont superflus pour 80 nœuds. vis-network : pas de nœuds composés. D3 : trop bas niveau pour le délai. NiceGUI : n'a pas de composant de graphe, il aurait fallu intégrer Cytoscape quand même.
 
 ## 2. Formats de données
@@ -69,12 +73,12 @@ graph-satellites/
 
 On reprend **exactement le format imposé** (section 2.3 de la consigne) : liste `noeuds` et liste `aretes`, avec les champs imposés. L'exemple de la consigne doit se charger puis se réécrire à l'identique.
 
-**Les valeurs imposées restent celles de la consigne.** `type` vaut toujours `magasin`, `sanitaire`, `carrefour` ou `sortie`, selon la correspondance du § 0 : un laboratoire est un nœud de type `magasin`. Le champ `nom` porte le libellé spatial affiché (« Laboratoire Columbus »). Ainsi, un fichier écrit au format de la consigne reste lisible par notre programme, et inversement.
+**Valeurs de `type` : un seul écart à la consigne** (décision du 2026-11-20). `type` vaut `module`, `sanitaire`, `carrefour` ou `sortie` : la valeur `module` remplace le `magasin` de la consigne, plus réaliste dans une station spatiale. Les trois autres valeurs sont celles de la consigne. Le programme ne valide pas les valeurs : un fichier au format de la consigne (avec `magasin`) se charge toujours, mais ses magasins ne seront pas reconnus comme des modules à visiter. **Écart à justifier dans le rapport** (story 9.2). Le champ `nom` porte le libellé spatial affiché (« Laboratoire Columbus »).
 
 Champs facultatifs ajoutés, tous justifiés :
 - `x`, `y` sur les nœuds : la position sur le plan, pour l'affichage ;
 - `nom` sur les nœuds : le libellé lisible ;
-- `largeur` sur les arêtes : prévu par la consigne. Ici, c'est la largeur de l'écoutille ou du passage ; elle sert à dériver la capacité (§ 4.1).
+- `largeur` sur les arêtes : prévu par la consigne comme facultatif, et accepté par le programme. Nos plans ne l'utilisent pas (décision du 2026-11-20) : la capacité `capacite_max` est donnée directement. Elle a été calculée comme largeur × débit par mètre (§ 4.1), avec 1,2 m pour un sas, 1 m pour un passage ordinaire, 0,8 m pour un goulot et 0,6 m pour un passage non PMR ; le rapport garde ce calcul.
 
 **Ce qui n'entre pas dans le JSON** : les valeurs calculées (taux d'occupation, coût, trafic, fumée des arêtes). Les stocker les ferait diverger de la simulation.
 
@@ -83,9 +87,9 @@ Champs facultatifs ajoutés, tous justifiés :
 ```json
 {
   "stations": [{"id": "A", "fichier": "stations/A.json", "x": 0, "y": 0}],
-  "sources": [{"id": "P1", "type": "spatioport", "x": -300, "y": 0}],
+  "sources": [],
   "connexions": [
-    {"source": "P1", "cible": "A:SAS1", "capacite_max": 2, "longueur": 120.0,
+    {"source": "A:SAS2", "cible": "B:SAS1", "capacite_max": 1.64, "longueur": 350.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true}
   ]
 }
@@ -93,16 +97,17 @@ Champs facultatifs ajoutés, tous justifiés :
 
 - Ce fichier n'est pas imposé par la consigne : ses noms suivent le sujet transposé.
 - Au chargement, chaque nœud d'une station est **préfixé par l'identifiant de la station** (`A:LAB1`) : deux stations peuvent ainsi employer les mêmes noms internes sans collision.
-- Une connexion (un tunnel) relie une source, ou la **sortie** d'une station, à une autre source ou une autre sortie. Les sas servent d'interface entre le graphe intérieur et le réseau.
+- Une connexion (un tunnel) relie le **sas** d'une station au sas d'une autre. Les sas servent d'interface entre le graphe intérieur et le réseau.
 - Les attributs exigés par la consigne pour une connexion (capacité, longueur, accessibilité) sont `capacite_max`, `longueur` et `pmr`.
 - **Vue macro** : on contracte chaque station en un seul nœud. Elle sert à l'affichage du réseau et à la discussion du rapport.
-- Les **sources** (spatioport, habitat, relais) ont une capacité illimitée. C'est d'elles que partent les visiteurs.
+- **Les nœuds sources sont les sas** (décision du 2026-11-20) : chaque station a deux sas, par lesquels les visiteurs arrivent de l'extérieur en s'amarrant, et par lesquels ils repartent. La liste `sources` reste dans le format, vide : le réseau n'a pas de point d'arrivée à part.
+- **Toutes les arêtes sont bidirectionnelles** dans nos plans (même décision). Le champ `sens` reste dans le format imposé, et le moteur sait traiter une arête `unique`.
 
 ### 2.3 Réglages de la simulation et paramètres
 
 - `donnees/parametres.json` : les valeurs physiques, chacune avec sa source ou sa justification (§ 4.1).
 - `donnees/simulation.json` : réglages de départ (graine aléatoire, rythme d'arrivée par source, part de PMR, durée des visites, β).
-- La page démarre une simulation unique, dont l'affluence se règle au curseur (visiteurs par minute pour tout le réseau, répartis entre les sources dans les proportions de départ). Le feu se déclenche au clic, avec α, θ₁, θ₂, δ et le mode de connaissance réglés dans le panneau.
+- La page démarre une simulation unique, dont l'affluence se règle au curseur (visiteurs par minute pour tout le réseau, répartis entre les sas dans les proportions de départ). Le feu se déclenche au clic, avec α, θ₁, θ₂, δ et le mode de connaissance réglés dans le panneau.
 
 ## 3. Algorithmes (codés à la main)
 
@@ -122,7 +127,7 @@ Champs facultatifs ajoutés, tous justifiés :
 - **Critère « moins encombré ».** C'est une longueur pénalisée : la foule ralentit, et β règle à quel point. Avec β = 0, on retrouve le plus court chemin.
 - **Alternative écartée : le goulot le plus large.** On maximiserait la capacité restante du tronçon le plus chargé. Rejeté parce que ce critère ignore la distance et peut imposer des détours absurdes. Il est cité dans le rapport avec ce motif.
 - **Une somme des τ seule est rejetée** : son résultat dépendrait du découpage des passages en arêtes, pas de la station.
-- **Itinéraire d'une région vers une station** : depuis la source jusqu'au sas d'entrée de la station, sur la vue détaillée. On peut le prolonger jusqu'à un module.
+- **Itinéraire d'une région vers une station** : depuis le sas d'arrivée (la source) jusqu'au sas d'entrée de la station visée, sur la vue détaillée. On peut le prolonger jusqu'à un module.
 
 ## 4. Modèle de simulation
 
@@ -139,7 +144,7 @@ Champs facultatifs ajoutés, tous justifiés :
 
 ### 4.2 Agents (extension ⋆)
 
-Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'origine, une station, une liste de 1 à 3 modules, un temps de visite aléatoire, et un itinéraire.
+Chaque visiteur est un agent : il a un profil (valide ou PMR), un sas d'arrivée, une station, une liste de 1 à 3 modules, un temps de visite aléatoire, et un itinéraire.
 
 **Pourquoi des agents.** La consigne demande de « suivre leurs déplacements » et de calculer des itinéraires par profil. Avec des effectifs agrégés, il faudrait suivre la destination de chaque groupe. Les contraintes du modèle minimal restent respectées à l'identique.
 
@@ -151,7 +156,7 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'orig
 3. **En attente au bout d'une arête**, parce qu'il a été refusé à l'entrée du nœud suivant.
 
 **Un pas de temps se déroule ainsi :**
-1. Les arrivées sont générées aux sources, au rythme fixé par l'affluence réglée.
+1. Les arrivées sont générées aux sas, au rythme fixé par l'affluence réglée.
 2. Les agents sur une arête avancent de `v · Δt`, où `v` dépend du profil et de la fumée.
 3. Les agents arrivés au bout d'une arête demandent à entrer dans le nœud. Ce nœud offre `c_v − o_v` places. Les candidats sont **tirés au sort** avec le générateur de la simulation (graine fixée, donc rejouable). Les refusés attendent et réessaient au pas suivant.
 4. Les agents qui quittent un nœud prennent l'arête suivante de leur itinéraire, dans la limite de `c_e · Δt` entrées par pas.
@@ -159,7 +164,7 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'orig
 
 **Invariants vérifiés à chaque pas** par les tests : `o_v ≤ c_v` et `φ_e ≤ c_e · Δt`. **Conservation** : agents créés = agents présents + agents repartis + agents sauvés.
 
-**Demande** : arrivée à une source, choix d'une station puis de 1 à 3 modules, visite d'une durée aléatoire, retour à la source d'origine. La part de PMR est réglable.
+**Demande** : arrivée à un sas, choix d'une station puis de 1 à 3 modules, visite d'une durée aléatoire, départ par un sas. La part de PMR est réglable.
 
 **Routage** : par défaut, le critère « moins encombré ». Un agent PMR n'emprunte que des arêtes `pmr`. L'itinéraire est recalculé quand l'objectif change ou que le graphe de navigation est modifié.
 
@@ -169,12 +174,12 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'orig
 - **Taux d'une arête** : `τ_e = φ_e / (c_e · Δt)`, la définition de la consigne, où `φ_e` est le nombre d'entrées sur l'arête pendant le pas. La contrainte de débit en découle directement.
 - **Limite assumée, à discuter dans le rapport.** Une arête saturée en aval, où plus personne n'entre, paraît peu chargée. La file d'attente au bout de l'arête est donc affichée à part.
 - **Palette à 5 niveaux partout**, bornes 0,2 / 0,4 / 0,6 / 0,8. Les seuils imposés de 0,4 et 0,8 tombent sur des bornes : la lecture vert / orange / rouge de la consigne reste possible. Le dégradé répond à la palette « graduelle » demandée pour les connexions.
-- Les couleurs sont choisies à l'étape de design, avec un contrôle de lisibilité pour les daltoniens.
+- Les couleurs sont choisies avec la story d'affichage de la simulation (5.6), avec un contrôle de lisibilité pour les daltoniens.
 - **La fumée et le blocage** passent par un autre canal que la couleur (bordure, icône), pour ne jamais être confondus avec l'occupation.
 
 ## 5. Incendie
 
-Il est limité à une station. Un agent qui atteint une sortie est **sauvé** et quitte la simulation : soit il a franchi un sas vers un tunnel, donc quitté la station en feu ; soit il a rejoint une capsule de sauvetage. C'est la procédure réelle de l'ISS, où l'équipage se regroupe dans les vaisseaux amarrés. Le rapport peut citer l'incendie de la station Mir en 1997.
+Il est limité à une station. Un agent qui atteint un sas est **sauvé** et quitte la simulation : il a quitté la station en feu, vers un tunnel ou un vaisseau amarré. C'est la procédure réelle de l'ISS, où l'équipage se regroupe dans les vaisseaux amarrés. Le rapport peut citer l'incendie de la station Mir en 1997.
 
 ### 5.1 Diffusion de la fumée
 
@@ -210,7 +215,7 @@ On distingue l'**état réel** et le **statut connu** :
 - **Cible** : la sortie la plus proche, obtenue par le Dijkstra multi-sources (§ 3).
 - **Recalcul** à chaque mise à jour du graphe de navigation.
 - **Agent piégé** : un agent qui n'a plus aucun chemin vers une sortie (distance infinie).
-- **Station fermée** : à l'alarme, la station en feu ne reçoit plus personne. Ses nœuds, sauf ses sorties, sont retirés des trajets des visiteurs : qui allait y entrer fait demi-tour au sas et rentre à sa source, qui ne faisait que la traverser la contourne. Sauvés, piégés, courbe et charge des sorties ne portent donc que sur les présents à l'alarme : sauvés + piégés = présents.
+- **Station fermée** : à l'alarme, la station en feu ne reçoit plus personne. Ses nœuds, sauf ses sorties, sont retirés des trajets des visiteurs : qui allait y entrer fait demi-tour au sas et repart, qui ne faisait que la traverser la contourne. Sauvés, piégés, courbe et charge des sorties ne portent donc que sur les présents à l'alarme : sauvés + piégés = présents.
 
 **Indicateurs :**
 - temps d'évacuation total, et courbe des personnes encore à bord ;
@@ -225,17 +230,17 @@ Tous s'exportent en CSV pour le rapport.
 **Le plan de la station détaillée A est dessiné par le groupe** (consigne § 5). Une station est en trois dimensions, mais son plan est dessiné à plat (positions `x`, `y`) : seules comptent les liaisons entre modules, pas leur disposition dans l'espace. Les arêtes non PMR viennent d'écoutilles étroites ou de passages encombrés (§ 4.2).
 
 Le plan de A doit contenir, et un test le vérifie :
-- au moins 2 sorties, situées aux deux extrémités de la station ;
-- au moins 6 modules (type `magasin`) et 1 module d'hygiène (type `sanitaire`) ;
+- au moins 2 sas (sorties, qui sont aussi les points d'arrivée), situés aux deux extrémités de la station ;
+- au moins 6 modules (type `module`) et 1 module d'hygiène (type `sanitaire`) ;
 - au moins un cycle, pour qu'il existe des chemins alternatifs ;
 - au moins un goulot : une écoutille étroite sur un passage fréquenté ;
 - au moins une arête non PMR, contournable par un chemin PMR plus long ;
-- au moins une arête à sens unique (par exemple un passage à circulation imposée pour croiser sans se gêner) ;
 - au moins 2 nœuds sans capteur, dont un sur un chemin d'évacuation ;
-- au moins une capsule de sauvetage, reliée à la station mais à aucun tunnel ;
 - un départ de feu possible près d'une sortie, pour la démonstration.
 
-Les deux stations simples, B et C, comptent au moins 12 nœuds et 2 sorties chacune. Le réseau comporte 3 stations et au moins 3 sources : spatioport, habitat, relais.
+Toutes les arêtes sont bidirectionnelles, et il n'y a pas de capsule de sauvetage (décision du 2026-11-20).
+
+Les deux stations simples, B et C, comptent au moins 12 nœuds et 2 sas chacune. Chacune des trois stations a au moins 2 passages non PMR, tous contournables : le réseau entier reste accessible en fauteuil (décision du 2026-11-20). Le réseau comporte 3 stations, reliées par des tunnels entre leurs sas ; les sas sont les nœuds sources.
 
 ## 7. Graphe des propriétés (partie 4)
 

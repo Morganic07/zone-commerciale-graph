@@ -1,0 +1,34 @@
+{
+  "vitesse_valide": {
+    "description": "Vitesse de marche libre d'une personne valide",
+    "valeur": 1.34,
+    "unite": "m/s",
+    "source": "U. Weidmann, Transporttechnik der Fussgänger, IVT, ETH Zürich, Schriftenreihe Nr. 90",
+    "annee": 1993,
+    "hypothese": ""
+  },
+  "vitesse_pmr": {
+    "description": "Vitesse d'une personne en fauteuil roulant manuel, sans aide, sur un chemin plat",
+    "valeur": 0.67,
+    "unite": "m/s",
+    "source": "Huang et al., Measuring spatial accessibility for wheelchair users: A case study in a Chinese campus, PLoS One 20(12), e0335663",
+    "annee": 2025,
+    "hypothese": ""
+  },
+  "debit_par_metre": {
+    "description": "Débit maximal à travers un passage plat, par mètre de largeur (82 personnes par mètre et par minute)",
+    "valeur": 1.37,
+    "unite": "personnes/(m·s)",
+    "source": "Guide to Safety at Sports Grounds (Green Guide), 5e édition, Department for Culture, Media and Sport (Royaume-Uni)",
+    "annee": 2008,
+    "hypothese": ""
+  },
+  "surface_par_personne": {
+    "description": "Surface minimale par personne (densité de sécurité d'une foule en mouvement : 4 personnes/m²), d'où la capacité des modules",
+    "valeur": 0.25,
+    "unite": "m²/personne",
+    "source": "Guide to Safety at Sports Grounds (Green Guide), 5e édition, Department for Culture, Media and Sport (Royaume-Uni)",
+    "annee": 2008,
+    "hypothese": ""
+  }
+}

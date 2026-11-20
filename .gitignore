@@ -35,3 +35,8 @@ sorties/
 
 
 graph-satellites.code-workspace
+
+
+#tests
+tests/
+

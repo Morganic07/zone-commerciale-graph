@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Réseau de stations spatiales</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Réseau de stations spatiales</h1>
+    <button id="recharger" type="button">Recharger les fichiers</button>
+  </header>
+
+  <form class="filtres" role="search" id="filtres">
+    <label>Nœud
+      <input id="filtre-id" type="search" placeholder="ex. A2" size="6" autocomplete="off">
+    </label>
+    <label>Type
+      <select id="filtre-type">
+        <option value="">tous</option>
+        <option value="module">module</option>
+        <option value="sanitaire">sanitaire</option>
+        <option value="carrefour">carrefour</option>
+        <option value="sortie">sortie (sas)</option>
+      </select>
+    </label>
+    <label>Capteur de fumée
+      <select id="filtre-capteur">
+        <option value="">peu importe</option>
+        <option value="avec">avec</option>
+        <option value="sans">sans</option>
+      </select>
+    </label>
+    <label>Arêtes
+      <select id="filtre-pmr">
+        <option value="">toutes</option>
+        <option value="oui">accessibles en fauteuil</option>
+        <option value="non">interdites aux fauteuils</option>
+      </select>
+    </label>
+    <button id="tout-afficher" type="reset">Tout afficher</button>
+    <p id="message-filtre" role="status"></p>
+  </form>
+
+  <main>
+    <div id="graphe"></div>
+    <div id="infobulle" hidden></div>
+
+    <aside class="legende" aria-label="Légende">
+      <ul>
+        <li><span class="forme point"></span> Noeud</li>
+        <li><span class="forme source"></span> Sas (noeud source)</li>
+        <li><span class="trait arete"></span> Arête</li>
+        <li><span class="trait non-pmr"></span> Arête interdite aux fauteuils</li>
+        <li><span class="trait tunnel"></span> Tunnel entre stations</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script src="vendor/cytoscape.min.js"></script>
+  <script src="visionneuse.js"></script>
+</body>
+</html>

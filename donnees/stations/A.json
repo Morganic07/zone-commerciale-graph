@@ -1,0 +1,96 @@
+{
+  "noeuds": [
+    {"id": "A1", "type": "sortie", "capacite_max": 32, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
+     "x": 0, "y": 200, "nom": "Sas ouest"},
+
+    {"id": "A2", "type": "carrefour", "capacite_max": 48, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 150, "y": 200, "nom": "Jonction Unity"},
+
+    {"id": "A3", "type": "module", "capacite_max": 120, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 150, "y": 50, "nom": "Laboratoire Columbus"},
+
+    {"id": "A4", "type": "module", "capacite_max": 100, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 300, "y": 50, "nom": "Serre"},
+
+     {"id": "A5", "type": "carrefour", "capacite_max": 48, "occupation": 0,
+     "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre",
+     "x": 300, "y": 200, "nom": "Jonction centrale"},
+
+     {"id": "A6", "type": "module", "capacite_max": 40, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 300, "y": 350, "nom": "Observatoire Cupola"},
+
+     {"id": "A7", "type": "module", "capacite_max": 120, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 450, "y": 50, "nom": "Salon panoramique"},
+
+     {"id": "A8", "type": "carrefour", "capacite_max": 48, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 450, "y": 200, "nom": "Jonction Harmony"},
+
+     {"id": "A9", "type": "sanitaire", "capacite_max": 24, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 450, "y": 350, "nom": "Module d'hygiène"},
+
+     {"id": "A10", "type": "module", "capacite_max": 80, "occupation": 0,
+     "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre",
+     "x": 600, "y": 50, "nom": "Quartiers d'équipage"},
+
+     {"id": "A11", "type": "module", "capacite_max": 120, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 600, "y": 350, "nom": "Laboratoire Kibo"},
+
+     {"id": "A12", "type": "sortie", "capacite_max": 32, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
+     "x": 750, "y": 200, "nom": "Sas est"}
+  ],
+
+
+  "aretes": [
+    {"source": "A1", "cible": "A2", "capacite_max": 1.64, "longueur": 8.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A2", "cible": "A5", "capacite_max": 1.1, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A2", "cible": "A3", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A3", "cible": "A4", "capacite_max": 0.82, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": false},
+
+     {"source": "A4", "cible": "A5", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A5", "cible": "A8", "capacite_max": 0.82, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": false},
+
+     {"source": "A4", "cible": "A7", "capacite_max": 1.37, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A7", "cible": "A8", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A5", "cible": "A6", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A6", "cible": "A9", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A9", "cible": "A11", "capacite_max": 1.37, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A8", "cible": "A11", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A8", "cible": "A10", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "A8", "cible": "A12", "capacite_max": 1.64, "longueur": 8.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true}
+  ]
+}
