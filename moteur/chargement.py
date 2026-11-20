@@ -181,7 +181,9 @@ def charger_reseau(chemin: Path) -> Reseau:
         # plan ont ainsi chacune leurs propres nœuds, préfixés différemment.
         station = charger_station(dossier / donnee_station["fichier"])
         prefixer(station, donnee_station["id"])
-        station_du_reseau = StationDuReseau(id=donnee_station["id"], station=station)
+        station_du_reseau = StationDuReseau(
+            id=donnee_station["id"], station=station, fichier=donnee_station["fichier"]
+        )
         if "x" in donnee_station:
             station_du_reseau.x = donnee_station["x"]
         if "y" in donnee_station:

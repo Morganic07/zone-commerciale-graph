@@ -1,0 +1,220 @@
+/* Visionneuse : un plan technique clair et sobre.
+   Les couleurs sont reprises dans visionneuse.js pour le dessin du graphe. */
+
+:root {
+  --fond: #F5F7FA;
+  --encre: #1F2933;
+  --encre-douce: #52606D;
+  --trait: #9AA5B1;
+  --point: #7B8794;
+  --source: #FACC15;
+  --bord-source: #A16207;
+  --focus: #3B6EA8;
+  --non-pmr: #C2410C;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* La page occupe tout l'écran : le bandeau en haut, le graphe prend le reste. */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  background: var(--fond);
+  color: var(--encre);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--trait);
+  background: #FFFFFF;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+#resume {
+  margin: 0;
+  color: var(--encre-douce);
+}
+
+#recharger {
+  margin-left: auto;
+}
+
+button {
+  padding: 6px 14px;
+  border: 1px solid var(--encre-douce);
+  border-radius: 4px;
+  background: #FFFFFF;
+  color: var(--encre);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--fond);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Barre de recherche : sous le bandeau, les critères se combinent. */
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--trait);
+  background: #FFFFFF;
+  font-size: 14px;
+}
+
+.filtres label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--encre-douce);
+}
+
+.filtres input,
+.filtres select {
+  padding: 4px 6px;
+  border: 1px solid var(--trait);
+  border-radius: 4px;
+  background: #FFFFFF;
+  color: var(--encre);
+  font: inherit;
+}
+
+#message-filtre {
+  margin: 0;
+  color: var(--encre-douce);
+}
+
+main {
+  position: relative;
+  flex: 1;
+  min-height: 400px;
+}
+
+#graphe {
+  position: absolute;
+  inset: 0;
+}
+
+/* Infobulle : dit quel nœud ou quelle arête est survolé, et dans quel fichier le modifier. */
+#infobulle {
+  position: absolute;
+  z-index: 10;
+  max-width: 320px;
+  padding: 8px 12px;
+  border: 1px solid var(--encre-douce);
+  border-radius: 4px;
+  background: #FFFFFF;
+  font-size: 13px;
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+#infobulle[hidden] {
+  display: none;
+}
+
+.legende {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--trait);
+  border-radius: 4px;
+  background: #FFFFFF;
+  font-size: 13px;
+}
+
+.legende ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legende li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+}
+
+/* Les formes de la légende imitent celles du graphe. */
+.forme {
+  display: inline-block;
+  flex: none;
+}
+
+.forme.point {
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  border-radius: 50%;
+  background: var(--point);
+}
+
+.forme.source {
+  width: 13px;
+  height: 13px;
+  margin: 0 3px;
+  border: 2px solid var(--bord-source);
+  border-radius: 50%;
+  background: var(--source);
+}
+
+.trait {
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  border-top: 2px solid var(--trait);
+}
+
+.trait.non-pmr {
+  border-top: 2px dashed var(--non-pmr);
+}
+
+.trait.tunnel {
+  border-top: 5px solid var(--encre-douce);
+}
+
+/* Petit écran : la légende passe sous le graphe au lieu de le recouvrir. */
+@media (max-width: 700px) {
+  #graphe {
+    position: relative;
+    height: 60vh;
+  }
+
+  .legende {
+    position: static;
+    margin: 12px 16px;
+  }
+}

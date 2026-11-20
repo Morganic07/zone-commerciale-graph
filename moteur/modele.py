@@ -8,8 +8,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Noeud:
-    """Un module (type « magasin »), un module d'hygiène (« sanitaire »),
-    une jonction (« carrefour ») ou une sortie."""
+    """Un module (type « module », qui remplace le « magasin » de la consigne),
+    un module d'hygiène (« sanitaire »), une jonction (« carrefour ») ou un sas
+    (« sortie »)."""
 
     id: str
     type: str
@@ -53,6 +54,7 @@ class StationDuReseau:
 
     id: str
     station: Station
+    fichier: str  # chemin du plan, relatif au dossier du réseau (« stations/A.json »)
     x: float | None = None  # position sur la vue d'ensemble (facultatif)
     y: float | None = None
 
