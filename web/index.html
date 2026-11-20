@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Réseau de stations spatiales</title>
+</head>
+<body>
+  <h1>Réseau de stations spatiales</h1>
+  <p id="resume">Chargement du réseau…</p>
+  <button id="recharger">Recharger</button>
+
+  <script>
+    // Story 3.1 : la page ne fait que vérifier qu'elle reçoit le réseau.
+    // L'affichage du graphe arrive à la story 3.2.
+
+    function afficherResume(reseau) {
+      let nombreNoeuds = 0;
+      for (const station of reseau.stations) {
+        nombreNoeuds = nombreNoeuds + station.noeuds.length;
+      }
+      const texte = reseau.stations.length + " stations, "
+        + nombreNoeuds + " nœuds, "
+        + reseau.sources.length + " sources, "
+        + reseau.connexions.length + " tunnels";
+      document.getElementById("resume").textContent = texte;
+    }
+
+    async function chargerReseau() {
+      const reponse = await fetch("/api/reseau");
+      afficherResume(await reponse.json());
+    }
+
+    async function rechargerReseau() {
+      const reponse = await fetch("/api/recharger", {method: "POST"});
+      afficherResume(await reponse.json());
+    }
+
+    document.getElementById("recharger").addEventListener("click", rechargerReseau);
+    chargerReseau();
+  </script>
+</body>
+</html>
