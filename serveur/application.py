@@ -24,6 +24,8 @@ def reseau_en_dictionnaire(reseau: Reseau) -> dict[str, Any]:
     for station_du_reseau in reseau.stations:
         donnee_station = station_en_dictionnaire(station_du_reseau.station)
         donnee_station["id"] = station_du_reseau.id
+        # Pour que la page dise dans quel fichier modifier un nœud ou un passage.
+        donnee_station["fichier"] = station_du_reseau.fichier
         donnee_station["x"] = station_du_reseau.x
         donnee_station["y"] = station_du_reseau.y
         liste_stations.append(donnee_station)
@@ -45,27 +47,29 @@ def reseau_en_dictionnaire(reseau: Reseau) -> dict[str, Any]:
     return {"stations": liste_stations, "sources": liste_sources, "connexions": liste_tunnels}
 
 
-# Ce que le serveur garde en mémoire : le chemin du fichier du réseau, et le réseau
-# chargé. Les fonctions des routes le lisent et le remplacent quand on recharge.
-etat: dict[str, Any] = {"chemin": None, "reseau": None}
+# Ce que le serveur garde en mémoire : le chemin du fichier du réseau.
+etat: dict[str, Any] = {"chemin": None}
 
 
 def donner_reseau() -> dict[str, Any]:
-    """Route GET /api/reseau : le réseau tel qu'il est chargé."""
-    return reseau_en_dictionnaire(etat["reseau"])
+    """Route GET /api/reseau : relit les fichiers JSON à chaque demande.
+
+    Le réseau n'est pas gardé en mémoire : sinon, après une modification d'un fichier,
+    la page continuerait d'afficher l'ancienne version sans qu'on s'en aperçoive.
+    Les fichiers sont petits, les relire est instantané.
+    """
+    return reseau_en_dictionnaire(charger_reseau(etat["chemin"]))
 
 
 def recharger() -> dict[str, Any]:
-    """Route POST /api/recharger : relit les fichiers JSON, puis renvoie le réseau."""
-    etat["reseau"] = charger_reseau(etat["chemin"])
-    return reseau_en_dictionnaire(etat["reseau"])
+    """Route POST /api/recharger, utilisée par le bouton « Recharger les fichiers » :
+    relit les fichiers JSON, comme /api/reseau."""
+    return donner_reseau()
 
 
 def creer_application(chemin_reseau: Path) -> FastAPI:
-    """Crée le serveur. Le réseau est lu une fois au départ, puis relu à la demande
-    (route /api/recharger), après une modification des fichiers JSON."""
+    """Crée le serveur, qui lira le réseau dans ce fichier."""
     etat["chemin"] = chemin_reseau
-    etat["reseau"] = charger_reseau(chemin_reseau)
 
     application = FastAPI(title="Réseau de stations spatiales")
     application.add_api_route("/api/reseau", donner_reseau, methods=["GET"])

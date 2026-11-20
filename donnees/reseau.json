@@ -4,21 +4,19 @@
     {"id": "B", "fichier": "stations/B.json", "x": 1100, "y": -350},
     {"id": "C", "fichier": "stations/C.json", "x": 1100, "y": 450}
   ],
-  "sources": [
-    {"id": "P1", "type": "spatioport", "x": -350, "y": 200},
-    {"id": "H1", "type": "habitat", "x": 1850, "y": -200},
-    {"id": "R1", "type": "relais", "x": 1850, "y": 600}
-  ],
+  "sources": [],
+
   "connexions": [
-    {"source": "P1", "cible": "A:SAS1", "capacite_max": 1.64, "longueur": 200.0,
-     "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2},
-    {"source": "A:SAS2", "cible": "B:SAS1", "capacite_max": 1.64, "longueur": 350.0,
-     "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2},
-    {"source": "A:SAS2", "cible": "C:SAS1", "capacite_max": 1.64, "longueur": 400.0,
-     "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2},
-    {"source": "B:SAS2", "cible": "H1", "capacite_max": 1.64, "longueur": 250.0,
-     "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2},
-    {"source": "C:SAS2", "cible": "R1", "capacite_max": 1.64, "longueur": 250.0,
-     "statut": "libre", "sens": "bidirectionnel", "pmr": true, "largeur": 1.2}
+    {"source": "A:A12", "cible": "B:B1", "capacite_max": 1.64, "longueur": 350.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+  
+     {"source": "A:A12", "cible": "C:C1", "capacite_max": 1.64, "longueur": 400.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+  
+     {"source": "A:A1", "cible": "C:C1", "capacite_max": 1.64, "longueur": 600.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+  
+     {"source": "B:B6", "cible": "C:C5", "capacite_max": 1.64, "longueur": 300.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true}
   ]
 }

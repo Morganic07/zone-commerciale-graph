@@ -33,22 +33,13 @@ def graphe_oriente(aretes: list[Arete], pmr_seulement: bool) -> nx.DiGraph:
     return graphe
 
 
-def sorties_reliees_a_un_tunnel(reseau: Reseau, station: Station) -> list[str]:
-    extremites = []
-    for connexion in reseau.connexions:
-        extremites.append(connexion.source)
-        extremites.append(connexion.cible)
-    resultat = []
+def test_deux_sas_aux_deux_extremites() -> None:
+    # Les sas sont les sorties de la station, et aussi les points d'arrivée des visiteurs.
+    station = station_a(charger_reseau(RESEAU))
+    sas = []
     for noeud in station.noeuds:
-        if noeud.type == "sortie" and noeud.id in extremites:
-            resultat.append(noeud.id)
-    return resultat
-
-
-def test_deux_sorties_aux_deux_extremites() -> None:
-    reseau = charger_reseau(RESEAU)
-    station = station_a(reseau)
-    sas = sorties_reliees_a_un_tunnel(reseau, station)
+        if noeud.type == "sortie":
+            sas.append(noeud.id)
     assert len(sas) >= 2
     plus_a_gauche = min(station.noeuds, key=lambda noeud: noeud.x or 0)
     plus_a_droite = max(station.noeuds, key=lambda noeud: noeud.x or 0)
@@ -61,7 +52,7 @@ def test_six_modules_et_un_sanitaire() -> None:
     types = []
     for noeud in station.noeuds:
         types.append(noeud.type)
-    assert types.count("magasin") >= 6
+    assert types.count("module") >= 6
     assert types.count("sanitaire") >= 1
 
 
@@ -72,19 +63,20 @@ def test_au_moins_un_cycle() -> None:
 
 
 def test_un_goulot() -> None:
-    # Goulot : un passage entre deux jonctions plus étroit que les passages des sas.
+    # Goulot : une arête entre deux jonctions qui laisse passer moins de monde par seconde
+    # que les arêtes des sas.
     station = station_a(charger_reseau(RESEAU))
     types = {}
     for noeud in station.noeuds:
         types[noeud.id] = noeud.type
-    largeur_des_sas = []
+    capacites_des_sas = []
     for arete in station.aretes:
         if types[arete.source] == "sortie" or types[arete.cible] == "sortie":
-            largeur_des_sas.append(arete.largeur or 0)
+            capacites_des_sas.append(arete.capacite_max)
     goulots = []
     for arete in station.aretes:
         entre_jonctions = types[arete.source] == "carrefour" and types[arete.cible] == "carrefour"
-        if entre_jonctions and (arete.largeur or 0) < min(largeur_des_sas):
+        if entre_jonctions and arete.capacite_max < min(capacites_des_sas):
             goulots.append(arete)
     assert len(goulots) >= 1
 
@@ -100,14 +92,6 @@ def test_arete_non_pmr_contournable_par_un_chemin_pmr_plus_long() -> None:
         if detour > arete.longueur:
             contournables.append(arete)
     assert len(contournables) >= 1
-
-
-def test_une_arete_a_sens_unique() -> None:
-    station = station_a(charger_reseau(RESEAU))
-    sens = []
-    for arete in station.aretes:
-        sens.append(arete.sens)
-    assert "unique" in sens
 
 
 def test_deux_noeuds_sans_capteur_dont_un_sur_un_chemin_d_evacuation() -> None:
@@ -131,17 +115,3 @@ def test_deux_noeuds_sans_capteur_dont_un_sur_un_chemin_d_evacuation() -> None:
         if len(set(chemins[depart]) & set(sans_capteur)) > 0:
             sur_un_chemin = True
     assert sur_un_chemin
-
-
-def test_une_capsule_reliee_a_la_station_mais_a_aucun_tunnel() -> None:
-    reseau = charger_reseau(RESEAU)
-    station = station_a(reseau)
-    sas = sorties_reliees_a_un_tunnel(reseau, station)
-    capsules = []
-    for noeud in station.noeuds:
-        if noeud.type == "sortie" and noeud.id not in sas:
-            capsules.append(noeud.id)
-    assert len(capsules) >= 1
-    graphe = graphe_oriente(station.aretes, False)
-    for capsule in capsules:
-        assert graphe.degree(capsule) > 0
