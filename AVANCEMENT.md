@@ -15,7 +15,7 @@ Correspondance avec la consigne :
 
 ## Epic 1 — Socle
 
-- [ ] **1.1 Squelette du projet.** `pyproject.toml` (dépendances d'exécution et de test), paquets `moteur/` et `serveur/` vides, `README.md` avec l'installation et le lancement.
+- [x] **1.1 Squelette du projet.** `pyproject.toml` (dépendances d'exécution et de test), paquets `moteur/` et `serveur/` vides, `README.md` avec l'installation et le lancement.
   *Critère :* `pytest`, `ruff check .` et `mypy moteur serveur` passent ; un test échoue si un module de `moteur/` importe `networkx`, `fastapi` ou `uvicorn`.
 
 ## Epic 2 — Données
