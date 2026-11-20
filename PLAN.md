@@ -35,7 +35,7 @@ Trois couches, dépendantes dans un seul sens : moteur ← serveur ← page.
 graph-satellites/
 ├── moteur/              Python pur : aucune dépendance web ni graphe
 │   ├── modele.py        nœuds, arêtes, stations, réseau, statuts
-│   ├── chargement.py    JSON ↔ modèle, validation
+│   ├── chargement.py    JSON ↔ modèle (sans validation, décision du 2026-11-20)
 │   ├── navigation.py    graphe orienté de navigation : sens, filtres PMR et blocage, poids
 │   ├── chemins.py       Dijkstra, fonctions de coût, itinéraires, distances d'évacuation
 │   ├── connexite.py     composantes, points d'articulation, Tarjan, graphe réduit
@@ -60,6 +60,10 @@ graph-satellites/
 - **Page.** Cytoscape.js (MIT), copié dans `web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
 - **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
 - **Lancement en une commande** : `python -m serveur`, puis on ouvre la page indiquée.
+
+**Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires et articulations, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `serveur/` et `web/` grandissent.
+
+**Design super simple** (même décision) : une page claire et sobre, sans recherche graphique. L'ancien design system de l'autre projet n'est pas repris.
 
 **Écartés.** Dash Cytoscape : plus maintenu depuis 2 ans. sigma.js : son rendu WebGL et sa compilation sont superflus pour 80 nœuds. vis-network : pas de nœuds composés. D3 : trop bas niveau pour le délai. NiceGUI : n'a pas de composant de graphe, il aurait fallu intégrer Cytoscape quand même.
 
@@ -169,7 +173,7 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), une source d'orig
 - **Taux d'une arête** : `τ_e = φ_e / (c_e · Δt)`, la définition de la consigne, où `φ_e` est le nombre d'entrées sur l'arête pendant le pas. La contrainte de débit en découle directement.
 - **Limite assumée, à discuter dans le rapport.** Une arête saturée en aval, où plus personne n'entre, paraît peu chargée. La file d'attente au bout de l'arête est donc affichée à part.
 - **Palette à 5 niveaux partout**, bornes 0,2 / 0,4 / 0,6 / 0,8. Les seuils imposés de 0,4 et 0,8 tombent sur des bornes : la lecture vert / orange / rouge de la consigne reste possible. Le dégradé répond à la palette « graduelle » demandée pour les connexions.
-- Les couleurs sont choisies à l'étape de design, avec un contrôle de lisibilité pour les daltoniens.
+- Les couleurs sont choisies avec la story d'affichage de la simulation (5.6), avec un contrôle de lisibilité pour les daltoniens.
 - **La fumée et le blocage** passent par un autre canal que la couleur (bordure, icône), pour ne jamais être confondus avec l'occupation.
 
 ## 5. Incendie
