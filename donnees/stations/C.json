@@ -58,7 +58,7 @@
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
      {"source": "C3", "cible": "C4", "capacite_max": 1.37, "longueur": 12.0,
-     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+     "statut": "libre", "sens": "bidirectionnel", "pmr": false},
 
      {"source": "C4", "cible": "C5", "capacite_max": 1.64, "longueur": 8.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
@@ -70,6 +70,9 @@
      "statut": "libre", "sens": "bidirectionnel", "pmr": false},
 
      {"source": "C7", "cible": "C3", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+      {"source": "C7", "cible": "C4", "capacite_max": 1.37, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
      {"source": "C2", "cible": "C8", "capacite_max": 1.37, "longueur": 10.0,

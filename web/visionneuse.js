@@ -269,6 +269,8 @@ function appliquerFiltres() {
     // On centre la vue sur le nœud, avec un zoom modéré pour garder sa station visible.
     cy.zoom(1.2);
     cy.center(dernierTrouve);
+  } else if (filtreSurLesNoeuds && nombreTrouves === 0) {
+    message = "Aucun nœud ne correspond.";
   } else if (filtreSurLesNoeuds && nombreTrouves === 1) {
     message = "1 nœud correspond.";
   } else if (filtreSurLesNoeuds) {

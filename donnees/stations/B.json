@@ -61,7 +61,7 @@
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
      {"source": "B4", "cible": "B5", "capacite_max": 1.37, "longueur": 12.0,
-     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+     "statut": "libre", "sens": "bidirectionnel", "pmr": false},
 
      {"source": "B5", "cible": "B2", "capacite_max": 1.37, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
