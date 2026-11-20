@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from moteur.modele import Arete, Noeud, Station
+from moteur.modele import Arete, Noeud, Reseau, Source, Station, StationDuReseau
 
 # ---------------------------------------------------------------------------------------
 # Paramètres physiques (donnees/parametres.json)
@@ -144,3 +144,61 @@ def ecrire_station(station: Station, chemin: Path) -> None:
     texte = json.dumps(donnees, ensure_ascii=False, indent=2)
     with open(chemin, "w", encoding="utf-8") as fichier:
         fichier.write(texte + "\n")
+
+
+# ---------------------------------------------------------------------------------------
+# Réseau (donnees/reseau.json)
+# ---------------------------------------------------------------------------------------
+
+
+def prefixer(station: Station, prefixe: str) -> None:
+    """Ajoute « prefixe: » devant les identifiants des nœuds de la station, et devant
+    les extrémités de ses arêtes. Deux stations peuvent ainsi avoir un nœud SAS1
+    chacune : ils deviennent A:SAS1 et B:SAS1."""
+    for noeud in station.noeuds:
+        noeud.id = prefixe + ":" + noeud.id
+    for arete in station.aretes:
+        arete.source = prefixe + ":" + arete.source
+        arete.cible = prefixe + ":" + arete.cible
+
+
+def charger_reseau(chemin: Path) -> Reseau:
+    """Lit le fichier du réseau, puis le fichier de chaque station.
+
+    Les fichiers des stations sont cherchés dans le même dossier que celui du réseau.
+    Les connexions désignent les nœuds des stations par leur identifiant préfixé
+    (« A:SAS1 »).
+    Complexité : O(V + E), V nœuds et E arêtes en tout (chacun est lu une fois).
+    """
+    with open(chemin, encoding="utf-8") as fichier:
+        donnees = json.load(fichier)
+
+    dossier = chemin.parent
+
+    stations = []
+    for donnee_station in donnees["stations"]:
+        # Le fichier est relu pour chaque station : deux stations qui utilisent le même
+        # plan ont ainsi chacune leurs propres nœuds, préfixés différemment.
+        station = charger_station(dossier / donnee_station["fichier"])
+        prefixer(station, donnee_station["id"])
+        station_du_reseau = StationDuReseau(id=donnee_station["id"], station=station)
+        if "x" in donnee_station:
+            station_du_reseau.x = donnee_station["x"]
+        if "y" in donnee_station:
+            station_du_reseau.y = donnee_station["y"]
+        stations.append(station_du_reseau)
+
+    sources = []
+    for donnee_source in donnees["sources"]:
+        source = Source(id=donnee_source["id"], type=donnee_source["type"])
+        if "x" in donnee_source:
+            source.x = donnee_source["x"]
+        if "y" in donnee_source:
+            source.y = donnee_source["y"]
+        sources.append(source)
+
+    connexions = []
+    for donnee_connexion in donnees["connexions"]:
+        connexions.append(lire_arete(donnee_connexion))
+
+    return Reseau(stations=stations, sources=sources, connexions=connexions)
