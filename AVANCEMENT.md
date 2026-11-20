@@ -21,9 +21,9 @@ Correspondance avec la consigne :
 ## Epic 2 — Données
 
 - [x] **2.1 Valeurs physiques de l'apesanteur.** `donnees/parametres.json` (vitesse d'une personne valide, vitesse d'une personne sur civière, débit par mètre de largeur d'écoutille, volume habitable par personne) et `rapport/sources.md`.
-  *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement ; le chargement refuse une valeur qui n'a ni l'un ni l'autre.
-- [ ] **2.2 Modèle et format station.** Modèle de données, lecture et écriture JSON au format imposé, validation.
-  *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique. Un test par règle de validation : identifiants uniques ; extrémités existantes ; `type`, `statut` et `sens` dans leurs ensembles (les valeurs de la consigne) ; `occupation ≤ capacite_max` ; `niveau_fumee ∈ [0, 100]`.
+  *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement (vérifié à la relecture : le programme ne contrôle pas les données, décision du 2026-11-20) ; le fichier se charge.
+- [x] **2.2 Modèle et format station.** Modèle de données, lecture et écriture JSON au format imposé.
+  *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique, champs facultatifs compris. Pas de validation des données (décision du 2026-11-20).
 - [ ] **2.3 Format réseau.** Chargement de `reseau.json`, préfixage des identifiants par station, rattachement des tunnels aux sas, vue macro.
   *Critère :* un réseau de test se charge ; une connexion vers une sortie inexistante, ou vers un nœud qui n'est pas une sortie, produit une erreur explicite ; la vue macro compte un nœud par station et par source.
 - [ ] **2.4 Plan de la station détaillée A, dessiné par le groupe.** Plan dessiné (figure dans `rapport/`), `donnees/stations/A.json` et une notice qui situe chaque cas demandé sur le plan.
