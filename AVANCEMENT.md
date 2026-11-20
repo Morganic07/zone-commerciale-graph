@@ -20,7 +20,7 @@ Correspondance avec la consigne :
 
 ## Epic 2 — Données
 
-- [ ] **2.1 Valeurs physiques de l'apesanteur.** `donnees/parametres.json` (vitesse d'une personne valide, vitesse d'une personne sur civière, débit par mètre de largeur d'écoutille, volume habitable par personne) et `rapport/sources.md`.
+- [x] **2.1 Valeurs physiques de l'apesanteur.** `donnees/parametres.json` (vitesse d'une personne valide, vitesse d'une personne sur civière, débit par mètre de largeur d'écoutille, volume habitable par personne) et `rapport/sources.md`.
   *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement ; le chargement refuse une valeur qui n'a ni l'un ni l'autre.
 - [ ] **2.2 Modèle et format station.** Modèle de données, lecture et écriture JSON au format imposé, validation.
   *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique. Un test par règle de validation : identifiants uniques ; extrémités existantes ; `type`, `statut` et `sens` dans leurs ensembles (les valeurs de la consigne) ; `occupation ≤ capacite_max` ; `niveau_fumee ∈ [0, 100]`.
