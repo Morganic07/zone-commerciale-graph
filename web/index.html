@@ -47,6 +47,32 @@
     <div id="graphe"></div>
     <div id="infobulle" hidden></div>
 
+    <details class="panneau-navigation">
+      <summary>navigation.py</summary>
+      <p class="explication">
+        Lance <code>graphe_de_navigation</code> du moteur Python dans la situation choisie,
+        puis cliquez sur un nœud : vous verrez où l'on peut aller depuis lui, et à quel coût.
+        Ce qui n'est plus praticable s'estompe.
+      </p>
+      <label class="case"><input id="nav-pmr" type="checkbox"> En fauteuil (pmr)</label>
+      <label>Nœuds bloqués
+        <input id="nav-bloques" type="text" placeholder="ex. A5, B3" autocomplete="off">
+      </label>
+      <label>Arêtes encombrées (taux τ entre 0 et 1)
+        <input id="nav-taux" type="text" placeholder="ex. A2-A5=0.8" autocomplete="off">
+      </label>
+      <label>β (poids de l'encombrement)
+        <input id="nav-beta" type="number" value="0" min="0" step="0.5">
+      </label>
+      <p class="formule">coût d'une arête = longueur × (1 + β × τ)</p>
+      <div class="boutons">
+        <button id="nav-lancer" type="button">Lancer graphe_de_navigation</button>
+        <button id="nav-effacer" type="button">Effacer</button>
+      </div>
+      <p id="nav-resume" role="status"></p>
+      <pre id="nav-voisins"></pre>
+    </details>
+
     <aside class="legende" aria-label="Légende">
       <ul>
         <li><span class="forme point"></span> Noeud</li>
