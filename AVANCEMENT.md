@@ -37,7 +37,7 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
 
 - [x] **3.1 Serveur minimal.** FastAPI : une route qui renvoie le réseau chargé (stations, nœuds, arêtes, sources, tunnels, positions), une route qui relit les fichiers JSON, et la page servie. Lancement par `python -m serveur`.
   *Critère :* un test par route avec le client de test ; `python -m serveur` démarre et la page s'ouvre.
-- [ ] **3.2 Affichage du réseau et des plans.** Cytoscape : stations en nœuds composés, positions du plan, tous les nœuds en points gris sans nom (décision du 2026-11-20), arêtes non PMR distinguées, tunnels, bouton « Recharger ».
+- [x] **3.2 Affichage du réseau et des plans.** Cytoscape : stations en nœuds composés, positions du plan, tous les nœuds en points gris sans nom (décision du 2026-11-20), arêtes non PMR distinguées, tunnels, bouton « Recharger ».
   *Critère :* `/run` : le réseau complet s'affiche ; après une modification d'un fichier JSON, « Recharger » met l'affichage à jour ; une arête non PMR et un tunnel se reconnaissent grâce à la légende.
 
 ## Epic 4 — Algorithmes
