@@ -47,7 +47,7 @@ def test_le_moteur_existe() -> None:
 @pytest.mark.parametrize("fichier", fichiers_du_moteur())
 def test_aucun_import_interdit_dans_le_moteur(fichier: Path) -> None:
     interdits = imports_interdits(fichier.read_text(encoding="utf-8"))
-    assert not interdits, f"{fichier.name} importe {sorted(interdits)}"
+    assert not interdits, fichier.name + " importe " + str(sorted(interdits))
 
 
 @pytest.mark.parametrize(
