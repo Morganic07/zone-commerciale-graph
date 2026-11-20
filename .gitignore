@@ -31,13 +31,8 @@ __pycache__/
 
 # Sorties générées (rapport, exports de simulation)
 rapport/build/
-rapport/
 sorties/
 
 
 graph-satellites.code-workspace
-
-
-#tests
-tests/
 
