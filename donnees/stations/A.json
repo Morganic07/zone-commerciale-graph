@@ -2,51 +2,51 @@
   "noeuds": [
     {"id": "A1", "type": "sortie", "capacite_max": 32, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
-     "x": 0, "y": 200, "nom": "Sas ouest"},
+     "x": 0, "y": 200},
 
     {"id": "A2", "type": "carrefour", "capacite_max": 48, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 150, "y": 200, "nom": "Jonction Unity"},
+     "x": 150, "y": 200},
 
     {"id": "A3", "type": "module", "capacite_max": 120, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 150, "y": 50, "nom": "Laboratoire Columbus"},
+     "x": 150, "y": 50},
 
     {"id": "A4", "type": "module", "capacite_max": 100, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 300, "y": 50, "nom": "Serre"},
+     "x": 300, "y": 50},
 
      {"id": "A5", "type": "carrefour", "capacite_max": 48, "occupation": 0,
      "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre",
-     "x": 300, "y": 200, "nom": "Jonction centrale"},
+     "x": 300, "y": 200},
 
      {"id": "A6", "type": "module", "capacite_max": 40, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 300, "y": 350, "nom": "Observatoire Cupola"},
+     "x": 300, "y": 350},
 
      {"id": "A7", "type": "module", "capacite_max": 120, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 450, "y": 50, "nom": "Salon panoramique"},
+     "x": 450, "y": 50},
 
      {"id": "A8", "type": "carrefour", "capacite_max": 48, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 450, "y": 200, "nom": "Jonction Harmony"},
+     "x": 450, "y": 200},
 
      {"id": "A9", "type": "sanitaire", "capacite_max": 24, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 450, "y": 350, "nom": "Module d'hygiène"},
+     "x": 450, "y": 350},
 
      {"id": "A10", "type": "module", "capacite_max": 80, "occupation": 0,
      "capteur_fumee": false, "niveau_fumee": 0, "statut": "libre",
-     "x": 600, "y": 50, "nom": "Quartiers d'équipage"},
+     "x": 600, "y": 50},
 
      {"id": "A11", "type": "module", "capacite_max": 120, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 600, "y": 350, "nom": "Laboratoire Kibo"},
+     "x": 600, "y": 350},
 
      {"id": "A12", "type": "sortie", "capacite_max": 32, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
-     "x": 750, "y": 200, "nom": "Sas est"}
+     "x": 750, "y": 200}
   ],
 
 

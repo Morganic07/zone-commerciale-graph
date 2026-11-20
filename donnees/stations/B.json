@@ -3,51 +3,51 @@
 
     {"id": "B1", "type": "sortie", "capacite_max": 32, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
-     "x": 0, "y": 150, "nom": "Sas ouest"},
+     "x": 0, "y": 150},
 
      {"id": "B2", "type": "carrefour", "capacite_max": 48, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 120, "y": 150, "nom": "Jonction ouest"},
+     "x": 120, "y": 150},
 
      {"id": "B3", "type": "carrefour", "capacite_max": 48, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 240, "y": 50, "nom": "Jonction nord"},
+     "x": 240, "y": 50},
 
      {"id": "B4", "type": "carrefour", "capacite_max": 48, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 360, "y": 150, "nom": "Jonction est"},
+     "x": 360, "y": 150},
 
      {"id": "B5", "type": "carrefour", "capacite_max": 48, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 240, "y": 250, "nom": "Jonction sud"},
+     "x": 240, "y": 250},
 
      {"id": "B6", "type": "sortie", "capacite_max": 32, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
-     "x": 480, "y": 150, "nom": "Sas est"},
+     "x": 480, "y": 150},
 
      {"id": "B7", "type": "module", "capacite_max": 120, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 180, "y": -50, "nom": "Laboratoire Destiny"},
+     "x": 180, "y": -50},
 
      {"id": "B8", "type": "module", "capacite_max": 100, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 300, "y": -50, "nom": "Serre"},
+     "x": 300, "y": -50},
 
      {"id": "B9", "type": "module", "capacite_max": 120, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 180, "y": 350, "nom": "Salon"},
+     "x": 180, "y": 350},
 
      {"id": "B10", "type": "module", "capacite_max": 80, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 300, "y": 350, "nom": "Quartiers d'équipage"},
+     "x": 300, "y": 350},
 
      {"id": "B11", "type": "module", "capacite_max": 80, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 60, "y": 50, "nom": "Salle de sport"},
+     "x": 60, "y": 50},
 
      {"id": "B12", "type": "sanitaire", "capacite_max": 24, "occupation": 0,
      "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
-     "x": 420, "y": 50, "nom": "Module d'hygiène"}
+     "x": 420, "y": 50}
   ],
 
   "aretes": [
