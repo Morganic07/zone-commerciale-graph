@@ -66,6 +66,35 @@ const STYLE = [
     // Nœud trouvé par son identifiant : cerclé de noir.
     selector: ".trouve",
     style: {"border-width": 3, "border-color": COULEURS.encre, "width": 22, "height": 22}
+  },
+  {
+    // Panneau navigation.py : ce que graphe_de_navigation a retiré.
+    selector: ".hors-nav",
+    style: {"opacity": 0.12}
+  },
+  {
+    // Panneau navigation.py : nœud bloqué à la main.
+    selector: ".bloque-nav",
+    style: {"background-color": COULEURS.nonPmr, "opacity": 1, "width": 18, "height": 18}
+  },
+  {
+    // Panneau navigation.py : nœud cliqué, et les trajets possibles depuis lui.
+    selector: ".nav-choisi",
+    style: {"border-width": 3, "border-color": COULEURS.encre, "width": 22, "height": 22}
+  },
+  {
+    // La flèche part du nœud cliqué. Selon le sens où l'arête est écrite dans le
+    // fichier, elle se dessine au bout « target » ou au bout « source ».
+    selector: ".arc-choisi, .arc-choisi-inverse",
+    style: {"width": 4, "line-color": COULEURS.encre, "line-style": "solid", "z-index": 10}
+  },
+  {
+    selector: ".arc-choisi",
+    style: {"target-arrow-shape": "triangle", "target-arrow-color": COULEURS.encre}
+  },
+  {
+    selector: ".arc-choisi-inverse",
+    style: {"source-arrow-shape": "triangle", "source-arrow-color": COULEURS.encre}
   }
 ];
 
@@ -292,6 +321,199 @@ function toutAfficher() {
 }
 
 
+// ---------------------------------------------------------------------------------------
+// Panneau « navigation.py » : lance graphe_de_navigation du moteur et montre son résultat.
+// ---------------------------------------------------------------------------------------
+
+// Le dernier résultat reçu : pour chaque nœud, la liste des [voisin, coût].
+// null tant qu'on n'a rien lancé.
+const navigation = {voisins: null};
+
+// Retrouve l'identifiant complet (« A:A5 ») d'un nœud écrit comme dans le fichier (« a5 »).
+// Renvoie "" si aucun nœud ne porte cet identifiant.
+function idComplet(idEcrit) {
+  const cherche = idEcrit.trim().toUpperCase();
+  for (const noeud of cy.nodes()) {
+    if (!noeud.hasClass("station") && noeud.data("idFichier") === cherche) {
+      return noeud.id();
+    }
+  }
+  return "";
+}
+
+// Lit le champ « Nœuds bloqués » (« A5, B3 ») et renvoie la liste des identifiants complets.
+// Les identifiants inconnus sont ajoutés à la liste `erreurs`.
+function lireBloques(erreurs) {
+  const bloques = [];
+  const texte = document.getElementById("nav-bloques").value;
+  for (const morceau of texte.split(",")) {
+    if (morceau.trim() === "") {
+      continue;
+    }
+    const id = idComplet(morceau);
+    if (id === "") {
+      erreurs.push("nœud inconnu : " + morceau.trim());
+    } else {
+      bloques.push(id);
+    }
+  }
+  return bloques;
+}
+
+// Lit le champ « Arêtes encombrées » (« A2-A5=0.8, A12-B1=0.5 »). Renvoie un dictionnaire
+// {"A:A2|A:A5": 0.8} avec la source et la cible écrites comme dans le fichier.
+function lireTaux(erreurs) {
+  const taux = {};
+  const texte = document.getElementById("nav-taux").value;
+  for (const morceau of texte.split(",")) {
+    if (morceau.trim() === "") {
+      continue;
+    }
+    const egal = morceau.split("=");
+    const bouts = egal[0].split("-");
+    // Il faut deux nœuds séparés par un tiret, puis « = » et un taux.
+    if (bouts.length !== 2 || egal.length !== 2) {
+      erreurs.push("à écrire comme A2-A5=0.8 : " + morceau.trim());
+      continue;
+    }
+    const premier = idComplet(bouts[0]);
+    const second = idComplet(bouts[1]);
+    // L'arête est écrite dans un sens ou dans l'autre dans le fichier : on cherche les deux.
+    let arete = cy.getElementById(premier + " vers " + second);
+    if (arete.length === 0) {
+      arete = cy.getElementById(second + " vers " + premier);
+    }
+    if (arete.length === 0) {
+      erreurs.push("arête inconnue : " + egal[0].trim());
+    } else {
+      taux[arete.data("source") + "|" + arete.data("target")] = Number(egal[1]);
+    }
+  }
+  return taux;
+}
+
+// Vrai si le résultat contient un trajet de `depart` vers `arrivee`.
+function existeTrajet(depart, arrivee) {
+  if (!(depart in navigation.voisins)) {
+    return false;
+  }
+  for (const voisinEtCout of navigation.voisins[depart]) {
+    if (voisinEtCout[0] === arrivee) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Estompe ce que le graphe de navigation a retiré, et marque les nœuds bloqués.
+function afficherNavigation(bloques) {
+  let nombreDeTrajets = 0;
+  for (const id in navigation.voisins) {
+    nombreDeTrajets = nombreDeTrajets + navigation.voisins[id].length;
+  }
+
+  for (const noeud of cy.nodes()) {
+    if (noeud.hasClass("station")) {
+      continue;
+    }
+    noeud.removeClass("hors-nav bloque-nav nav-choisi");
+    if (!(noeud.id() in navigation.voisins)) {
+      noeud.addClass("hors-nav");
+    }
+    if (bloques.includes(noeud.id())) {
+      noeud.addClass("bloque-nav");
+    }
+  }
+
+  // Une arête reste nette si au moins un trajet l'emprunte, dans un sens ou dans l'autre.
+  for (const arete of cy.edges()) {
+    arete.removeClass("hors-nav arc-choisi arc-choisi-inverse");
+    const aller = existeTrajet(arete.data("source"), arete.data("target"));
+    const retour = existeTrajet(arete.data("target"), arete.data("source"));
+    if (!aller && !retour) {
+      arete.addClass("hors-nav");
+    }
+  }
+
+  document.getElementById("nav-resume").textContent = nombreDeTrajets
+    + " trajets possibles (un par sens de chaque arête praticable). Cliquez sur un nœud.";
+  document.getElementById("nav-voisins").textContent = "";
+}
+
+// Envoie la situation choisie au serveur, qui lance graphe_de_navigation.
+async function lancerNavigation() {
+  const erreurs = [];
+  const bloques = lireBloques(erreurs);
+  const taux = lireTaux(erreurs);
+  if (erreurs.length > 0) {
+    document.getElementById("nav-resume").textContent = "À corriger : " + erreurs.join(", ");
+    return;
+  }
+  const demande = {
+    pmr: document.getElementById("nav-pmr").checked,
+    beta: Number(document.getElementById("nav-beta").value),
+    bloques: bloques,
+    taux: taux
+  };
+  const reponse = await fetch("/api/navigation", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(demande)
+  });
+  const resultat = await reponse.json();
+  navigation.voisins = resultat.voisins;
+  afficherNavigation(bloques);
+}
+
+// Clic sur un nœud : affiche sa liste de voisins, telle que le moteur l'a calculée,
+// et dessine en noir les trajets possibles depuis lui.
+function montrerVoisins(evenement) {
+  const noeud = evenement.target;
+  if (navigation.voisins === null || noeud.hasClass("station")) {
+    return;
+  }
+  for (const element of cy.elements()) {
+    element.removeClass("nav-choisi arc-choisi arc-choisi-inverse");
+  }
+  noeud.addClass("nav-choisi");
+
+  const nom = noeud.data("idFichier");
+  if (!(noeud.id() in navigation.voisins)) {
+    document.getElementById("nav-voisins").textContent = nom
+      + " est bloqué : il n'est pas dans le graphe, on ne peut ni y aller ni en partir.";
+    return;
+  }
+
+  let texte = "Depuis " + nom + ", on peut aller à :\n";
+  if (navigation.voisins[noeud.id()].length === 0) {
+    texte = texte + "  (nulle part)";
+  }
+  for (const voisinEtCout of navigation.voisins[noeud.id()]) {
+    const voisin = cy.getElementById(voisinEtCout[0]);
+    const cout = Math.round(voisinEtCout[1] * 100) / 100;
+    texte = texte + "  → " + voisin.data("idFichier") + "   coût " + cout + "\n";
+    // L'arête est écrite dans un sens ou dans l'autre : la flèche suit le trajet.
+    let arete = cy.getElementById(noeud.id() + " vers " + voisinEtCout[0]);
+    if (arete.length > 0) {
+      arete.addClass("arc-choisi");
+    } else {
+      arete = cy.getElementById(voisinEtCout[0] + " vers " + noeud.id());
+      arete.addClass("arc-choisi-inverse");
+    }
+  }
+  document.getElementById("nav-voisins").textContent = texte;
+}
+
+// Efface le résultat : le graphe redevient celui des fichiers.
+function effacerNavigation() {
+  navigation.voisins = null;
+  for (const element of cy.elements()) {
+    element.removeClass("hors-nav bloque-nav nav-choisi arc-choisi arc-choisi-inverse");
+  }
+  document.getElementById("nav-resume").textContent = "";
+  document.getElementById("nav-voisins").textContent = "";
+}
+
 // Remplace tout le dessin par le réseau reçu, puis cadre la vue.
 function dessiner(cy, reseau) {
   cy.elements().remove();
@@ -299,6 +521,8 @@ function dessiner(cy, reseau) {
   cy.fit(undefined, 40);
   // Après un rechargement, la recherche en cours s'applique au nouveau dessin.
   appliquerFiltres();
+  // Le résultat de navigation.py portait sur l'ancien dessin : on l'efface.
+  effacerNavigation();
 }
 
 const cy = cytoscape({
@@ -333,6 +557,11 @@ document.getElementById("filtre-type").addEventListener("change", appliquerFiltr
 document.getElementById("filtre-capteur").addEventListener("change", appliquerFiltres);
 document.getElementById("filtre-pmr").addEventListener("change", appliquerFiltres);
 document.getElementById("tout-afficher").addEventListener("click", toutAfficher);
+// Panneau navigation.py.
+document.getElementById("nav-lancer").addEventListener("click", lancerNavigation);
+document.getElementById("nav-effacer").addEventListener("click", effacerNavigation);
+cy.on("tap", "node", montrerVoisins);
+
 // Entrée dans le champ de recherche ne doit pas recharger la page.
 document.getElementById("filtres").addEventListener("submit", empecherEnvoi);
 chargerReseau();
