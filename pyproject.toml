@@ -35,7 +35,7 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 # B904 imposerait `raise ... from erreur` dans chaque `except` : une syntaxe de plus
-# pour un débutant, sans utilité pour ce projet (CLAUDE.md, « Code débutant »).
+# pour un débutant, sans utilité pour ce projet, dont le code vise un niveau lycée.
 ignore = ["B904"]
 
 [tool.mypy]
