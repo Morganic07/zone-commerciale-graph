@@ -24,8 +24,8 @@ Correspondance avec la consigne :
   *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement (vérifié à la relecture : le programme ne contrôle pas les données, décision du 2026-11-20) ; le fichier se charge.
 - [x] **2.2 Modèle et format station.** Modèle de données, lecture et écriture JSON au format imposé.
   *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique, champs facultatifs compris. Pas de validation des données (décision du 2026-11-20).
-- [ ] **2.3 Format réseau.** Chargement de `reseau.json`, préfixage des identifiants par station, rattachement des tunnels aux sas, vue macro.
-  *Critère :* un réseau de test se charge ; une connexion vers une sortie inexistante, ou vers un nœud qui n'est pas une sortie, produit une erreur explicite ; la vue macro compte un nœud par station et par source.
+- [x] **2.3 Format réseau.** Chargement de `reseau.json`, préfixage des identifiants par station, rattachement des tunnels aux sas, vue macro.
+  *Critère :* un réseau de test se charge ; les identifiants sont préfixés par station ; les tunnels relient des sorties ou des sources ; la vue macro compte un nœud par station et par source. Pas de validation des données (décision du 2026-11-20).
 - [ ] **2.4 Plan de la station détaillée A, dessiné par le groupe.** Plan dessiné (figure dans `rapport/`), `donnees/stations/A.json` et une notice qui situe chaque cas demandé sur le plan.
   *Critère :* `tests/test_plan_A.py` vérifie la liste des cas de `PLAN.md` § 6 (sorties, modules, cycle, goulot, arête non PMR contournable, sens unique, nœuds sans capteur, capsule de sauvetage).
 - [ ] **2.5 Stations simples et réseau complet.** `B.json`, `C.json` et `reseau.json` : 3 stations, au moins 3 sources.

@@ -41,7 +41,8 @@ def fichiers_du_moteur() -> list[Path]:
 
 def test_le_moteur_existe() -> None:
     # Sans ce garde-fou, un dossier moteur/ déplacé ferait passer le test suivant à vide.
-    assert (RACINE_MOTEUR / "__init__.py").is_file()
+    # Le moteur n'a pas de __init__.py (choix du 2026-11-20) : on vérifie qu'il a du code.
+    assert len(fichiers_du_moteur()) > 0
 
 
 @pytest.mark.parametrize("fichier", fichiers_du_moteur())

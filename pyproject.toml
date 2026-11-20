@@ -22,7 +22,9 @@ test = [
 ]
 
 [tool.setuptools]
-packages = ["moteur", "serveur"]
+# serveur/ s'ajoutera à la story 6.1 : un dossier vide n'existe pas dans git, et
+# setuptools refuse d'installer un paquet dont le dossier manque.
+packages = ["moteur"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -41,3 +43,6 @@ ignore = ["B904"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+# Sans __init__.py, mypy verrait moteur/modele.py à la fois comme « modele » et comme
+# « moteur.modele ». Cette option lui fait déduire le nom depuis la racine du projet.
+explicit_package_bases = true
