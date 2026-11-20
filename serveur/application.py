@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from moteur.chargement import charger_reseau, station_en_dictionnaire
 from moteur.modele import Reseau, Station
+from moteur.navigation import graphe_de_navigation
 
 RACINE = Path(__file__).resolve().parent.parent
 RESEAU_PAR_DEFAUT = RACINE / "donnees" / "reseau.json"
@@ -67,6 +68,36 @@ def recharger() -> dict[str, Any]:
     return donner_reseau()
 
 
+def calculer_navigation(demande: dict[str, Any]) -> dict[str, Any]:
+    """Route POST /api/navigation : lance graphe_de_navigation (moteur/navigation.py)
+    sur le réseau des fichiers, dans la situation choisie sur la page.
+
+    La demande contient :
+    - « pmr » : vrai pour un trajet en fauteuil ;
+    - « beta » : le coefficient β du coût longueur × (1 + β·τ) ;
+    - « bloques » : la liste des nœuds à bloquer (« A:A5 »), comme pendant un incendie ;
+    - « taux » : le taux d'occupation τ de certaines arêtes, sous la forme
+      {"A:A2|A:A5": 0.8} (source et cible de l'arête, comme dans le fichier).
+    Renvoie {"voisins": {nœud: [[voisin, coût], ...]}}, le résultat tel quel.
+    """
+    reseau = charger_reseau(etat["chemin"])
+
+    # Les nœuds bloqués à la main reçoivent le statut « bloqué », comme le ferait le feu.
+    for station_du_reseau in reseau.stations:
+        for noeud in station_du_reseau.station.noeuds:
+            if noeud.id in demande["bloques"]:
+                noeud.statut = "bloqué"
+
+    # « A:A2|A:A5 » devient la paire ("A:A2", "A:A5") qu'attend graphe_de_navigation.
+    taux: dict[tuple[str, str], float] = {}
+    for cle in demande["taux"]:
+        morceaux = cle.split("|")
+        taux[(morceaux[0], morceaux[1])] = demande["taux"][cle]
+
+    voisins = graphe_de_navigation(reseau, demande["pmr"], demande["beta"], taux)
+    return {"voisins": voisins}
+
+
 def creer_application(chemin_reseau: Path) -> FastAPI:
     """Crée le serveur, qui lira le réseau dans ce fichier."""
     etat["chemin"] = chemin_reseau
@@ -74,6 +105,7 @@ def creer_application(chemin_reseau: Path) -> FastAPI:
     application = FastAPI(title="Réseau de stations spatiales")
     application.add_api_route("/api/reseau", donner_reseau, methods=["GET"])
     application.add_api_route("/api/recharger", recharger, methods=["POST"])
+    application.add_api_route("/api/navigation", calculer_navigation, methods=["POST"])
 
     # Tout le reste est la page : web/index.html et ses fichiers.
     application.mount("/", StaticFiles(directory=DOSSIER_WEB, html=True))

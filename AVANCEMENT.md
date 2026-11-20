@@ -42,7 +42,7 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
 
 ## Epic 4 — Algorithmes
 
-- [ ] **4.1 Graphe de navigation.** Arcs orientés selon `sens`, filtre PMR, retrait des éléments bloqués, poids selon le critère.
+- [x] **4.1 Graphe de navigation.** Arcs orientés selon `sens`, filtre PMR, retrait des éléments bloqués, poids selon le critère.
   *Critère :* une arête `unique` donne un seul arc, une arête `bidirectionnel` en donne deux ; aucun arc non PMR dans la vue PMR ; aucun élément bloqué.
 - [ ] **4.2 Dijkstra et les trois fonctions de coût.** Plus court, moins encombré (`longueur × (1 + β·τ)`), PMR ; reconstruction du chemin ; complexité indiquée dans la docstring.
   *Critère :* distances identiques à celles de `networkx` sur 50 graphes aléatoires (graine fixée) et sur le réseau ; β = 0 redonne le plus court chemin ; une destination inaccessible renvoie « aucun chemin ».

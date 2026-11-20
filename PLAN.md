@@ -73,11 +73,11 @@ graph-satellites/
 
 On reprend **exactement le format imposé** (section 2.3 de la consigne) : liste `noeuds` et liste `aretes`, avec les champs imposés. L'exemple de la consigne doit se charger puis se réécrire à l'identique.
 
-**Valeurs de `type` : un seul écart à la consigne** (décision du 2026-11-20). `type` vaut `module`, `sanitaire`, `carrefour` ou `sortie` : la valeur `module` remplace le `magasin` de la consigne, plus réaliste dans une station spatiale. Les trois autres valeurs sont celles de la consigne. Le programme ne valide pas les valeurs : un fichier au format de la consigne (avec `magasin`) se charge toujours, mais ses magasins ne seront pas reconnus comme des modules à visiter. **Écart à justifier dans le rapport** (story 9.2). Le champ `nom` porte le libellé spatial affiché (« Laboratoire Columbus »).
+**Valeurs de `type` : un seul écart à la consigne** (décision du 2026-11-20). `type` vaut `module`, `sanitaire`, `carrefour` ou `sortie` : la valeur `module` remplace le `magasin` de la consigne, plus réaliste dans une station spatiale. Les trois autres valeurs sont celles de la consigne. Le programme ne valide pas les valeurs : un fichier au format de la consigne (avec `magasin`) se charge toujours, mais ses magasins ne seront pas reconnus comme des modules à visiter. **Écart à justifier dans le rapport** (story 9.2).
 
 Champs facultatifs ajoutés, tous justifiés :
 - `x`, `y` sur les nœuds : la position sur le plan, pour l'affichage ;
-- `nom` sur les nœuds : le libellé lisible ;
+- `nom` sur les nœuds : un libellé lisible, accepté par le programme mais absent de nos plans (décision du 2026-11-20) : un nœud se désigne par son identifiant (`A4`) ;
 - `largeur` sur les arêtes : prévu par la consigne comme facultatif, et accepté par le programme. Nos plans ne l'utilisent pas (décision du 2026-11-20) : la capacité `capacite_max` est donnée directement. Elle a été calculée comme largeur × débit par mètre (§ 4.1), avec 1,2 m pour un sas, 1 m pour un passage ordinaire, 0,8 m pour un goulot et 0,6 m pour un passage non PMR ; le rapport garde ce calcul.
 
 **Ce qui n'entre pas dans le JSON** : les valeurs calculées (taux d'occupation, coût, trafic, fumée des arêtes). Les stocker les ferait diverger de la simulation.
