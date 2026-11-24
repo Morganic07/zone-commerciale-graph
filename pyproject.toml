@@ -47,7 +47,8 @@ ignore = ["B904"]
 python_version = "3.11"
 strict = true
 # Sans __init__.py, mypy verrait epic2_donnees/moteur/modele.py à la fois comme « modele »
-# et comme « epic2_donnees.moteur.modele ». Cette option lui fait déduire le nom depuis la racine du projet.
+# et comme « epic2_donnees.moteur.modele ». Cette option lui fait déduire le nom depuis
+# la racine du projet.
 explicit_package_bases = true
 
 # networkx ne fournit pas d'annotations de type ; il ne sert que d'oracle dans les tests.
