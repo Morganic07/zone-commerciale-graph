@@ -21,7 +21,6 @@ class Noeud:
     statut: str  # « libre », « enfumé », « bloqué » ou « sortie »
     x: float | None = None  # position sur le plan (facultatif)
     y: float | None = None
-    nom: str | None = None  # libellé affiché (facultatif)
 
 
 @dataclass
@@ -36,7 +35,6 @@ class Arete:
     statut: str  # « libre », « enfumé » ou « bloqué »
     sens: str  # « bidirectionnel » ou « unique »
     pmr: bool  # praticable en fauteuil roulant
-    largeur: float | None = None  # en mètres (facultatif)
 
 
 @dataclass

@@ -23,7 +23,7 @@ Correspondance avec la consigne :
 - [x] **2.1 Valeurs physiques.** `epic2_donnees/donnees/parametres.json` (vitesse d'une personne valide, vitesse d'une personne en fauteuil roulant, débit par mètre de largeur de passage, surface par personne) et `epic9_rapport/sources.md`. Les stations ont une gravité artificielle : les valeurs sont terrestres.
   *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement (vérifié à la relecture : le programme ne contrôle pas les données, décision du 2026-11-20) ; le fichier se charge.
 - [x] **2.2 Modèle et format station.** Modèle de données, lecture et écriture JSON au format imposé.
-  *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique, champs facultatifs compris. Pas de validation des données (décision du 2026-11-20).
+  *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique, champs facultatifs compris. Pas de validation des données (décision du 2026-11-20). Depuis le 2026-11-24, seuls `x` et `y` sont conservés : `nom` et `largeur` sont ignorés à la lecture (code simplifié).
 - [x] **2.3 Format réseau.** Chargement de `reseau.json`, préfixage des identifiants par station, rattachement des tunnels aux sas, vue macro.
   *Critère :* un réseau de test se charge ; les identifiants sont préfixés par station ; les tunnels relient des sorties ou des sources ; la vue macro compte un nœud par station et par source. Pas de validation des données (décision du 2026-11-20).
 - [x] **2.4 Plan de la station détaillée A, dessiné par le groupe.** Plan dessiné (figure dans `epic9_rapport/`), `epic2_donnees/donnees/stations/A.json` et une notice qui situe chaque cas demandé sur le plan.

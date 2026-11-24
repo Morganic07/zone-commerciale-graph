@@ -88,8 +88,8 @@ On reprend **exactement le format imposé** (section 2.3 de la consigne) : liste
 
 Champs facultatifs ajoutés, tous justifiés :
 - `x`, `y` sur les nœuds : la position sur le plan, pour l'affichage ;
-- `nom` sur les nœuds : un libellé lisible, accepté par le programme mais absent de nos plans (décision du 2026-11-20) : un nœud se désigne par son identifiant (`A4`) ;
-- `largeur` sur les arêtes : prévu par la consigne comme facultatif, et accepté par le programme. Nos plans ne l'utilisent pas (décision du 2026-11-20) : la capacité `capacite_max` est donnée directement. Elle a été calculée comme largeur × débit par mètre (§ 4.1), avec 1,2 m pour un sas, 1 m pour un passage ordinaire, 0,8 m pour un goulot et 0,6 m pour un passage non PMR ; le rapport garde ce calcul.
+- `nom` sur les nœuds : retiré du programme (décision du 2026-11-24, code simplifié) ; un nœud se désigne par son identifiant (`A4`) ;
+- `largeur` sur les arêtes : prévu par la consigne comme facultatif, mais ni lu ni écrit par le programme (décision du 2026-11-24, code simplifié) : un fichier qui le contient se charge, le champ est ignoré. La capacité `capacite_max` est donnée directement. Elle a été calculée comme largeur × débit par mètre (§ 4.1), avec 1,2 m pour un sas, 1 m pour un passage ordinaire, 0,8 m pour un goulot et 0,6 m pour un passage non PMR ; le rapport garde ce calcul.
 
 **Ce qui n'entre pas dans le JSON** : les valeurs calculées (taux d'occupation, coût, trafic, fumée des arêtes). Les stocker les ferait diverger de la simulation.
 

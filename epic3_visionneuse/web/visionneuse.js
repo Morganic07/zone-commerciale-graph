@@ -128,13 +128,9 @@ function decrireNoeud(noeud, station) {
 // Texte de l'infobulle d'une arête. Les tunnels gardent les identifiants préfixés,
 // car c'est ainsi qu'ils sont écrits dans reseau.json.
 function decrireArete(titre, fichier, arete) {
-  let texte = titre + "\n"
+  return titre + "\n"
     + "Fichier : " + fichier + "\n"
-    + "Longueur : " + arete.longueur + " m\n";
-  if (arete.largeur !== undefined) {
-    texte = texte + "Largeur : " + arete.largeur + " m\n";
-  }
-  return texte
+    + "Longueur : " + arete.longueur + " m\n"
     + "Capacité : " + arete.capacite_max + " personnes par seconde\n"
     + "Accessible en fauteuil : " + ouiNon(arete.pmr);
 }

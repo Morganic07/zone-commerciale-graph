@@ -1,4 +1,13 @@
-"""Lecture et écriture des fichiers JSON du projet."""
+"""Lecture et écriture des fichiers JSON du projet.
+
+Trois sortes de fichiers :
+- parametres.json : les valeurs physiques (vitesses, débits…) ;
+- stations/A.json, B.json… : le plan d'une station, une liste de nœuds et d'arêtes ;
+- reseau.json : la liste des stations, des sources et des tunnels qui les relient.
+
+Fonctionnement : json.load transforme le fichier en dictionnaires et en listes Python,
+puis les fonctions lire_… recopient ces valeurs dans les objets du modèle (modele.py).
+"""
 
 import json
 from pathlib import Path
@@ -14,6 +23,8 @@ from epic2_donnees.moteur.modele import Arete, Noeud, Reseau, Source, Station, S
 def charger_parametres(chemin: Path) -> dict[str, float]:
     """Lit le fichier des paramètres et renvoie un dictionnaire {nom: valeur}.
 
+    Dans le fichier, chaque paramètre a aussi sa source et son unité : on ne garde
+    que la valeur, la seule dont le programme a besoin.
     Complexité : O(n), n étant le nombre de paramètres (une seule boucle).
     """
     with open(chemin, encoding="utf-8") as fichier:
@@ -42,20 +53,19 @@ def lire_noeud(donnee_noeud: dict[str, Any]) -> Noeud:
         statut=donnee_noeud["statut"],
     )
 
-    # Champs facultatifs : on ne les lit que s'ils sont dans le fichier.
+    # La position sur le plan n'est pas dans le format de la consigne : on ne la lit
+    # que si elle est dans le fichier.
     if "x" in donnee_noeud:
         noeud.x = donnee_noeud["x"]
     if "y" in donnee_noeud:
         noeud.y = donnee_noeud["y"]
-    if "nom" in donnee_noeud:
-        noeud.nom = donnee_noeud["nom"]
 
     return noeud
 
 
 def lire_arete(donnee_arete: dict[str, Any]) -> Arete:
     """Crée une arête à partir de ce qui a été lu dans le fichier."""
-    arete = Arete(
+    return Arete(
         source=donnee_arete["source"],
         cible=donnee_arete["cible"],
         capacite_max=donnee_arete["capacite_max"],
@@ -64,12 +74,6 @@ def lire_arete(donnee_arete: dict[str, Any]) -> Arete:
         sens=donnee_arete["sens"],
         pmr=donnee_arete["pmr"],
     )
-
-    # Champ facultatif.
-    if "largeur" in donnee_arete:
-        arete.largeur = donnee_arete["largeur"]
-
-    return arete
 
 
 def lire_station(donnees: dict[str, Any]) -> Station:
@@ -90,10 +94,10 @@ def lire_station(donnees: dict[str, Any]) -> Station:
 
 def station_en_dictionnaire(station: Station) -> dict[str, Any]:
     """Fait l'inverse de lire_station : transforme une station en dictionnaire,
-    prêt à être écrit dans un fichier JSON.
+    prêt à être écrit dans un fichier JSON ou envoyé à la page web.
 
-    Les champs sont dans l'ordre de la consigne. Les champs facultatifs ne sont écrits
-    que s'ils ont une valeur, pour qu'un fichier relu puis réécrit reste identique.
+    Les champs sont dans l'ordre de la consigne. La position n'est écrite que si elle
+    existe, pour qu'un fichier relu puis réécrit reste identique.
     """
     liste_noeuds = []
     for noeud in station.noeuds:
@@ -109,8 +113,6 @@ def station_en_dictionnaire(station: Station) -> dict[str, Any]:
             donnee_noeud["x"] = noeud.x
         if noeud.y is not None:
             donnee_noeud["y"] = noeud.y
-        if noeud.nom is not None:
-            donnee_noeud["nom"] = noeud.nom
         liste_noeuds.append(donnee_noeud)
 
     liste_aretes = []
@@ -123,8 +125,6 @@ def station_en_dictionnaire(station: Station) -> dict[str, Any]:
         donnee_arete["statut"] = arete.statut
         donnee_arete["sens"] = arete.sens
         donnee_arete["pmr"] = arete.pmr
-        if arete.largeur is not None:
-            donnee_arete["largeur"] = arete.largeur
         liste_aretes.append(donnee_arete)
 
     return {"noeuds": liste_noeuds, "aretes": liste_aretes}
@@ -138,7 +138,8 @@ def charger_station(chemin: Path) -> Station:
 
 
 def ecrire_station(station: Station, chemin: Path) -> None:
-    """Écrit une station dans un fichier JSON."""
+    """Écrit une station dans un fichier JSON (sert à vérifier qu'un plan relu puis
+    réécrit ne change pas)."""
     donnees = station_en_dictionnaire(station)
     # ensure_ascii=False garde les accents (« enfumé ») ; indent=2 rend le fichier lisible.
     texte = json.dumps(donnees, ensure_ascii=False, indent=2)
@@ -165,9 +166,10 @@ def prefixer(station: Station, prefixe: str) -> None:
 def charger_reseau(chemin: Path) -> Reseau:
     """Lit le fichier du réseau, puis le fichier de chaque station.
 
+    Étapes : (1) chaque station est chargée depuis son fichier, puis ses identifiants
+    sont préfixés ; (2) les sources sont lues ; (3) les tunnels (« connexions ») sont
+    lus comme des arêtes ordinaires, entre identifiants déjà préfixés (« A:SAS1 »).
     Les fichiers des stations sont cherchés dans le même dossier que celui du réseau.
-    Les connexions désignent les nœuds des stations par leur identifiant préfixé
-    (« A:SAS1 »).
     Complexité : O(V + E), V nœuds et E arêtes en tout (chacun est lu une fois).
     """
     with open(chemin, encoding="utf-8") as fichier:
@@ -175,6 +177,7 @@ def charger_reseau(chemin: Path) -> Reseau:
 
     dossier = chemin.parent
 
+    # (1) Les stations.
     stations = []
     for donnee_station in donnees["stations"]:
         # Le fichier est relu pour chaque station : deux stations qui utilisent le même
@@ -184,21 +187,25 @@ def charger_reseau(chemin: Path) -> Reseau:
         station_du_reseau = StationDuReseau(
             id=donnee_station["id"], station=station, fichier=donnee_station["fichier"]
         )
+        # La position sert seulement à placer la station sur la vue d'ensemble.
         if "x" in donnee_station:
             station_du_reseau.x = donnee_station["x"]
         if "y" in donnee_station:
             station_du_reseau.y = donnee_station["y"]
         stations.append(station_du_reseau)
 
+    # (2) Les sources, d'où arrivent les visiteurs.
     sources = []
     for donnee_source in donnees["sources"]:
         source = Source(id=donnee_source["id"], type=donnee_source["type"])
+        # Même chose : la position ne sert qu'à l'affichage.
         if "x" in donnee_source:
             source.x = donnee_source["x"]
         if "y" in donnee_source:
             source.y = donnee_source["y"]
         sources.append(source)
 
+    # (3) Les tunnels, qui ont les mêmes champs qu'une arête de station.
     connexions = []
     for donnee_connexion in donnees["connexions"]:
         connexions.append(lire_arete(donnee_connexion))
