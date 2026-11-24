@@ -93,6 +93,15 @@ const STYLE = [
     style: {"target-arrow-shape": "triangle", "target-arrow-color": COULEURS.encre}
   },
   {
+    // Panneau chemins.py : les nœuds et les arêtes du chemin trouvé, en noir et épais.
+    selector: "node.chemin",
+    style: {"background-color": COULEURS.encre, "width": 18, "height": 18}
+  },
+  {
+    selector: "edge.chemin",
+    style: {"width": 6, "line-color": COULEURS.encre, "line-style": "solid", "z-index": 10}
+  },
+  {
     selector: ".arc-choisi-inverse",
     style: {"source-arrow-shape": "triangle", "source-arrow-color": COULEURS.encre}
   }
@@ -337,11 +346,11 @@ function idComplet(idEcrit) {
   return "";
 }
 
-// Lit le champ « Nœuds bloqués » (« A5, B3 ») et renvoie la liste des identifiants complets.
-// Les identifiants inconnus sont ajoutés à la liste `erreurs`.
-function lireBloques(erreurs) {
+// Lit un champ « Nœuds bloqués » (« A5, B3 ») et renvoie la liste des identifiants complets.
+// Les identifiants inconnus sont ajoutés à la liste `erreurs`. Sert aux deux panneaux.
+function lireBloques(idChamp, erreurs) {
   const bloques = [];
-  const texte = document.getElementById("nav-bloques").value;
+  const texte = document.getElementById(idChamp).value;
   for (const morceau of texte.split(",")) {
     if (morceau.trim() === "") {
       continue;
@@ -356,11 +365,12 @@ function lireBloques(erreurs) {
   return bloques;
 }
 
-// Lit le champ « Arêtes encombrées » (« A2-A5=0.8, A12-B1=0.5 »). Renvoie un dictionnaire
+// Lit un champ « Arêtes encombrées » (« A2-A5=0.8, A12-B1=0.5 »). Renvoie un dictionnaire
 // {"A:A2|A:A5": 0.8} avec la source et la cible écrites comme dans le fichier.
-function lireTaux(erreurs) {
+// Sert aux deux panneaux.
+function lireTaux(idChamp, erreurs) {
   const taux = {};
-  const texte = document.getElementById("nav-taux").value;
+  const texte = document.getElementById(idChamp).value;
   for (const morceau of texte.split(",")) {
     if (morceau.trim() === "") {
       continue;
@@ -439,8 +449,8 @@ function afficherNavigation(bloques) {
 // Envoie la situation choisie au serveur, qui lance graphe_de_navigation.
 async function lancerNavigation() {
   const erreurs = [];
-  const bloques = lireBloques(erreurs);
-  const taux = lireTaux(erreurs);
+  const bloques = lireBloques("nav-bloques", erreurs);
+  const taux = lireTaux("nav-taux", erreurs);
   if (erreurs.length > 0) {
     document.getElementById("nav-resume").textContent = "À corriger : " + erreurs.join(", ");
     return;
@@ -510,6 +520,89 @@ function effacerNavigation() {
   document.getElementById("nav-voisins").textContent = "";
 }
 
+// ---------------------------------------------------------------------------------------
+// Panneau « chemins.py » : lance la fonction du critère choisi et dessine le chemin trouvé.
+// ---------------------------------------------------------------------------------------
+
+// Retire le chemin dessiné, et vide le texte du résultat.
+function effacerChemin() {
+  for (const element of cy.elements()) {
+    element.removeClass("chemin");
+  }
+  document.getElementById("chemin-resultat").textContent = "";
+}
+
+// Dessine en noir les nœuds du chemin et les arêtes qui les relient.
+function dessinerChemin(chemin) {
+  for (let i = 0; i < chemin.length; i = i + 1) {
+    cy.getElementById(chemin[i]).addClass("chemin");
+    if (i === 0) {
+      continue;
+    }
+    // L'arête est écrite dans un sens ou dans l'autre dans le fichier : on cherche les deux.
+    let arete = cy.getElementById(chemin[i - 1] + " vers " + chemin[i]);
+    if (arete.length === 0) {
+      arete = cy.getElementById(chemin[i] + " vers " + chemin[i - 1]);
+    }
+    arete.addClass("chemin");
+  }
+}
+
+// Envoie départ, arrivée, critère et situation au serveur, qui lance la fonction du critère.
+async function lancerChemin() {
+  effacerChemin();
+  const erreurs = [];
+  const texteDepart = document.getElementById("chemin-depart").value;
+  const texteArrivee = document.getElementById("chemin-arrivee").value;
+  const depart = idComplet(texteDepart);
+  const arrivee = idComplet(texteArrivee);
+  // Le serveur attend des nœuds qui existent : on prévient avant d'envoyer.
+  if (depart === "") {
+    erreurs.push("départ inconnu : " + texteDepart.trim());
+  }
+  if (arrivee === "") {
+    erreurs.push("arrivée inconnue : " + texteArrivee.trim());
+  }
+  const bloques = lireBloques("chemin-bloques", erreurs);
+  const taux = lireTaux("chemin-taux", erreurs);
+  if (erreurs.length > 0) {
+    document.getElementById("chemin-resultat").textContent = "À corriger : " + erreurs.join(", ");
+    return;
+  }
+
+  const demande = {
+    depart: depart,
+    arrivee: arrivee,
+    critere: document.getElementById("chemin-critere").value,
+    beta: Number(document.getElementById("chemin-beta").value),
+    bloques: bloques,
+    taux: taux
+  };
+  const reponse = await fetch("/api/chemin", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(demande)
+  });
+  const resultat = await reponse.json();
+
+  const nomDepart = cy.getElementById(depart).data("idFichier");
+  const nomArrivee = cy.getElementById(arrivee).data("idFichier");
+  if (resultat.chemin.length === 0) {
+    document.getElementById("chemin-resultat").textContent = "Aucun chemin de "
+      + nomDepart + " à " + nomArrivee + ".";
+    return;
+  }
+
+  dessinerChemin(resultat.chemin);
+  const noms = [];
+  for (const id of resultat.chemin) {
+    noms.push(cy.getElementById(id).data("idFichier"));
+  }
+  const cout = Math.round(resultat.cout * 100) / 100;
+  document.getElementById("chemin-resultat").textContent = noms.join(" → ")
+    + "\nCoût total : " + cout;
+}
+
 // Remplace tout le dessin par le réseau reçu, puis cadre la vue.
 function dessiner(cy, reseau) {
   cy.elements().remove();
@@ -517,8 +610,10 @@ function dessiner(cy, reseau) {
   cy.fit(undefined, 40);
   // Après un rechargement, la recherche en cours s'applique au nouveau dessin.
   appliquerFiltres();
-  // Le résultat de navigation.py portait sur l'ancien dessin : on l'efface.
+  // Les résultats de navigation.py et de chemins.py portaient sur l'ancien dessin :
+  // on les efface.
   effacerNavigation();
+  effacerChemin();
 }
 
 const cy = cytoscape({
@@ -557,6 +652,9 @@ document.getElementById("tout-afficher").addEventListener("click", toutAfficher)
 document.getElementById("nav-lancer").addEventListener("click", lancerNavigation);
 document.getElementById("nav-effacer").addEventListener("click", effacerNavigation);
 cy.on("tap", "node", montrerVoisins);
+// Panneau chemins.py.
+document.getElementById("chemin-lancer").addEventListener("click", lancerChemin);
+document.getElementById("chemin-effacer").addEventListener("click", effacerChemin);
 
 // Entrée dans le champ de recherche ne doit pas recharger la page.
 document.getElementById("filtres").addEventListener("submit", empecherEnvoi);

@@ -10,8 +10,6 @@ station_en_dictionnaire fait le chemin inverse, pour envoyer une station à la p
 """
 
 import json
-from pathlib import Path
-from typing import Any
 
 from epic2_donnees.moteur.modele import Arete, Noeud, Reseau, Source, Station, StationDuReseau
 
@@ -20,7 +18,7 @@ from epic2_donnees.moteur.modele import Arete, Noeud, Reseau, Source, Station, S
 # ---------------------------------------------------------------------------------------
 
 
-def lire_noeud(donnee_noeud: dict[str, Any]) -> Noeud:
+def lire_noeud(donnee_noeud):
     """Crée un nœud à partir de ce qui a été lu dans le fichier."""
     noeud = Noeud(
         id=donnee_noeud["id"],
@@ -42,7 +40,7 @@ def lire_noeud(donnee_noeud: dict[str, Any]) -> Noeud:
     return noeud
 
 
-def lire_arete(donnee_arete: dict[str, Any]) -> Arete:
+def lire_arete(donnee_arete):
     """Crée une arête à partir de ce qui a été lu dans le fichier."""
     return Arete(
         source=donnee_arete["source"],
@@ -55,7 +53,7 @@ def lire_arete(donnee_arete: dict[str, Any]) -> Arete:
     )
 
 
-def lire_station(donnees: dict[str, Any]) -> Station:
+def lire_station(donnees):
     """Crée une station à partir de ce qui a été lu dans son fichier.
 
     Complexité : O(V + E), V nœuds et E arêtes (chacun est lu une fois).
@@ -71,7 +69,7 @@ def lire_station(donnees: dict[str, Any]) -> Station:
     return Station(noeuds=noeuds, aretes=aretes)
 
 
-def station_en_dictionnaire(station: Station) -> dict[str, Any]:
+def station_en_dictionnaire(station):
     """Fait l'inverse de lire_station : transforme une station en dictionnaire,
     que le serveur envoie à la page web au format JSON.
 
@@ -80,7 +78,7 @@ def station_en_dictionnaire(station: Station) -> dict[str, Any]:
     """
     liste_noeuds = []
     for noeud in station.noeuds:
-        donnee_noeud: dict[str, Any] = {}
+        donnee_noeud = {}
         donnee_noeud["id"] = noeud.id
         donnee_noeud["type"] = noeud.type
         donnee_noeud["capacite_max"] = noeud.capacite_max
@@ -96,7 +94,7 @@ def station_en_dictionnaire(station: Station) -> dict[str, Any]:
 
     liste_aretes = []
     for arete in station.aretes:
-        donnee_arete: dict[str, Any] = {}
+        donnee_arete = {}
         donnee_arete["source"] = arete.source
         donnee_arete["cible"] = arete.cible
         donnee_arete["capacite_max"] = arete.capacite_max
@@ -109,7 +107,7 @@ def station_en_dictionnaire(station: Station) -> dict[str, Any]:
     return {"noeuds": liste_noeuds, "aretes": liste_aretes}
 
 
-def charger_station(chemin: Path) -> Station:
+def charger_station(chemin):
     """Lit le fichier JSON d'une station et renvoie la station."""
     with open(chemin, encoding="utf-8") as fichier:
         donnees = json.load(fichier)
@@ -121,7 +119,7 @@ def charger_station(chemin: Path) -> Station:
 # ---------------------------------------------------------------------------------------
 
 
-def prefixer(station: Station, prefixe: str) -> None:
+def prefixer(station, prefixe):
     """Ajoute « prefixe: » devant les identifiants des nœuds de la station, et devant
     les extrémités de ses arêtes. Deux stations peuvent ainsi avoir un nœud SAS1
     chacune : ils deviennent A:SAS1 et B:SAS1."""
@@ -132,7 +130,7 @@ def prefixer(station: Station, prefixe: str) -> None:
         arete.cible = prefixe + ":" + arete.cible
 
 
-def charger_reseau(chemin: Path) -> Reseau:
+def charger_reseau(chemin):
     """Lit le fichier du réseau, puis le fichier de chaque station.
 
     Étapes : (1) chaque station est chargée depuis son fichier, puis ses identifiants

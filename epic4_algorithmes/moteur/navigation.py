@@ -9,10 +9,7 @@ roulant (PMR) et des éléments bloqués.
 
 
 
-from epic2_donnees.moteur.modele import Arete, Reseau
-
-
-def cout(arete: Arete, beta: float, taux: dict[tuple[str, str], float]) -> float:
+def cout(arete, beta, taux):
     """Coût d'un passage par l'arête : longueur × (1 + β·τ).
 
     τ est le taux d'occupation de l'arête (0 si elle n'est pas dans `taux`). Avec β = 0,
@@ -26,9 +23,7 @@ def cout(arete: Arete, beta: float, taux: dict[tuple[str, str], float]) -> float
     return arete.longueur * (1 + beta * taux_de_l_arete)
 
 
-def graphe_de_navigation(
-    reseau: Reseau, pmr: bool, beta: float, taux: dict[tuple[str, str], float]
-) -> dict[str, list[tuple[str, float]]]:
+def graphe_de_navigation(reseau, pmr, beta, taux):
     """Renvoie, pour chaque nœud, la liste des (voisin, coût) où l'on peut aller.
 
     - Une arête « bidirectionnel » donne deux arcs (aller et retour), une arête « unique »
@@ -39,7 +34,7 @@ def graphe_de_navigation(
 
     Complexité : O(V + E), V nœuds et E arêtes (chacun est parcouru une fois).
     """
-    voisins_par_noeud: dict[str, list[tuple[str, float]]] = {}
+    voisins_par_noeud = {}
 
     # Les nœuds praticables, tous stations confondues. Un nœud bloqué n'y est pas.
     for station_placee in reseau.stations:

@@ -1,6 +1,6 @@
 # AVANCEMENT
 
-Une case ne se coche qu'une fois **tout vert** : tests, lint et typage passent, `/but-for-real` a été mené à son terme sans objection restante, et `/run` a été passé dès que la story a quelque chose à lancer.
+Une case ne se coche qu'une fois **tout vert** : tests et lint passent (le typage `mypy` est retiré le 2026-11-24 avec les annotations de type, décision de l'utilisateur), `/but-for-real` a été mené à son terme sans objection restante, et `/run` a été passé dès que la story a quelque chose à lancer.
 
 Les epics sont des lots séquentiels. L'interface grandit au fil du projet (décision du 2026-11-20) : une visionneuse est livrée juste après les données (epic 3), puis chaque epic, des algorithmes à l'incendie, se termine par sa story d'affichage, qui complète `epic3_visionneuse/serveur/` et `epic3_visionneuse/web/`. Les fichiers sont rangés par epic (décision du 2026-11-24, voir `PLAN.md` § 1) : une story écrit ses fichiers neufs dans le dossier de son epic. Le sigle ⋆ marque une extension, à sacrifier en premier en cas de retard (`PLAN.md` § 8).
 

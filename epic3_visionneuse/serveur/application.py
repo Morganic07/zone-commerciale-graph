@@ -1,13 +1,17 @@
 """Le serveur web : il charge le réseau avec le moteur et l'envoie à la page."""
 
 from pathlib import Path
-from typing import Any
 
-from fastapi import FastAPI
+from fastapi import Body, FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from epic2_donnees.moteur.chargement import charger_reseau, station_en_dictionnaire
-from epic2_donnees.moteur.modele import Reseau, Station
+from epic2_donnees.moteur.modele import Station
+from epic4_algorithmes.moteur.chemins import (
+    chemin_le_moins_encombre,
+    chemin_pmr,
+    plus_court_chemin,
+)
 from epic4_algorithmes.moteur.navigation import graphe_de_navigation
 
 # Racine du projet : serveur/ est dans epic3_visionneuse/, lui-même à la racine.
@@ -16,7 +20,7 @@ RESEAU_PAR_DEFAUT = RACINE / "epic2_donnees" / "donnees" / "reseau.json"
 DOSSIER_WEB = RACINE / "epic3_visionneuse" / "web"
 
 
-def reseau_en_dictionnaire(reseau: Reseau) -> dict[str, Any]:
+def reseau_en_dictionnaire(reseau):
     """Transforme le réseau en dictionnaire, envoyé à la page au format JSON.
 
     Les nœuds et les arêtes gardent les champs du format imposé, avec leurs
@@ -34,7 +38,7 @@ def reseau_en_dictionnaire(reseau: Reseau) -> dict[str, Any]:
 
     liste_sources = []
     for source in reseau.sources:
-        donnee_source: dict[str, Any] = {}
+        donnee_source = {}
         donnee_source["id"] = source.id
         donnee_source["type"] = source.type
         donnee_source["x"] = source.x
@@ -50,10 +54,10 @@ def reseau_en_dictionnaire(reseau: Reseau) -> dict[str, Any]:
 
 
 # Ce que le serveur garde en mémoire : le chemin du fichier du réseau.
-etat: dict[str, Any] = {"chemin": None}
+etat = {"chemin": None}
 
 
-def donner_reseau() -> dict[str, Any]:
+def donner_reseau():
     """Route GET /api/reseau : relit les fichiers JSON à chaque demande.
 
     Le réseau n'est pas gardé en mémoire : sinon, après une modification d'un fichier,
@@ -63,16 +67,18 @@ def donner_reseau() -> dict[str, Any]:
     return reseau_en_dictionnaire(charger_reseau(etat["chemin"]))
 
 
-def recharger() -> dict[str, Any]:
+def recharger():
     """Route POST /api/recharger, utilisée par le bouton « Recharger les fichiers » :
     relit les fichiers JSON, comme /api/reseau."""
     return donner_reseau()
 
 
-def calculer_navigation(demande: dict[str, Any]) -> dict[str, Any]:
+def calculer_navigation(demande=Body()):
     """Route POST /api/navigation : lance graphe_de_navigation
     (epic4_algorithmes/moteur/navigation.py) sur le réseau des fichiers, dans la situation
     choisie sur la page.
+
+    `demande=Body()` dit à FastAPI que `demande` est le JSON envoyé par la page.
 
     La demande contient :
     - « pmr » : vrai pour un trajet en fauteuil ;
@@ -82,25 +88,59 @@ def calculer_navigation(demande: dict[str, Any]) -> dict[str, Any]:
       {"A:A2|A:A5": 0.8} (source et cible de l'arête, comme dans le fichier).
     Renvoie {"voisins": {nœud: [[voisin, coût], ...]}}, le résultat tel quel.
     """
-    reseau = charger_reseau(etat["chemin"])
-
-    # Les nœuds bloqués à la main reçoivent le statut « bloqué », comme le ferait le feu.
-    for station_du_reseau in reseau.stations:
-        for noeud in station_du_reseau.station.noeuds:
-            if noeud.id in demande["bloques"]:
-                noeud.statut = "bloqué"
-
-    # « A:A2|A:A5 » devient la paire ("A:A2", "A:A5") qu'attend graphe_de_navigation.
-    taux: dict[tuple[str, str], float] = {}
-    for cle in demande["taux"]:
-        morceaux = cle.split("|")
-        taux[(morceaux[0], morceaux[1])] = demande["taux"][cle]
-
+    reseau = reseau_avec_bloques(demande["bloques"])
+    taux = lire_taux(demande["taux"])
     voisins = graphe_de_navigation(reseau, demande["pmr"], demande["beta"], taux)
     return {"voisins": voisins}
 
 
-def creer_application(chemin_reseau: Path) -> FastAPI:
+def reseau_avec_bloques(bloques):
+    """Charge le réseau des fichiers, puis donne le statut « bloqué » aux nœuds de la
+    liste, comme le ferait le feu."""
+    reseau = charger_reseau(etat["chemin"])
+    for station_du_reseau in reseau.stations:
+        for noeud in station_du_reseau.station.noeuds:
+            if noeud.id in bloques:
+                noeud.statut = "bloqué"
+    return reseau
+
+
+def lire_taux(taux_de_la_page):
+    """« A:A2|A:A5 » devient la paire ("A:A2", "A:A5") qu'attend le moteur : une paire ne
+    peut pas être une clé en JSON, la page envoie donc les deux nœuds collés par « | »."""
+    taux = {}
+    for cle in taux_de_la_page:
+        morceaux = cle.split("|")
+        taux[(morceaux[0], morceaux[1])] = taux_de_la_page[cle]
+    return taux
+
+
+def calculer_chemin(demande=Body()):
+    """Route POST /api/chemin : lance la fonction du critère choisi
+    (epic4_algorithmes/moteur/chemins.py) sur le réseau des fichiers, dans la situation
+    choisie sur la page. Comme pour /api/navigation, `demande` est le JSON de la page.
+
+    La demande contient « depart » et « arrivee » (« A:A5 »), « critere » (« plus_court »,
+    « moins_encombre » ou « pmr »), et, comme /api/navigation, « beta », « bloques » et
+    « taux » (ces deux derniers ne servent qu'au critère « moins_encombre »).
+    Renvoie {"chemin": [nœuds], "cout": coût}, ou {"chemin": [], "cout": None} s'il n'y a
+    aucun chemin.
+    """
+    reseau = reseau_avec_bloques(demande["bloques"])
+    depart = demande["depart"]
+    arrivee = demande["arrivee"]
+
+    if demande["critere"] == "moins_encombre":
+        taux = lire_taux(demande["taux"])
+        chemin, cout = chemin_le_moins_encombre(reseau, depart, arrivee, demande["beta"], taux)
+    elif demande["critere"] == "pmr":
+        chemin, cout = chemin_pmr(reseau, depart, arrivee)
+    else:
+        chemin, cout = plus_court_chemin(reseau, depart, arrivee)
+    return {"chemin": chemin, "cout": cout}
+
+
+def creer_application(chemin_reseau):
     """Crée le serveur, qui lira le réseau dans ce fichier."""
     etat["chemin"] = chemin_reseau
 
@@ -108,6 +148,7 @@ def creer_application(chemin_reseau: Path) -> FastAPI:
     application.add_api_route("/api/reseau", donner_reseau, methods=["GET"])
     application.add_api_route("/api/recharger", recharger, methods=["POST"])
     application.add_api_route("/api/navigation", calculer_navigation, methods=["POST"])
+    application.add_api_route("/api/chemin", calculer_chemin, methods=["POST"])
 
     # Tout le reste est la page : web/index.html et ses fichiers.
     application.mount("/", StaticFiles(directory=DOSSIER_WEB, html=True))

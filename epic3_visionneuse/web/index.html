@@ -47,7 +47,8 @@
     <div id="graphe"></div>
     <div id="infobulle" hidden></div>
 
-    <details class="panneau-navigation">
+    <div class="panneaux">
+    <details class="panneau">
       <summary>navigation.py</summary>
       <p class="explication">
         Lance <code>graphe_de_navigation</code> du moteur Python dans la situation choisie,
@@ -72,6 +73,43 @@
       <p id="nav-resume" role="status"></p>
       <pre id="nav-voisins"></pre>
     </details>
+
+    <details class="panneau">
+      <summary>chemins.py</summary>
+      <p class="explication">
+        Lance, selon le critère, <code>plus_court_chemin</code>,
+        <code>chemin_le_moins_encombre</code> ou <code>chemin_pmr</code> du moteur Python
+        (algorithme de Dijkstra) : le chemin trouvé se dessine en noir sur le plan.
+      </p>
+      <label>Départ
+        <input id="chemin-depart" type="text" placeholder="ex. A1" autocomplete="off">
+      </label>
+      <label>Arrivée
+        <input id="chemin-arrivee" type="text" placeholder="ex. B3" autocomplete="off">
+      </label>
+      <label>Critère
+        <select id="chemin-critere">
+          <option value="plus_court">plus court (coût = longueur)</option>
+          <option value="moins_encombre">moins encombré (longueur × (1 + β × τ))</option>
+          <option value="pmr">en fauteuil (pmr, coût = longueur)</option>
+        </select>
+      </label>
+      <label>Nœuds bloqués
+        <input id="chemin-bloques" type="text" placeholder="ex. A5, B3" autocomplete="off">
+      </label>
+      <label>Arêtes encombrées (taux τ entre 0 et 1)
+        <input id="chemin-taux" type="text" placeholder="ex. A2-A5=0.8" autocomplete="off">
+      </label>
+      <label>β (critère « moins encombré » seulement)
+        <input id="chemin-beta" type="number" value="1" min="0" step="0.5">
+      </label>
+      <div class="boutons">
+        <button id="chemin-lancer" type="button">Chercher le chemin</button>
+        <button id="chemin-effacer" type="button">Effacer</button>
+      </div>
+      <p id="chemin-resultat" role="status"></p>
+    </details>
+    </div>
 
     <aside class="legende" aria-label="Légende">
       <ul>

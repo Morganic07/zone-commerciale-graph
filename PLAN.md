@@ -64,7 +64,7 @@ graph-satellites/
 **Pourquoi un moteur pur.** Les algorithmes doivent être codés à la main et testés unitairement. Isolés de toute interface, ils se testent sans serveur, et le rapport peut produire ses figures en appelant directement le moteur.
 
 **Stack.** Choix issu de la recherche d'antériorité.
-- **Python ≥ 3.11.** Dépendances d'exécution : `fastapi`, `uvicorn`. Dépendances de test : `pytest`, `httpx` (pour le client de test FastAPI), `networkx`, `ruff`, `mypy`.
+- **Python ≥ 3.11.** Dépendances d'exécution : `fastapi`, `uvicorn`. Dépendances de test : `pytest`, `httpx` (pour le client de test FastAPI), `networkx`, `ruff`. `mypy` a été retiré le 2026-11-24, avec les annotations de type, jugées illisibles pour un débutant (décision de l'utilisateur).
 - **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit qu'aucun dossier `epic*/moteur/` ne l'importe.
 - **Page.** Cytoscape.js (MIT), copié dans `epic3_visionneuse/web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
 - **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
@@ -122,15 +122,16 @@ Champs facultatifs ajoutés, tous justifiés :
 
 | Besoin | Algorithme | Complexité |
 |---|---|---|
-| Plus court chemin | Dijkstra (tas binaire), coût = `longueur` | O((V+E) log V) |
-| Moins encombré | Dijkstra, coût = `longueur × (1 + β·τ_e)` | O((V+E) log V) |
-| Accessible PMR | Dijkstra sur le sous-graphe des arêtes `pmr`, coût = longueur | O((V+E) log V) |
+| Plus court chemin | Dijkstra (recherche du plus proche dans une liste), coût = `longueur` | O(V² + E) |
+| Moins encombré | Dijkstra, coût = `longueur × (1 + β·τ_e)` | O(V² + E) |
+| Accessible PMR | Dijkstra sur le sous-graphe des arêtes `pmr`, coût = longueur | O(V² + E) |
 | Distances d'évacuation | Un seul Dijkstra multi-sources, lancé depuis toutes les sorties sur le graphe inversé | O((V+E) log V) |
 | Connexité | Parcours en largeur | O(V+E) |
 | Points d'articulation | Hopcroft–Tarjan (DFS, indices et `low`) | O(V+E) |
 | Composantes fortement connexes | Tarjan, puis graphe réduit et tri topologique | O(V+E) |
 
 - **Tous les coûts sont positifs**, condition nécessaire à Dijkstra.
+- **Dijkstra sans tas** (décision du 2026-11-24, code simplifié) : à chaque tour, on cherche le nœud le plus proche en parcourant la liste des nœuds à traiter. C'est O(V² + E) au lieu de O((V+E) log V) avec un tas binaire, mais le réseau ne compte que quelques dizaines de nœuds, et le code se lit sans connaître le module `heapq`. Le rapport le justifie.
 - **Le graphe de navigation est orienté** : une arête `bidirectionnel` donne deux arcs, une arête `unique` un seul.
 - **Les arêtes et nœuds bloqués** (statut connu) sont retirés du graphe de navigation.
 - **Critère « moins encombré ».** C'est une longueur pénalisée : la foule ralentit, et β règle à quel point. Avec β = 0, on retrouve le plus court chemin.
