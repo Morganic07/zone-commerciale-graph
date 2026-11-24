@@ -25,6 +25,9 @@ coverage.json
 .ruff_cache/
 __pycache__/
 
+# Tests : gardés en local, pas sur le dépôt (décision du 2026-11-24)
+tests/
+
 # Environnement Python
 .venv/
 *.egg-info/
