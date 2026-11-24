@@ -55,15 +55,23 @@ def graphe_de_navigation(
         aretes.append(tunnel)
 
     for arete in aretes:
-        # Une arête bloquée, ou interdite aux fauteuils pour un trajet PMR, ne donne aucun arc.
+        # Une arête bloquée ne donne aucun arc.
         if arete.statut == "bloqué":
             continue
-        if pmr and not arete.pmr:
-            continue
-        # Une arête qui touche un nœud bloqué ne mène nulle part.
-        if arete.source not in voisins or arete.cible not in voisins:
+
+        # Pour un trajet en fauteuil, une arête non praticable ne donne aucun arc.
+        interdite_au_fauteuil = pmr and not arete.pmr
+        if interdite_au_fauteuil:
             continue
 
+        # Une arête qui touche un nœud bloqué ne mène nulle part : le nœud bloqué
+        # n'a pas été mis dans `voisins`.
+        depart_bloque = arete.source not in voisins
+        arrivee_bloquee = arete.cible not in voisins
+        if depart_bloque or arrivee_bloquee:
+            continue
+
+        # L'arc aller, puis l'arc retour si l'arête se prend dans les deux sens.
         valeur = cout(arete, beta, taux)
         voisins[arete.source].append((arete.cible, valeur))
         if arete.sens == "bidirectionnel":
