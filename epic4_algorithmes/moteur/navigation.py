@@ -6,7 +6,7 @@ Ce module construit cette liste, en tenant compte du sens des arêtes, du fauteu
 roulant (PMR) et des éléments bloqués.
 """
 
-from moteur.modele import Arete, Reseau
+from epic2_donnees.moteur.modele import Arete, Reseau
 
 
 def cout(arete: Arete, beta: float, taux: dict[tuple[str, str], float]) -> float:

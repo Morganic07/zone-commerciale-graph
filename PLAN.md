@@ -31,37 +31,48 @@ La consigne porte sur une zone commerciale. Le groupe la transpose à un réseau
 
 Trois couches, dépendantes dans un seul sens : moteur ← serveur ← page.
 
+**Rangement par epic** (décision du 2026-11-24). Un dossier par epic, au nom importable en Python (`epic2_donnees`). Dans chaque epic, les couches gardent leurs sous-dossiers (`moteur/`, `serveur/`, `web/`, `donnees/`, `tests/`). Les fichiers qui grossissent d'epic en epic, comme `modele.py`, le serveur ou la page, restent dans l'epic où ils sont nés.
+
 ```
 graph-satellites/
-├── moteur/              Python pur : aucune dépendance web ni graphe
-│   ├── modele.py        nœuds, arêtes, stations, réseau, statuts
-│   ├── chargement.py    JSON ↔ modèle (sans validation, décision du 2026-11-20)
-│   ├── navigation.py    graphe orienté de navigation : sens, filtres PMR et blocage, poids
-│   ├── chemins.py       Dijkstra, fonctions de coût, itinéraires, distances d'évacuation
-│   ├── connexite.py     composantes, points d'articulation, Tarjan, graphe réduit
-│   ├── simulation.py    agents, pas de temps, capacités, admission
-│   ├── demande.py       arrivées et parcours de visite
-│   ├── incendie.py      diffusion, détection, effets, évacuation
-│   ├── indicateurs.py   mesures et exports CSV
-│   ├── palette.py       taux d'occupation → niveau de couleur
-│   └── proprietes.py    graphe des propriétés (partie 4)
-├── serveur/             FastAPI : expose le moteur à la page
-├── web/                 page : index.html, JS, CSS, vendor/cytoscape.min.js
-├── donnees/             stations/*.json, reseau.json, simulation.json, parametres.json, proprietaires.json
-├── tests/
-└── rapport/             rapport.md, figures générées, construction PDF (pandoc)
+├── epic1_socle/
+│   └── tests/                 test_dependances.py (pureté des moteurs)
+├── epic2_donnees/
+│   ├── moteur/                Python pur : aucune dépendance web ni graphe
+│   │   ├── modele.py          nœuds, arêtes, stations, réseau, statuts
+│   │   └── chargement.py      JSON ↔ modèle (sans validation, décision du 2026-11-20)
+│   ├── donnees/               stations/*.json, reseau.json, parametres.json
+│   └── tests/
+├── epic3_visionneuse/
+│   ├── serveur/               FastAPI : expose le moteur à la page
+│   ├── web/                   page : index.html, JS, CSS, vendor/cytoscape.min.js
+│   └── tests/
+├── epic4_algorithmes/
+│   ├── moteur/
+│   │   ├── navigation.py      graphe orienté de navigation : sens, filtres PMR et blocage, poids
+│   │   ├── chemins.py         Dijkstra, fonctions de coût, itinéraires, distances d'évacuation
+│   │   └── connexite.py       composantes, points d'articulation, Tarjan, graphe réduit
+│   └── tests/
+├── epic5_simulation/
+│   ├── moteur/                simulation.py (agents, pas de temps, capacités, admission),
+│   │                          demande.py, indicateurs.py (mesures, exports CSV), palette.py
+│   └── donnees/               simulation.json
+├── epic6_incendie/moteur/     incendie.py : diffusion, détection, effets, évacuation
+├── epic7_interface/
+├── epic8_proprietes/          moteur/proprietes.py (partie 4), donnees/proprietaires.json
+└── epic9_rapport/             rapport.md, sources.md, figures générées, construction PDF (pandoc)
 ```
 
 **Pourquoi un moteur pur.** Les algorithmes doivent être codés à la main et testés unitairement. Isolés de toute interface, ils se testent sans serveur, et le rapport peut produire ses figures en appelant directement le moteur.
 
 **Stack.** Choix issu de la recherche d'antériorité.
 - **Python ≥ 3.11.** Dépendances d'exécution : `fastapi`, `uvicorn`. Dépendances de test : `pytest`, `httpx` (pour le client de test FastAPI), `networkx`, `ruff`, `mypy`.
-- **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit que `moteur/` ne l'importe jamais.
-- **Page.** Cytoscape.js (MIT), copié dans `web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
+- **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit qu'aucun dossier `epic*/moteur/` ne l'importe.
+- **Page.** Cytoscape.js (MIT), copié dans `epic3_visionneuse/web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
 - **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
-- **Lancement en une commande** : `python -m serveur`, puis on ouvre la page indiquée.
+- **Lancement en une commande** : `python -m epic3_visionneuse.serveur`, puis on ouvre la page indiquée.
 
-**Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires et articulations, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `serveur/` et `web/` grandissent.
+**Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires et articulations, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `epic3_visionneuse/serveur/` et `epic3_visionneuse/web/` grandissent.
 
 **Design super simple** (même décision) : une page claire et sobre, sans recherche graphique. L'ancien design system de l'autre projet n'est pas repris.
 
@@ -105,8 +116,8 @@ Champs facultatifs ajoutés, tous justifiés :
 
 ### 2.3 Réglages de la simulation et paramètres
 
-- `donnees/parametres.json` : les valeurs physiques, chacune avec sa source ou sa justification (§ 4.1).
-- `donnees/simulation.json` : réglages de départ (graine aléatoire, rythme d'arrivée par source, part de PMR, durée des visites, β).
+- `epic2_donnees/donnees/parametres.json` : les valeurs physiques, chacune avec sa source ou sa justification (§ 4.1).
+- `epic5_simulation/donnees/simulation.json` : réglages de départ (graine aléatoire, rythme d'arrivée par source, part de PMR, durée des visites, β).
 - La page démarre une simulation unique, dont l'affluence se règle au curseur (visiteurs par minute pour tout le réseau, répartis entre les sas dans les proportions de départ). Le feu se déclenche au clic, avec α, θ₁, θ₂, δ et le mode de connaissance réglés dans le panneau.
 
 ## 3. Algorithmes (codés à la main)
@@ -280,7 +291,7 @@ Le socle commun de la consigne passe toujours en premier.
 
 ## 9. Rapport
 
-Il est rédigé en Markdown dans `rapport/`, converti en PDF par pandoc. Figures et tableaux sont générés par des scripts qui appellent le moteur.
+Il est rédigé en Markdown dans `epic9_rapport/`, converti en PDF par pandoc. Figures et tableaux sont générés par des scripts qui appellent le moteur.
 
 Il contient :
 - la transposition du sujet et sa table de correspondance (§ 0) ;

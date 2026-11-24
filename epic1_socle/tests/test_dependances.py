@@ -1,4 +1,5 @@
-"""Le moteur `moteur/` reste pur : ni bibliothèque de graphes, ni dépendance web.
+"""Le moteur (les dossiers `epic*/moteur/`) reste pur : ni bibliothèque de graphes, ni
+dépendance web.
 
 Les algorithmes doivent être codés à la main (networkx ne sert que d'oracle dans les
 tests), et le moteur doit se tester sans serveur (PLAN.md § 1).
@@ -9,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-RACINE_MOTEUR = Path(__file__).resolve().parent.parent / "moteur"
+RACINE = Path(__file__).resolve().parent.parent.parent
 INTERDITS = {"networkx", "fastapi", "uvicorn"}
 
 
@@ -36,11 +37,12 @@ def imports_interdits(source: str) -> set[str]:
 
 
 def fichiers_du_moteur() -> list[Path]:
-    return sorted(RACINE_MOTEUR.rglob("*.py"))
+    # Chaque epic range son moteur dans son propre dossier moteur/ : on les prend tous.
+    return sorted(RACINE.glob("epic*/moteur/**/*.py"))
 
 
 def test_le_moteur_existe() -> None:
-    # Sans ce garde-fou, un dossier moteur/ déplacé ferait passer le test suivant à vide.
+    # Sans ce garde-fou, un moteur déplacé ferait passer le test suivant à vide.
     # Le moteur n'a pas de __init__.py (choix du 2026-11-20) : on vérifie qu'il a du code.
     assert len(fichiers_du_moteur()) > 0
 

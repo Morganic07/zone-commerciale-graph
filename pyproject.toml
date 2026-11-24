@@ -21,12 +21,17 @@ test = [
     "mypy>=1.10",
 ]
 
-[tool.setuptools]
-packages = ["moteur", "serveur"]
+# Le code est rangé par epic (epic2_donnees/moteur, epic3_visionneuse/serveur…).
+# Les dossiers n'ont pas de __init__.py : ce sont des paquets « namespace ».
+[tool.setuptools.packages.find]
+include = ["epic*"]
+namespaces = true
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["tests"]
+testpaths = ["epic1_socle", "epic2_donnees", "epic3_visionneuse", "epic4_algorithmes"]
+# Deux epics peuvent avoir des fichiers de test de même nom.
+addopts = "--import-mode=importlib"
 
 [tool.ruff]
 line-length = 100
@@ -41,8 +46,8 @@ ignore = ["B904"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
-# Sans __init__.py, mypy verrait moteur/modele.py à la fois comme « modele » et comme
-# « moteur.modele ». Cette option lui fait déduire le nom depuis la racine du projet.
+# Sans __init__.py, mypy verrait epic2_donnees/moteur/modele.py à la fois comme « modele »
+# et comme « epic2_donnees.moteur.modele ». Cette option lui fait déduire le nom depuis la racine du projet.
 explicit_package_bases = true
 
 # networkx ne fournit pas d'annotations de type ; il ne sert que d'oracle dans les tests.

@@ -4,11 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from moteur.chargement import charger_reseau
-from moteur.modele import Arete, Noeud, Reseau, Station, StationDuReseau
-from moteur.navigation import graphe_de_navigation
+from epic2_donnees.moteur.chargement import charger_reseau
+from epic2_donnees.moteur.modele import Arete, Noeud, Reseau, Station, StationDuReseau
+from epic4_algorithmes.moteur.navigation import graphe_de_navigation
 
-RESEAU = Path(__file__).resolve().parent.parent / "donnees" / "reseau.json"
+RACINE = Path(__file__).resolve().parent.parent.parent
+RESEAU = RACINE / "epic2_donnees" / "donnees" / "reseau.json"
 
 
 def noeud(identifiant: str, statut: str = "libre") -> Noeud:

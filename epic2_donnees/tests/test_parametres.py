@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from moteur.chargement import charger_parametres
+from epic2_donnees.moteur.chargement import charger_parametres
 
 FICHIER_PARAMETRES = Path(__file__).resolve().parent.parent / "donnees" / "parametres.json"
 

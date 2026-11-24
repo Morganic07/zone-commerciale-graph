@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from moteur.chargement import charger_reseau
-from moteur.modele import macro_noeud, vue_macro
+from epic2_donnees.moteur.chargement import charger_reseau
+from epic2_donnees.moteur.modele import macro_noeud, vue_macro
 
 RESEAU = Path(__file__).resolve().parent / "donnees" / "reseau_test.json"
 

@@ -8,8 +8,8 @@ from pathlib import Path
 
 import networkx as nx
 
-from moteur.chargement import charger_reseau
-from moteur.modele import Arete, Reseau, Station
+from epic2_donnees.moteur.chargement import charger_reseau
+from epic2_donnees.moteur.modele import Arete, Reseau, Station
 
 RESEAU = Path(__file__).resolve().parent.parent / "donnees" / "reseau.json"
 

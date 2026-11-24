@@ -6,13 +6,14 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from moteur.chargement import charger_reseau, station_en_dictionnaire
-from moteur.modele import Reseau, Station
-from moteur.navigation import graphe_de_navigation
+from epic2_donnees.moteur.chargement import charger_reseau, station_en_dictionnaire
+from epic2_donnees.moteur.modele import Reseau, Station
+from epic4_algorithmes.moteur.navigation import graphe_de_navigation
 
-RACINE = Path(__file__).resolve().parent.parent
-RESEAU_PAR_DEFAUT = RACINE / "donnees" / "reseau.json"
-DOSSIER_WEB = RACINE / "web"
+# Racine du projet : serveur/ est dans epic3_visionneuse/, lui-même à la racine.
+RACINE = Path(__file__).resolve().parent.parent.parent
+RESEAU_PAR_DEFAUT = RACINE / "epic2_donnees" / "donnees" / "reseau.json"
+DOSSIER_WEB = RACINE / "epic3_visionneuse" / "web"
 
 
 def reseau_en_dictionnaire(reseau: Reseau) -> dict[str, Any]:
@@ -69,8 +70,9 @@ def recharger() -> dict[str, Any]:
 
 
 def calculer_navigation(demande: dict[str, Any]) -> dict[str, Any]:
-    """Route POST /api/navigation : lance graphe_de_navigation (moteur/navigation.py)
-    sur le réseau des fichiers, dans la situation choisie sur la page.
+    """Route POST /api/navigation : lance graphe_de_navigation
+    (epic4_algorithmes/moteur/navigation.py) sur le réseau des fichiers, dans la situation
+    choisie sur la page.
 
     La demande contient :
     - « pmr » : vrai pour un trajet en fauteuil ;

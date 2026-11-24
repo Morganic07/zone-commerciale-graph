@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from moteur.modele import Arete, Noeud, Reseau, Source, Station, StationDuReseau
+from epic2_donnees.moteur.modele import Arete, Noeud, Reseau, Source, Station, StationDuReseau
 
 # ---------------------------------------------------------------------------------------
 # Paramètres physiques (donnees/parametres.json)

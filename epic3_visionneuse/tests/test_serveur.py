@@ -7,9 +7,11 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from serveur.application import RESEAU_PAR_DEFAUT, creer_application
+from epic3_visionneuse.serveur.application import RESEAU_PAR_DEFAUT, creer_application
 
-DONNEES_TEST = Path(__file__).resolve().parent / "donnees"
+# Les petits fichiers de test sont rangés avec ceux de l'epic 2, qui les a créés.
+RACINE = Path(__file__).resolve().parent.parent.parent
+DONNEES_TEST = RACINE / "epic2_donnees" / "tests" / "donnees"
 
 
 def test_route_reseau() -> None:

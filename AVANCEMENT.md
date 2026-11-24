@@ -2,7 +2,7 @@
 
 Une case ne se coche qu'une fois **tout vert** : tests, lint et typage passent, `/but-for-real` a été mené à son terme sans objection restante, et `/run` a été passé dès que la story a quelque chose à lancer.
 
-Les epics sont des lots séquentiels. L'interface grandit au fil du projet (décision du 2026-11-20) : une visionneuse est livrée juste après les données (epic 3), puis chaque epic, des algorithmes à l'incendie, se termine par sa story d'affichage, qui complète `serveur/` et `web/`. Le sigle ⋆ marque une extension, à sacrifier en premier en cas de retard (`PLAN.md` § 8).
+Les epics sont des lots séquentiels. L'interface grandit au fil du projet (décision du 2026-11-20) : une visionneuse est livrée juste après les données (epic 3), puis chaque epic, des algorithmes à l'incendie, se termine par sa story d'affichage, qui complète `epic3_visionneuse/serveur/` et `epic3_visionneuse/web/`. Les fichiers sont rangés par epic (décision du 2026-11-24, voir `PLAN.md` § 1) : une story écrit ses fichiers neufs dans le dossier de son epic. Le sigle ⋆ marque une extension, à sacrifier en premier en cas de retard (`PLAN.md` § 8).
 
 Sujet transposé : un réseau de trois stations spatiales à la place d'une zone commerciale (`PLAN.md` § 0). Les sections de la consigne restent les mêmes.
 
@@ -15,19 +15,19 @@ Correspondance avec la consigne :
 
 ## Epic 1 — Socle
 
-- [x] **1.1 Squelette du projet.** `pyproject.toml` (dépendances d'exécution et de test), paquet `moteur/` (sans `__init__.py`, décision du 2026-11-20 ; `serveur/` arrive à la story 3.1). Le `README.md` est reporté à la story 7.1.
-  *Critère :* `pytest`, `ruff check .` et `mypy moteur tests` passent ; un test échoue si un module de `moteur/` importe `networkx`, `fastapi` ou `uvicorn`.
+- [x] **1.1 Squelette du projet.** `pyproject.toml` (dépendances d'exécution et de test), paquets `moteur/` (sans `__init__.py`, décision du 2026-11-20 ; `serveur/` arrive à la story 3.1). Le `README.md` est reporté à la story 7.1.
+  *Critère :* `pytest`, `ruff check .` et `mypy` passent ; un test (`epic1_socle/tests/test_dependances.py`) échoue si un module d'un `epic*/moteur/` importe `networkx`, `fastapi` ou `uvicorn`.
 
 ## Epic 2 — Données
 
-- [x] **2.1 Valeurs physiques.** `donnees/parametres.json` (vitesse d'une personne valide, vitesse d'une personne en fauteuil roulant, débit par mètre de largeur de passage, surface par personne) et `rapport/sources.md`. Les stations ont une gravité artificielle : les valeurs sont terrestres.
+- [x] **2.1 Valeurs physiques.** `epic2_donnees/donnees/parametres.json` (vitesse d'une personne valide, vitesse d'une personne en fauteuil roulant, débit par mètre de largeur de passage, surface par personne) et `epic9_rapport/sources.md`. Les stations ont une gravité artificielle : les valeurs sont terrestres.
   *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement (vérifié à la relecture : le programme ne contrôle pas les données, décision du 2026-11-20) ; le fichier se charge.
 - [x] **2.2 Modèle et format station.** Modèle de données, lecture et écriture JSON au format imposé.
   *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique, champs facultatifs compris. Pas de validation des données (décision du 2026-11-20).
 - [x] **2.3 Format réseau.** Chargement de `reseau.json`, préfixage des identifiants par station, rattachement des tunnels aux sas, vue macro.
   *Critère :* un réseau de test se charge ; les identifiants sont préfixés par station ; les tunnels relient des sorties ou des sources ; la vue macro compte un nœud par station et par source. Pas de validation des données (décision du 2026-11-20).
-- [ ] **2.4 Plan de la station détaillée A, dessiné par le groupe.** Plan dessiné (figure dans `rapport/`), `donnees/stations/A.json` et une notice qui situe chaque cas demandé sur le plan.
-  *Critère :* `tests/test_plan_A.py` vérifie la liste des cas de `PLAN.md` § 6 (sas, modules, cycle, goulot, arête non PMR contournable, nœuds sans capteur).
+- [x] **2.4 Plan de la station détaillée A, dessiné par le groupe.** Plan dessiné (figure dans `epic9_rapport/`), `epic2_donnees/donnees/stations/A.json` et une notice qui situe chaque cas demandé sur le plan.
+  *Critère :* `epic2_donnees/tests/test_plan_A.py` vérifie la liste des cas de `PLAN.md` § 6 (sas, modules, cycle, goulot, arête non PMR contournable, nœuds sans capteur).
 - [x] **2.5 Stations simples et réseau complet.** `B.json`, `C.json` et `reseau.json` : 3 stations reliées par des tunnels entre leurs sas ; les sas sont les nœuds sources (décision du 2026-11-20). En attendant le plan du groupe, A est un plan provisoire.
   *Critère :* tout se charge ; B et C ont au moins 12 nœuds et 2 sorties ; le graphe de navigation complet est fortement connexe, vérifié avec `networkx`.
 
@@ -35,8 +35,8 @@ Correspondance avec la consigne :
 
 Pour voir les plans et le réseau dès maintenant. Design **super simple** (décision du 2026-11-20) : l'ancien design system n'est pas repris. Avant la story 3.2, proposer le choix entre `frontend-design` et `ui-ux-pro-max` (règle globale de design).
 
-- [x] **3.1 Serveur minimal.** FastAPI : une route qui renvoie le réseau chargé (stations, nœuds, arêtes, sources, tunnels, positions), une route qui relit les fichiers JSON, et la page servie. Lancement par `python -m serveur`.
-  *Critère :* un test par route avec le client de test ; `python -m serveur` démarre et la page s'ouvre.
+- [x] **3.1 Serveur minimal.** FastAPI : une route qui renvoie le réseau chargé (stations, nœuds, arêtes, sources, tunnels, positions), une route qui relit les fichiers JSON, et la page servie. Lancement par `python -m epic3_visionneuse.serveur`.
+  *Critère :* un test par route avec le client de test ; `python -m epic3_visionneuse.serveur` démarre et la page s'ouvre.
 - [x] **3.2 Affichage du réseau et des plans.** Cytoscape : stations en nœuds composés, positions du plan, tous les nœuds en points gris sans nom (décision du 2026-11-20), arêtes non PMR distinguées, tunnels, bouton « Recharger ».
   *Critère :* `/run` : le réseau complet s'affiche ; après une modification d'un fichier JSON, « Recharger » met l'affichage à jour ; une arête non PMR et un tunnel se reconnaissent grâce à la légende.
 
@@ -96,7 +96,7 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
 
 `proprietaires.json` est écrit par le groupe (`PLAN.md` § 7).
 
-- [ ] **8.1 Jeu de données des propriétaires.** `donnees/proprietaires.json` : une douzaine de stations (dont A, B et C), des agences spatiales et des opérateurs privés, les parts en pourcentage ; chargement et validation ; une notice dans `rapport/` explique comment il a été construit.
+- [ ] **8.1 Jeu de données des propriétaires.** `epic8_proprietes/donnees/proprietaires.json` : une douzaine de stations (dont A, B et C), des agences spatiales et des opérateurs privés, les parts en pourcentage ; chargement et validation ; une notice dans `epic9_rapport/` explique comment il a été construit.
   *Critère :* le chargement refuse une station dont les parts ne font pas 100 % ; sur ce fichier, G_P a au moins une articulation, et G⃗_P au moins une composante fortement connexe de plus d'un sommet et une chaîne de contrôle de longueur au moins 3 (vérifié avec `networkx`).
 - [ ] **8.2 Analyse de G_P.** Connexité et composantes, vérification de la propriété de clique et de la borne, points d'articulation (stations, puis propriétaires dans le graphe biparti).
   *Critère :* sur un jeu d'essai conçu à la main puis sur `proprietaires.json`, résultats identiques à `networkx` et borne vérifiée.
@@ -105,8 +105,8 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
 
 ## Epic 9 — Rapport
 
-- [ ] **9.1 Chaîne de production.** `rapport/rapport.md`, scripts qui génèrent les figures, construction du PDF par pandoc.
-  *Critère :* une seule commande produit `rapport/build/rapport.pdf` avec ses figures ; le dépôt est poussé sur un dépôt distant accessible au correcteur, et le rapport en donne le lien (livrable de la consigne § 5).
+- [ ] **9.1 Chaîne de production.** `epic9_rapport/rapport.md`, scripts qui génèrent les figures, construction du PDF par pandoc.
+  *Critère :* une seule commande produit `epic9_rapport/build/rapport.pdf` avec ses figures ; le dépôt est poussé sur un dépôt distant accessible au correcteur, et le rapport en donne le lien (livrable de la consigne § 5).
 - [ ] **9.2 Modélisation.** Transposition du sujet et sa table de correspondance, formats, plan des stations, accessibilité, palette et seuils justifiés, choix des agents.
   *Critère :* chaque écart à la consigne est justifié en toutes lettres (sujet transposé, agents, palette à 5 niveaux, champs ajoutés, type `module` au lieu de `magasin`, sas comme nœuds sources, définition de l'accessibilité) ; les hypothèses sur les valeurs physiques sont listées à part.
 - [ ] **9.3 Algorithmes.** Fonctions de coût, complexités, alternative écartée pour « moins encombré ».

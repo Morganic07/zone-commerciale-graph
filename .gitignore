@@ -30,7 +30,7 @@ __pycache__/
 *.egg-info/
 
 # Sorties générées (rapport, exports de simulation)
-rapport/build/
+epic9_rapport/build/
 sorties/
 
 
