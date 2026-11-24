@@ -200,8 +200,9 @@ main {
   font-size: 13px;
 }
 
-/* Le résultat tient sur deux lignes : le chemin, puis son coût. */
-#chemin-resultat {
+/* Le résultat tient sur plusieurs lignes : le chemin, puis son coût. */
+#chemin-resultat,
+#evac-resultat {
   margin: 10px 0 4px;
   white-space: pre-wrap;
 }

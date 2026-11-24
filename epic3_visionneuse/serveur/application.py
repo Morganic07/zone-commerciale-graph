@@ -10,6 +10,7 @@ from epic2_donnees.moteur.modele import Station
 from epic4_algorithmes.moteur.chemins import (
     chemin_le_moins_encombre,
     chemin_pmr,
+    chemins_d_evacuation,
     plus_court_chemin,
 )
 from epic4_algorithmes.moteur.navigation import graphe_de_navigation
@@ -140,6 +141,28 @@ def calculer_chemin(demande=Body()):
     return {"chemin": chemin, "cout": cout}
 
 
+def calculer_evacuation(demande=Body()):
+    """Route POST /api/evacuation : lance chemins_d_evacuation
+    (epic4_algorithmes/moteur/chemins.py) sur le réseau des fichiers. `demande` est le
+    JSON de la page : « pmr » (vrai pour un trajet en fauteuil) et « bloques » (les nœuds
+    à bloquer, comme pendant un incendie).
+
+    Renvoie {"couts": {nœud: coût}, "suivants": {nœud: nœud suivant vers la sortie},
+    "pieges": [nœuds praticables sans chemin vers une sortie]}.
+    """
+    reseau = reseau_avec_bloques(demande["bloques"])
+    couts, suivants = chemins_d_evacuation(reseau, demande["pmr"])
+
+    # Un nœud piégé n'est ni bloqué, ni atteint par le calcul.
+    pieges = []
+    for station_du_reseau in reseau.stations:
+        for noeud in station_du_reseau.station.noeuds:
+            if noeud.statut != "bloqué" and noeud.id not in couts:
+                pieges.append(noeud.id)
+
+    return {"couts": couts, "suivants": suivants, "pieges": pieges}
+
+
 def creer_application(chemin_reseau):
     """Crée le serveur, qui lira le réseau dans ce fichier."""
     etat["chemin"] = chemin_reseau
@@ -149,6 +172,7 @@ def creer_application(chemin_reseau):
     application.add_api_route("/api/recharger", recharger, methods=["POST"])
     application.add_api_route("/api/navigation", calculer_navigation, methods=["POST"])
     application.add_api_route("/api/chemin", calculer_chemin, methods=["POST"])
+    application.add_api_route("/api/evacuation", calculer_evacuation, methods=["POST"])
 
     # Tout le reste est la page : web/index.html et ses fichiers.
     application.mount("/", StaticFiles(directory=DOSSIER_WEB, html=True))

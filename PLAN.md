@@ -110,7 +110,7 @@ Champs facultatifs ajoutés, tous justifiés :
 - Les attributs exigés par la consigne pour une connexion (capacité, longueur, accessibilité) sont `capacite_max`, `longueur` et `pmr`.
 - **Vue macro** : on contracte chaque station en un seul nœud. Elle sert à l'affichage du réseau, où Cytoscape regroupe les nœuds d'une station dans une boîte, et à la discussion du rapport. Aucune fonction du moteur ne la calcule (retirée le 2026-11-24, faute d'usage hors des tests).
 - **Les nœuds sources sont les sas** (décision du 2026-11-20) : chaque station a deux sas, par lesquels les visiteurs arrivent de l'extérieur en s'amarrant, et par lesquels ils repartent. La liste `sources` reste dans le format, vide : le réseau n'a pas de point d'arrivée à part.
-- **Toutes les arêtes sont bidirectionnelles** dans nos plans (même décision). Le champ `sens` reste dans le format imposé, et le moteur sait traiter une arête `unique`.
+- **Toutes les arêtes sont bidirectionnelles** dans nos plans (même décision). Le champ `sens` reste dans le format imposé. Le graphe de navigation et les itinéraires savent traiter une arête `unique`, mais pas les distances d'évacuation : elles comptent sur des arêtes bidirectionnelles pour se passer du graphe inversé (décision de l'utilisateur, 2026-11-24). Un plan avec une arête `unique` fausserait l'évacuation.
 
 ### 2.3 Réglages de la simulation et paramètres
 
@@ -125,7 +125,7 @@ Champs facultatifs ajoutés, tous justifiés :
 | Plus court chemin | Dijkstra (recherche du plus proche dans une liste), coût = `longueur` | O(V² + E) |
 | Moins encombré | Dijkstra, coût = `longueur × (1 + β·τ_e)` | O(V² + E) |
 | Accessible PMR | Dijkstra sur le sous-graphe des arêtes `pmr`, coût = longueur | O(V² + E) |
-| Distances d'évacuation | Un seul Dijkstra multi-sources, lancé depuis toutes les sorties sur le graphe inversé | O((V+E) log V) |
+| Distances d'évacuation | Un seul Dijkstra multi-sources, lancé depuis toutes les sorties (graphe non inversé : toutes les arêtes sont bidirectionnelles) | O(V² + E) |
 | Connexité | Parcours en largeur | O(V+E) |
 | Points d'articulation | Hopcroft–Tarjan (DFS, indices et `low`) | O(V+E) |
 | Composantes fortement connexes | Tarjan, puis graphe réduit et tri topologique | O(V+E) |

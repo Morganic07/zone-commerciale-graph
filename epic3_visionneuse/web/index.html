@@ -109,6 +109,24 @@
       </div>
       <p id="chemin-resultat" role="status"></p>
     </details>
+
+    <details class="panneau">
+      <summary>chemins.py : évacuation</summary>
+      <p class="explication">
+        Lance <code>chemins_d_evacuation</code> du moteur Python : un seul Dijkstra, parti de
+        tous les sas à la fois. Cliquez ensuite sur un nœud pour voir son chemin vers le sas
+        le plus proche.
+      </p>
+      <label class="case"><input id="evac-pmr" type="checkbox"> En fauteuil (pmr)</label>
+      <label>Nœuds bloqués
+        <input id="evac-bloques" type="text" placeholder="ex. A5, B3" autocomplete="off">
+      </label>
+      <div class="boutons">
+        <button id="evac-lancer" type="button">Calculer l'évacuation</button>
+        <button id="evac-effacer" type="button">Effacer</button>
+      </div>
+      <p id="evac-resultat" role="status"></p>
+    </details>
     </div>
 
     <aside class="legende" aria-label="Légende">

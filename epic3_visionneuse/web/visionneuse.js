@@ -603,6 +603,91 @@ async function lancerChemin() {
     + "\nCoût total : " + cout;
 }
 
+// ---------------------------------------------------------------------------------------
+// Panneau « chemins.py : évacuation » : lance chemins_d_evacuation du moteur, puis montre
+// le chemin vers le sas le plus proche du nœud cliqué.
+// ---------------------------------------------------------------------------------------
+
+// Le dernier résultat reçu : pour chaque nœud, son coût et le nœud suivant vers la sortie.
+// null tant qu'on n'a rien lancé.
+const evacuation = {couts: null, suivants: null};
+
+// Écrit une liste d'identifiants complets comme dans les fichiers (« A5, B3 »).
+function nomsDansLeFichier(ids) {
+  const noms = [];
+  for (const id of ids) {
+    noms.push(cy.getElementById(id).data("idFichier"));
+  }
+  return noms.join(", ");
+}
+
+// Envoie la situation choisie au serveur, qui lance chemins_d_evacuation.
+async function lancerEvacuation() {
+  effacerEvacuation();
+  const erreurs = [];
+  const bloques = lireBloques("evac-bloques", erreurs);
+  if (erreurs.length > 0) {
+    document.getElementById("evac-resultat").textContent = "À corriger : " + erreurs.join(", ");
+    return;
+  }
+  const demande = {pmr: document.getElementById("evac-pmr").checked, bloques: bloques};
+  const reponse = await fetch("/api/evacuation", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(demande)
+  });
+  const resultat = await reponse.json();
+  evacuation.couts = resultat.couts;
+  evacuation.suivants = resultat.suivants;
+
+  let texte = "Aucun nœud piégé : chacun a un chemin vers un sas.";
+  if (resultat.pieges.length > 0) {
+    texte = resultat.pieges.length + " nœud(s) piégé(s), sans chemin vers un sas : "
+      + nomsDansLeFichier(resultat.pieges);
+  }
+  document.getElementById("evac-resultat").textContent = texte
+    + "\nCliquez sur un nœud pour voir son chemin d'évacuation.";
+}
+
+// Clic sur un nœud : dessine son chemin vers le sas le plus proche.
+function montrerEvacuation(evenement) {
+  const noeud = evenement.target;
+  if (evacuation.couts === null || noeud.hasClass("station")) {
+    return;
+  }
+  for (const element of cy.elements()) {
+    element.removeClass("chemin");
+  }
+  const nom = noeud.data("idFichier");
+  if (!(noeud.id() in evacuation.couts)) {
+    document.getElementById("evac-resultat").textContent = nom
+      + " est bloqué, ou piégé : aucun chemin ne mène à un sas.";
+    return;
+  }
+
+  // On suit les nœuds suivants jusqu'au sas, qui n'a pas de suivant.
+  const chemin = [noeud.id()];
+  let courant = noeud.id();
+  while (courant in evacuation.suivants) {
+    courant = evacuation.suivants[courant];
+    chemin.push(courant);
+  }
+  dessinerChemin(chemin);
+  const cout = Math.round(evacuation.couts[noeud.id()] * 100) / 100;
+  document.getElementById("evac-resultat").textContent = nomsDansLeFichier(chemin)
+    + "\nCoût jusqu'au sas : " + cout;
+}
+
+// Efface le résultat : le graphe redevient celui des fichiers.
+function effacerEvacuation() {
+  evacuation.couts = null;
+  evacuation.suivants = null;
+  for (const element of cy.elements()) {
+    element.removeClass("chemin");
+  }
+  document.getElementById("evac-resultat").textContent = "";
+}
+
 // Remplace tout le dessin par le réseau reçu, puis cadre la vue.
 function dessiner(cy, reseau) {
   cy.elements().remove();
@@ -614,6 +699,7 @@ function dessiner(cy, reseau) {
   // on les efface.
   effacerNavigation();
   effacerChemin();
+  effacerEvacuation();
 }
 
 const cy = cytoscape({
@@ -655,6 +741,10 @@ cy.on("tap", "node", montrerVoisins);
 // Panneau chemins.py.
 document.getElementById("chemin-lancer").addEventListener("click", lancerChemin);
 document.getElementById("chemin-effacer").addEventListener("click", effacerChemin);
+// Panneau chemins.py : évacuation.
+document.getElementById("evac-lancer").addEventListener("click", lancerEvacuation);
+document.getElementById("evac-effacer").addEventListener("click", effacerEvacuation);
+cy.on("tap", "node", montrerEvacuation);
 
 // Entrée dans le champ de recherche ne doit pas recharger la page.
 document.getElementById("filtres").addEventListener("submit", empecherEnvoi);
