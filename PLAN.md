@@ -48,7 +48,7 @@ graph-satellites/
 ├── epic4_algorithmes/
 │   ├── moteur/
 │   │   ├── navigation.py      graphe orienté de navigation : sens, filtres PMR et blocage, poids
-│   │   ├── chemins.py         Dijkstra, fonctions de coût, itinéraires, distances d'évacuation
+│   │   ├── chemins.py         Dijkstra, une fonction par critère, distances d'évacuation
 │   │   └── connexite.py       composantes, points d'articulation, Tarjan, graphe réduit
 │   └── tests/
 ├── epic5_simulation/
@@ -137,7 +137,7 @@ Champs facultatifs ajoutés, tous justifiés :
 - **Critère « moins encombré ».** C'est une longueur pénalisée : la foule ralentit, et β règle à quel point. Avec β = 0, on retrouve le plus court chemin.
 - **Alternative écartée : le goulot le plus large.** On maximiserait la capacité restante du tronçon le plus chargé. Rejeté parce que ce critère ignore la distance et peut imposer des détours absurdes. Il est cité dans le rapport avec ce motif.
 - **Une somme des τ seule est rejetée** : son résultat dépendrait du découpage des passages en arêtes, pas de la station.
-- **Itinéraire d'une région vers une station** : depuis le sas d'arrivée (la source) jusqu'au sas d'entrée de la station visée, sur la vue détaillée. On peut le prolonger jusqu'à un module.
+- **Itinéraire d'une région vers une station** (question 2 de la consigne) : une région est un sas, et on entre dans une station par l'un de ses sas. L'itinéraire est donc calculé de nœud à nœud, du sas de départ au sas d'arrivée choisi, par les trois fonctions de `chemins.py`. Le choix automatique du meilleur sas d'entrée, prévu par la story 4.3, est écarté le 2026-11-24 (décision de l'utilisateur) : la destination d'un visiteur est un lieu précis, pas une station abstraite. Motif complet dans `AVANCEMENT.md` (4.3) et `epic9_rapport/ecarts.md`.
 
 ## 4. Modèle de simulation
 
