@@ -75,33 +75,3 @@ class Reseau:
     stations: list[StationDuReseau]
     sources: list[Source]
     connexions: list[Arete]
-
-
-def macro_noeud(identifiant: str) -> str:
-    """Renvoie le macro-nœud d'un nœud : sa station (« A:SAS1 » donne « A »),
-    ou la source elle-même (« P1 » donne « P1 »)."""
-    if ":" in identifiant:
-        morceaux = identifiant.split(":")
-        return morceaux[0]
-    return identifiant
-
-
-def vue_macro(reseau: Reseau) -> tuple[list[str], list[tuple[str, str]]]:
-    """Graphe simplifié du réseau : un sommet par station et par source, une arête par
-    tunnel. Renvoie la liste des sommets et la liste des arêtes (paires de sommets).
-
-    Complexité : O(S + P + C), S stations, P sources et C connexions.
-    """
-    sommets = []
-    for station_du_reseau in reseau.stations:
-        sommets.append(station_du_reseau.id)
-    for source in reseau.sources:
-        sommets.append(source.id)
-
-    aretes = []
-    for connexion in reseau.connexions:
-        depart = macro_noeud(connexion.source)
-        arrivee = macro_noeud(connexion.cible)
-        aretes.append((depart, arrivee))
-
-    return sommets, aretes

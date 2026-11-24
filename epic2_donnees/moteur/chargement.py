@@ -1,12 +1,12 @@
-"""Lecture et écriture des fichiers JSON du projet.
+"""Lecture des fichiers JSON du projet.
 
-Trois sortes de fichiers :
-- parametres.json : les valeurs physiques (vitesses, débits…) ;
+Deux sortes de fichiers :
 - stations/A.json, B.json… : le plan d'une station, une liste de nœuds et d'arêtes ;
 - reseau.json : la liste des stations, des sources et des tunnels qui les relient.
 
 Fonctionnement : json.load transforme le fichier en dictionnaires et en listes Python,
 puis les fonctions lire_… recopient ces valeurs dans les objets du modèle (modele.py).
+station_en_dictionnaire fait le chemin inverse, pour envoyer une station à la page web.
 """
 
 import json
@@ -14,27 +14,6 @@ from pathlib import Path
 from typing import Any
 
 from epic2_donnees.moteur.modele import Arete, Noeud, Reseau, Source, Station, StationDuReseau
-
-# ---------------------------------------------------------------------------------------
-# Paramètres physiques (donnees/parametres.json)
-# ---------------------------------------------------------------------------------------
-
-
-def charger_parametres(chemin: Path) -> dict[str, float]:
-    """Lit le fichier des paramètres et renvoie un dictionnaire {nom: valeur}.
-
-    Dans le fichier, chaque paramètre a aussi sa source et son unité : on ne garde
-    que la valeur, la seule dont le programme a besoin.
-    Complexité : O(n), n étant le nombre de paramètres (une seule boucle).
-    """
-    with open(chemin, encoding="utf-8") as fichier:
-        donnees = json.load(fichier)
-
-    valeurs = {}
-    for nom in donnees:
-        valeurs[nom] = donnees[nom]["valeur"]
-    return valeurs
-
 
 # ---------------------------------------------------------------------------------------
 # Stations (donnees/stations/*.json), au format imposé par la consigne
@@ -94,10 +73,10 @@ def lire_station(donnees: dict[str, Any]) -> Station:
 
 def station_en_dictionnaire(station: Station) -> dict[str, Any]:
     """Fait l'inverse de lire_station : transforme une station en dictionnaire,
-    prêt à être écrit dans un fichier JSON ou envoyé à la page web.
+    que le serveur envoie à la page web au format JSON.
 
-    Les champs sont dans l'ordre de la consigne. La position n'est écrite que si elle
-    existe, pour qu'un fichier relu puis réécrit reste identique.
+    Les champs sont dans l'ordre de la consigne. La position n'est mise que si elle
+    existe dans le fichier.
     """
     liste_noeuds = []
     for noeud in station.noeuds:
@@ -135,16 +114,6 @@ def charger_station(chemin: Path) -> Station:
     with open(chemin, encoding="utf-8") as fichier:
         donnees = json.load(fichier)
     return lire_station(donnees)
-
-
-def ecrire_station(station: Station, chemin: Path) -> None:
-    """Écrit une station dans un fichier JSON (sert à vérifier qu'un plan relu puis
-    réécrit ne change pas)."""
-    donnees = station_en_dictionnaire(station)
-    # ensure_ascii=False garde les accents (« enfumé ») ; indent=2 rend le fichier lisible.
-    texte = json.dumps(donnees, ensure_ascii=False, indent=2)
-    with open(chemin, "w", encoding="utf-8") as fichier:
-        fichier.write(texte + "\n")
 
 
 # ---------------------------------------------------------------------------------------

@@ -35,9 +35,7 @@ Trois couches, dépendantes dans un seul sens : moteur ← serveur ← page.
 
 ```
 graph-satellites/
-├── epic1_socle/
-│   └── tests/                 test_dependances.py (pureté des moteurs)
-├── epic2_donnees/
+├── epic2_donnees/             (l'epic 1, le socle, n'a plus de dossier depuis le 2026-11-24)
 │   ├── moteur/                Python pur : aucune dépendance web ni graphe
 │   │   ├── modele.py          nœuds, arêtes, stations, réseau, statuts
 │   │   └── chargement.py      JSON ↔ modèle (sans validation, décision du 2026-11-20)
@@ -82,7 +80,7 @@ graph-satellites/
 
 ### 2.1 Station
 
-On reprend **exactement le format imposé** (section 2.3 de la consigne) : liste `noeuds` et liste `aretes`, avec les champs imposés. L'exemple de la consigne doit se charger puis se réécrire à l'identique.
+On reprend **exactement le format imposé** (section 2.3 de la consigne) : liste `noeuds` et liste `aretes`, avec les champs imposés. L'exemple de la consigne doit se charger. (La réécriture à l'identique a été abandonnée le 2026-11-24 : le programme ne réécrit jamais de fichier.)
 
 **Valeurs de `type` : un seul écart à la consigne** (décision du 2026-11-20). `type` vaut `module`, `sanitaire`, `carrefour` ou `sortie` : la valeur `module` remplace le `magasin` de la consigne, plus réaliste dans une station spatiale. Les trois autres valeurs sont celles de la consigne. Le programme ne valide pas les valeurs : un fichier au format de la consigne (avec `magasin`) se charge toujours, mais ses magasins ne seront pas reconnus comme des modules à visiter. **Écart à justifier dans le rapport** (story 9.2).
 
@@ -110,7 +108,7 @@ Champs facultatifs ajoutés, tous justifiés :
 - Au chargement, chaque nœud d'une station est **préfixé par l'identifiant de la station** (`A:LAB1`) : deux stations peuvent ainsi employer les mêmes noms internes sans collision.
 - Une connexion (un tunnel) relie le **sas** d'une station au sas d'une autre. Les sas servent d'interface entre le graphe intérieur et le réseau.
 - Les attributs exigés par la consigne pour une connexion (capacité, longueur, accessibilité) sont `capacite_max`, `longueur` et `pmr`.
-- **Vue macro** : on contracte chaque station en un seul nœud. Elle sert à l'affichage du réseau et à la discussion du rapport.
+- **Vue macro** : on contracte chaque station en un seul nœud. Elle sert à l'affichage du réseau, où Cytoscape regroupe les nœuds d'une station dans une boîte, et à la discussion du rapport. Aucune fonction du moteur ne la calcule (retirée le 2026-11-24, faute d'usage hors des tests).
 - **Les nœuds sources sont les sas** (décision du 2026-11-20) : chaque station a deux sas, par lesquels les visiteurs arrivent de l'extérieur en s'amarrant, et par lesquels ils repartent. La liste `sources` reste dans le format, vide : le réseau n'a pas de point d'arrivée à part.
 - **Toutes les arêtes sont bidirectionnelles** dans nos plans (même décision). Le champ `sens` reste dans le format imposé, et le moteur sait traiter une arête `unique`.
 

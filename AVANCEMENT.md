@@ -16,15 +16,15 @@ Correspondance avec la consigne :
 ## Epic 1 — Socle
 
 - [x] **1.1 Squelette du projet.** `pyproject.toml` (dépendances d'exécution et de test), paquets `moteur/` (sans `__init__.py`, décision du 2026-11-20 ; `serveur/` arrive à la story 3.1). Le `README.md` est reporté à la story 7.1.
-  *Critère :* `pytest`, `ruff check .` et `mypy` passent ; un test (`epic1_socle/tests/test_dependances.py`) échoue si un module d'un `epic*/moteur/` importe `networkx`, `fastapi` ou `uvicorn`.
+  *Critère :* `pytest`, `ruff check .` et `mypy` passent ; un test (`epic1_socle/tests/test_dependances.py`) échoue si un module d'un `epic*/moteur/` importe `networkx`, `fastapi` ou `uvicorn`. Ce test a été supprimé le 2026-11-24 (décision de l'utilisateur) : la règle reste, mais plus aucun test ne la vérifie.
 
 ## Epic 2 — Données
 
 - [x] **2.1 Valeurs physiques.** `epic2_donnees/donnees/parametres.json` (vitesse d'une personne valide, vitesse d'une personne en fauteuil roulant, débit par mètre de largeur de passage, surface par personne) et `epic9_rapport/sources.md`. Les stations ont une gravité artificielle : les valeurs sont terrestres.
-  *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement (vérifié à la relecture : le programme ne contrôle pas les données, décision du 2026-11-20) ; le fichier se charge.
+  *Critère :* chaque valeur cite son organisme ou son document, avec l'année, ou bien est marquée « hypothèse » avec son raisonnement (vérifié à la relecture : le programme ne contrôle pas les données, décision du 2026-11-20) ; le fichier se charge. La fonction de lecture (`charger_parametres`), que seuls les tests utilisaient, est retirée le 2026-11-24 : elle reviendra avec la simulation (epic 5), qui en aura besoin.
 - [x] **2.2 Modèle et format station.** Modèle de données, lecture et écriture JSON au format imposé.
-  *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique, champs facultatifs compris. Pas de validation des données (décision du 2026-11-20). Depuis le 2026-11-24, seuls `x` et `y` sont conservés : `nom` et `largeur` sont ignorés à la lecture (code simplifié).
-- [x] **2.3 Format réseau.** Chargement de `reseau.json`, préfixage des identifiants par station, rattachement des tunnels aux sas, vue macro.
+  *Critère :* l'exemple de la consigne se charge et se réécrit à l'identique, champs facultatifs compris. Pas de validation des données (décision du 2026-11-20). Depuis le 2026-11-24, seuls `x` et `y` sont conservés : `nom` et `largeur` sont ignorés à la lecture (code simplifié). L'écriture d'un fichier de station (`ecrire_station`), qui ne servait qu'au test de réécriture, est retirée le même jour : seule la lecture reste.
+- [x] **2.3 Format réseau.** Chargement de `reseau.json`, préfixage des identifiants par station, rattachement des tunnels aux sas, vue macro (fonction `vue_macro` retirée le 2026-11-24 : seuls les tests l'utilisaient ; l'affichage regroupe déjà les nœuds par station avec Cytoscape).
   *Critère :* un réseau de test se charge ; les identifiants sont préfixés par station ; les tunnels relient des sorties ou des sources ; la vue macro compte un nœud par station et par source. Pas de validation des données (décision du 2026-11-20).
 - [x] **2.4 Plan de la station détaillée A, dessiné par le groupe.** Plan dessiné (figure dans `epic9_rapport/`), `epic2_donnees/donnees/stations/A.json` et une notice qui situe chaque cas demandé sur le plan.
   *Critère :* `epic2_donnees/tests/test_plan_A.py` vérifie la liste des cas de `PLAN.md` § 6 (sas, modules, cycle, goulot, arête non PMR contournable, nœuds sans capteur).
