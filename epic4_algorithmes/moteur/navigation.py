@@ -1,10 +1,13 @@
-"""Graphe de navigation : la carte des déplacements possibles dans le réseau.
+"""
+Graphe de navigation : la carte des déplacements possibles dans le réseau.
 
 Les fichiers décrivent des arêtes. Les algorithmes de chemin (Dijkstra) ont besoin d'autre
 chose : pour chaque nœud, la liste des nœuds où l'on peut aller, avec le coût du trajet.
 Ce module construit cette liste, en tenant compte du sens des arêtes, du fauteuil
 roulant (PMR) et des éléments bloqués.
 """
+
+
 
 from epic2_donnees.moteur.modele import Arete, Reseau
 
@@ -16,11 +19,11 @@ def cout(arete: Arete, beta: float, taux: dict[tuple[str, str], float]) -> float
     le coût est la longueur : c'est le critère « plus court chemin ». Avec β > 0, une arête
     encombrée coûte plus cher : c'est le critère « moins encombré ».
     """
-    cle = (arete.source, arete.cible)
-    tau = 0.0
-    if cle in taux:
-        tau = taux[cle]
-    return arete.longueur * (1 + beta * tau)
+    paire_de_noeuds = (arete.source, arete.cible)
+    taux_de_l_arete = 0.0
+    if paire_de_noeuds in taux:
+        taux_de_l_arete = taux[paire_de_noeuds]
+    return arete.longueur * (1 + beta * taux_de_l_arete)
 
 
 def graphe_de_navigation(
@@ -36,25 +39,25 @@ def graphe_de_navigation(
 
     Complexité : O(V + E), V nœuds et E arêtes (chacun est parcouru une fois).
     """
-    voisins: dict[str, list[tuple[str, float]]] = {}
+    voisins_par_noeud: dict[str, list[tuple[str, float]]] = {}
 
     # Les nœuds praticables, tous stations confondues. Un nœud bloqué n'y est pas.
-    for station_du_reseau in reseau.stations:
-        for noeud in station_du_reseau.station.noeuds:
+    for station_placee in reseau.stations:
+        for noeud in station_placee.station.noeuds:
             if noeud.statut != "bloqué":
-                voisins[noeud.id] = []
-    for source in reseau.sources:
-        voisins[source.id] = []
+                voisins_par_noeud[noeud.id] = []
+    for point_d_arrivee in reseau.sources:
+        voisins_par_noeud[point_d_arrivee.id] = []
 
     # Toutes les arêtes : celles des stations, puis les tunnels.
-    aretes = []
-    for station_du_reseau in reseau.stations:
-        for arete in station_du_reseau.station.aretes:
-            aretes.append(arete)
+    toutes_les_aretes = []
+    for station_placee in reseau.stations:
+        for arete in station_placee.station.aretes:
+            toutes_les_aretes.append(arete)
     for tunnel in reseau.connexions:
-        aretes.append(tunnel)
+        toutes_les_aretes.append(tunnel)
 
-    for arete in aretes:
+    for arete in toutes_les_aretes:
         # Une arête bloquée ne donne aucun arc.
         if arete.statut == "bloqué":
             continue
@@ -65,16 +68,16 @@ def graphe_de_navigation(
             continue
 
         # Une arête qui touche un nœud bloqué ne mène nulle part : le nœud bloqué
-        # n'a pas été mis dans `voisins`.
-        depart_bloque = arete.source not in voisins
-        arrivee_bloquee = arete.cible not in voisins
+        # n'a pas été mis dans `voisins_par_noeud`.
+        depart_bloque = arete.source not in voisins_par_noeud
+        arrivee_bloquee = arete.cible not in voisins_par_noeud
         if depart_bloque or arrivee_bloquee:
             continue
 
         # L'arc aller, puis l'arc retour si l'arête se prend dans les deux sens.
-        valeur = cout(arete, beta, taux)
-        voisins[arete.source].append((arete.cible, valeur))
+        cout_du_passage = cout(arete, beta, taux)
+        voisins_par_noeud[arete.source].append((arete.cible, cout_du_passage))
         if arete.sens == "bidirectionnel":
-            voisins[arete.cible].append((arete.source, valeur))
+            voisins_par_noeud[arete.cible].append((arete.source, cout_du_passage))
 
-    return voisins
+    return voisins_par_noeud
