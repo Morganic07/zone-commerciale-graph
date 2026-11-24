@@ -68,7 +68,7 @@ graph-satellites/
 - **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit qu'aucun dossier `epic*/moteur/` ne l'importe.
 - **Page.** Cytoscape.js (MIT), copié dans `epic3_visionneuse/web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
 - **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
-- **Lancement en une commande** : `python -m epic3_visionneuse.serveur`, puis on ouvre la page indiquée.
+- **Lancement en une commande** : `python -m serveur` depuis la racine du projet (fichier `serveur.py`, décision de l'utilisateur, 2026-11-24 ; avant : `python -m epic3_visionneuse.serveur`), puis on ouvre la page indiquée.
 
 **Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires et articulations, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `epic3_visionneuse/serveur/` et `epic3_visionneuse/web/` grandissent.
 

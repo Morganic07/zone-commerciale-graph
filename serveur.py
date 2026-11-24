@@ -1,4 +1,5 @@
-"""Lance le serveur : `python -m epic3_visionneuse.serveur`, puis ouvrir http://localhost:8000."""
+"""Lance le serveur : `python -m serveur` depuis la racine du projet,
+puis ouvrir http://localhost:8000."""
 
 import uvicorn
 

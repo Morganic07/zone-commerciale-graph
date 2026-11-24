@@ -73,8 +73,7 @@ def station_en_dictionnaire(station):
     """Fait l'inverse de lire_station : transforme une station en dictionnaire,
     que le serveur envoie à la page web au format JSON.
 
-    Les champs sont dans l'ordre de la consigne. La position n'est mise que si elle
-    existe dans le fichier.
+    Les champs sont dans l'ordre de la consigne, suivis de la position.
     """
     liste_noeuds = []
     for noeud in station.noeuds:
@@ -86,10 +85,8 @@ def station_en_dictionnaire(station):
         donnee_noeud["capteur_fumee"] = noeud.capteur_fumee
         donnee_noeud["niveau_fumee"] = noeud.niveau_fumee
         donnee_noeud["statut"] = noeud.statut
-        if noeud.x is not None:
-            donnee_noeud["x"] = noeud.x
-        if noeud.y is not None:
-            donnee_noeud["y"] = noeud.y
+        donnee_noeud["x"] = noeud.x
+        donnee_noeud["y"] = noeud.y
         liste_noeuds.append(donnee_noeud)
 
     liste_aretes = []

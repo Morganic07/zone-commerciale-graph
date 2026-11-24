@@ -19,8 +19,8 @@ class Noeud:
     capteur_fumee: bool
     niveau_fumee: float  # entre 0 et 100
     statut: str  # « libre », « enfumé », « bloqué » ou « sortie »
-    x: float | None = None  # position sur le plan (facultatif)
-    y: float | None = None
+    x: float = 0  # position sur le plan (0 si le fichier n'en donne pas)
+    y: float = 0
 
 
 @dataclass
@@ -53,8 +53,8 @@ class StationDuReseau:
     id: str
     station: Station
     fichier: str  # chemin du plan, relatif au dossier du réseau (« stations/A.json »)
-    x: float | None = None  # position sur la vue d'ensemble (facultatif)
-    y: float | None = None
+    x: float = 0  # position sur la vue d'ensemble (0 si le fichier n'en donne pas)
+    y: float = 0
 
 
 @dataclass
@@ -63,8 +63,8 @@ class Source:
 
     id: str
     type: str  # « spatioport », « habitat » ou « relais »
-    x: float | None = None  # position sur la vue d'ensemble (facultatif)
-    y: float | None = None
+    x: float = 0  # position sur la vue d'ensemble (0 si le fichier n'en donne pas)
+    y: float = 0
 
 
 @dataclass

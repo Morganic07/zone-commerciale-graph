@@ -19,49 +19,49 @@ def dijkstra(graphe, depart, arrivee):
     `graphe` donne, pour chaque nœud, la liste des (voisin, coût) où l'on peut aller.
     Renvoie (liste des nœuds du chemin, coût total), ou ([], None) s'il n'y a aucun chemin.
 
-    Principe : à chaque tour, on prend le nœud le plus proche du départ parmi ceux qu'on
-    n'a pas encore traités ; sa distance est alors définitive, et on regarde ses voisins.
+    Principe : à chaque tour, on prend le nœud le moins coûteux à atteindre parmi ceux
+    qu'on n'a pas encore traités ; son coût est alors définitif, et on regarde ses voisins.
 
     Complexité : O(V² + E), V nœuds et E arcs (à chaque tour, on parcourt la liste des
-    nœuds à traiter pour trouver le plus proche).
+    nœuds à traiter pour trouver le moins coûteux).
     """
     # Un nœud bloqué n'est pas dans le graphe : on ne peut pas partir de lui.
     if depart not in graphe:
         return [], None
 
-    distances = {}  # nœud → coût du meilleur chemin trouvé depuis le départ
+    couts = {}  # nœud → coût du meilleur chemin trouvé depuis le départ
     precedents = {}  # nœud → le nœud d'où l'on arrive sur ce meilleur chemin
     a_traiter = []  # nœuds déjà atteints, mais pas encore traités
 
-    distances[depart] = 0
+    couts[depart] = 0
     a_traiter.append(depart)
 
     while len(a_traiter) > 0:
-        # Le nœud à traiter le plus proche du départ.
+        # Le nœud à traiter le moins coûteux à atteindre depuis le départ.
         noeud = a_traiter[0]
         for candidat in a_traiter:
-            if distances[candidat] < distances[noeud]:
+            if couts[candidat] < couts[noeud]:
                 noeud = candidat
         a_traiter.remove(noeud)
 
-        # L'arrivée est traitée : sa distance ne peut plus diminuer, on a fini.
+        # L'arrivée est traitée : son coût ne peut plus diminuer, on a fini.
         if noeud == arrivee:
             break
 
-        for voisin, cout in graphe[noeud]:
-            nouvelle_distance = distances[noeud] + cout
+        for voisin, cout_du_passage in graphe[noeud]:
+            nouveau_cout = couts[noeud] + cout_du_passage
             # Premier chemin trouvé vers ce voisin : on le note.
-            if voisin not in distances:
-                distances[voisin] = nouvelle_distance
+            if voisin not in couts:
+                couts[voisin] = nouveau_cout
                 precedents[voisin] = noeud
                 a_traiter.append(voisin)
-            # Chemin plus court que celui qu'on connaissait : on le remplace.
-            elif nouvelle_distance < distances[voisin]:
-                distances[voisin] = nouvelle_distance
+            # Chemin moins coûteux que celui qu'on connaissait : on le remplace.
+            elif nouveau_cout < couts[voisin]:
+                couts[voisin] = nouveau_cout
                 precedents[voisin] = noeud
 
     # On n'a jamais atteint l'arrivée : aucun chemin n'y mène.
-    if arrivee not in distances:
+    if arrivee not in couts:
         return [], None
 
     # On remonte de l'arrivée jusqu'au départ grâce aux précédents,
@@ -73,7 +73,7 @@ def dijkstra(graphe, depart, arrivee):
         chemin.append(noeud)
     chemin.reverse()
 
-    return chemin, distances[arrivee]
+    return chemin, couts[arrivee]
 
 
 def plus_court_chemin(reseau, depart, arrivee):
