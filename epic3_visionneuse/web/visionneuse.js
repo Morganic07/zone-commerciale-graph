@@ -521,11 +521,25 @@ function effacerNavigation() {
 }
 
 // ---------------------------------------------------------------------------------------
-// Panneau « chemins.py » : lance la fonction du critère choisi et dessine le chemin trouvé.
+// Panneau « chemins.py » : lance les trois critères sur le même trajet, écrit leurs
+// résultats l'un sous l'autre, et dessine le chemin du critère choisi.
 // ---------------------------------------------------------------------------------------
+
+// Les trois critères, dans l'ordre où on les écrit, avec leur nom pour la page.
+const CRITERES = ["plus_court", "moins_encombre", "pmr"];
+const NOMS_DES_CRITERES = {
+  plus_court: "plus court",
+  moins_encombre: "moins encombré",
+  pmr: "en fauteuil"
+};
+
+// Les derniers résultats reçus, pour chaque critère : {chemin, cout}.
+// null tant qu'on n'a rien lancé.
+const comparaison = {resultats: null};
 
 // Retire le chemin dessiné, et vide le texte du résultat.
 function effacerChemin() {
+  comparaison.resultats = null;
   for (const element of cy.elements()) {
     element.removeClass("chemin");
   }
@@ -548,7 +562,53 @@ function dessinerChemin(chemin) {
   }
 }
 
-// Envoie départ, arrivée, critère et situation au serveur, qui lance la fonction du critère.
+// Écrit les résultats des trois critères l'un sous l'autre, et dessine le chemin du
+// critère choisi dans la liste. Le critère dessiné est marqué en toutes lettres.
+function afficherComparaison() {
+  for (const element of cy.elements()) {
+    element.removeClass("chemin");
+  }
+  const critereChoisi = document.getElementById("chemin-critere").value;
+  let texte = "";
+
+  for (const critere of CRITERES) {
+    const resultat = comparaison.resultats[critere];
+    texte = texte + NOMS_DES_CRITERES[critere];
+    if (critere === critereChoisi) {
+      texte = texte + " (dessiné)";
+    }
+    texte = texte + " : ";
+
+    // Le moteur a renvoyé une liste vide : aucun chemin pour ce critère.
+    if (resultat.chemin.length === 0) {
+      texte = texte + "aucun chemin\n";
+      continue;
+    }
+    const noms = [];
+    for (const id of resultat.chemin) {
+      noms.push(cy.getElementById(id).data("idFichier"));
+    }
+    const cout = Math.round(resultat.cout * 100) / 100;
+    texte = texte + noms.join(" → ") + "\n    coût " + cout + "\n";
+    if (critere === critereChoisi) {
+      dessinerChemin(resultat.chemin);
+    }
+  }
+
+  texte = texte + "\nLe coût « moins encombré » compte la longueur pénalisée par l'encombrement ;"
+    + " les deux autres, la longueur seule.";
+  document.getElementById("chemin-resultat").textContent = texte;
+}
+
+// Changer de critère dans la liste dessine son chemin, sans relancer le calcul.
+function changerCritere() {
+  if (comparaison.resultats !== null) {
+    afficherComparaison();
+  }
+}
+
+// Envoie départ, arrivée et situation au serveur, une fois par critère : la page peut
+// ainsi comparer les trois chemins d'un même trajet.
 async function lancerChemin() {
   effacerChemin();
   const erreurs = [];
@@ -570,37 +630,26 @@ async function lancerChemin() {
     return;
   }
 
-  const demande = {
-    depart: depart,
-    arrivee: arrivee,
-    critere: document.getElementById("chemin-critere").value,
-    beta: Number(document.getElementById("chemin-beta").value),
-    bloques: bloques,
-    taux: taux
-  };
-  const reponse = await fetch("/api/chemin", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(demande)
-  });
-  const resultat = await reponse.json();
-
-  const nomDepart = cy.getElementById(depart).data("idFichier");
-  const nomArrivee = cy.getElementById(arrivee).data("idFichier");
-  if (resultat.chemin.length === 0) {
-    document.getElementById("chemin-resultat").textContent = "Aucun chemin de "
-      + nomDepart + " à " + nomArrivee + ".";
-    return;
+  const resultats = {};
+  for (const critere of CRITERES) {
+    const demande = {
+      depart: depart,
+      arrivee: arrivee,
+      critere: critere,
+      beta: Number(document.getElementById("chemin-beta").value),
+      bloques: bloques,
+      taux: taux
+    };
+    const reponse = await fetch("/api/chemin", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(demande)
+    });
+    resultats[critere] = await reponse.json();
   }
 
-  dessinerChemin(resultat.chemin);
-  const noms = [];
-  for (const id of resultat.chemin) {
-    noms.push(cy.getElementById(id).data("idFichier"));
-  }
-  const cout = Math.round(resultat.cout * 100) / 100;
-  document.getElementById("chemin-resultat").textContent = noms.join(" → ")
-    + "\nCoût total : " + cout;
+  comparaison.resultats = resultats;
+  afficherComparaison();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -741,6 +790,7 @@ cy.on("tap", "node", montrerVoisins);
 // Panneau chemins.py.
 document.getElementById("chemin-lancer").addEventListener("click", lancerChemin);
 document.getElementById("chemin-effacer").addEventListener("click", effacerChemin);
+document.getElementById("chemin-critere").addEventListener("change", changerCritere);
 // Panneau chemins.py : évacuation.
 document.getElementById("evac-lancer").addEventListener("click", lancerEvacuation);
 document.getElementById("evac-effacer").addEventListener("click", effacerEvacuation);

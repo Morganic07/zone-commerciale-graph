@@ -50,8 +50,7 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
   *Critère :* sur le réseau complet, le chemin PMR n'emprunte aucune arête non PMR et son coût est supérieur ou égal à celui du plus court chemin.
 - [x] **4.4 Distances d'évacuation.** Dijkstra multi-sources depuis toutes les sorties. Sans graphe inversé (décision du 2026-11-24) : toutes nos arêtes sont bidirectionnelles, le coût de la sortie vers un nœud est donc celui du nœud vers la sortie.
   *Critère :* pour chaque nœud, la distance obtenue égale le minimum des distances calculées sortie par sortie.
-- [ ] **4.5 Affichage des algorithmes.** Route et affichage : tracé d'un itinéraire (départ, arrivée, critère) avec son coût. Répond visuellement à la question 2 de la section 1 de la consigne.
-  *Critère :* `/run` : l'itinéraire tracé est le même que celui que renvoie le moteur ; sur un même trajet, les trois critères se comparent à l'écran.
+
 
 ## Epic 5 — Simulation
 

@@ -77,9 +77,10 @@
     <details class="panneau">
       <summary>chemins.py</summary>
       <p class="explication">
-        Lance, selon le critère, <code>plus_court_chemin</code>,
-        <code>chemin_le_moins_encombre</code> ou <code>chemin_pmr</code> du moteur Python
-        (algorithme de Dijkstra) : le chemin trouvé se dessine en noir sur le plan.
+        Lance <code>plus_court_chemin</code>, <code>chemin_le_moins_encombre</code> et
+        <code>chemin_pmr</code> du moteur Python (algorithme de Dijkstra) sur le même trajet :
+        les trois chemins s'écrivent l'un sous l'autre avec leur coût, et celui du critère
+        choisi se dessine en noir sur le plan.
       </p>
       <label>Départ
         <input id="chemin-depart" type="text" placeholder="ex. A1" autocomplete="off">
@@ -87,7 +88,7 @@
       <label>Arrivée
         <input id="chemin-arrivee" type="text" placeholder="ex. B3" autocomplete="off">
       </label>
-      <label>Critère
+      <label>Critère dessiné
         <select id="chemin-critere">
           <option value="plus_court">plus court (coût = longueur)</option>
           <option value="moins_encombre">moins encombré (longueur × (1 + β × τ))</option>
@@ -104,7 +105,7 @@
         <input id="chemin-beta" type="number" value="1" min="0" step="0.5">
       </label>
       <div class="boutons">
-        <button id="chemin-lancer" type="button">Chercher le chemin</button>
+        <button id="chemin-lancer" type="button">Chercher les chemins</button>
         <button id="chemin-effacer" type="button">Effacer</button>
       </div>
       <p id="chemin-resultat" role="status"></p>
