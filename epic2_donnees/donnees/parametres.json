@@ -1,6 +1,6 @@
 {
   "vitesse_valide": {
-    "description": "Vitesse de marche libre d'une personne valide",
+    "description": "Vitesse de marche libre d'une personne valide, sur Terre (les stations simulent la gravité : pas d'apesanteur)",
     "valeur": 1.34,
     "unite": "m/s",
     "source": "U. Weidmann, Transporttechnik der Fussgänger, IVT, ETH Zürich, Schriftenreihe Nr. 90",
@@ -8,7 +8,7 @@
     "hypothese": ""
   },
   "vitesse_pmr": {
-    "description": "Vitesse d'une personne en fauteuil roulant manuel, sans aide, sur un chemin plat",
+    "description": "Vitesse d'une personne en fauteuil roulant manuel, sans aide, sur un chemin plat, sur Terre (les stations simulent la gravité)",
     "valeur": 0.67,
     "unite": "m/s",
     "source": "Huang et al., Measuring spatial accessibility for wheelchair users: A case study in a Chinese campus, PLoS One 20(12), e0335663",

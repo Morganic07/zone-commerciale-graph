@@ -22,7 +22,7 @@ La consigne porte sur une zone commerciale. Le groupe la transpose à un réseau
 | Sortie | Sas, à la fois entrée et sortie de la station |
 | Couloir, passage | Passage entre deux modules, à travers une écoutille |
 | Visiteurs | Équipage, scientifiques et touristes spatiaux |
-| Personne à mobilité réduite | Personne transportée sur civière (§ 4.2) |
+| Personne à mobilité réduite | Personne en fauteuil roulant : les stations simulent la gravité (§ 4.1 et 4.2) |
 | Propriétaires | Agences spatiales et opérateurs privés (§ 7) |
 
 **Pourquoi des tunnels et pas des navettes entre les stations.** Une navette transporte des groupes à heures fixes : elle casserait le modèle de flux continu de la consigne (capacité par unité de temps, longueur). Un tunnel pressurisé se modélise exactement comme une zone de connexion. C'est la part fantaisiste du sujet, assumée dans le rapport.
@@ -141,14 +141,14 @@ Champs facultatifs ajoutés, tous justifiés :
 
 ### 4.1 Temps et valeurs physiques
 
-- **Δt = 1 s.** Les capacités d'arête de la consigne sont des débits (personnes par unité de temps) : une arête admet au plus `c_e · Δt` entrées par pas.
-- **Valeurs physiques**, toutes propres à l'apesanteur : la marche et les débits de foule au sol ne s'appliquent pas.
-  - vitesse de déplacement d'une personne valide, qui se tire le long des mains courantes ;
-  - vitesse d'une personne transportée sur civière ;
-  - débit de passage par mètre de largeur d'écoutille ;
-  - volume habitable par personne, d'où la capacité des modules.
-- **Où les chercher** (story 2.1) : documentation de la NASA sur la conception des habitats spatiaux et les dimensions des écoutilles et passages de l'ISS, publications de l'ESA, retours d'expérience des équipages.
-- **Règle** : chaque valeur cite sa source. Quand aucune source publiée n'existe (le débit à travers une écoutille, probablement), la valeur est marquée **hypothèse** dans `parametres.json`, avec son raisonnement (un ordre de grandeur tiré d'une valeur sourcée). Le rapport liste ces hypothèses à part. Aucune valeur n'est donnée sans l'une ou l'autre.
+- **Δt = 1 s.** Les capacités d'arête de la consigne sont des débits (personnes par unité de temps) : une arête admet au plus `c_e · Δt` entrées par pas (c_e = capacité d'une arete)
+- **Pas d'apesanteur : les stations simulent la gravité** (gravité artificielle, par rotation). Les occupants marchent comme sur Terre. Les valeurs physiques sont donc celles d'une personne au sol, tirées des études de foule et de mobilité terrestres :
+  - vitesse de marche d'une personne valide (1,34 m/s) ;
+  - vitesse d'une personne en fauteuil roulant (0,67 m/s) ;
+  - débit de passage par mètre de largeur ;
+  - surface par personne, d'où la capacité des modules.
+- **Sources** (story 2.1) : `epic2_donnees/donnees/parametres.json`, détaillées dans `epic9_rapport/sources.md`.
+- **Règle** : chaque valeur cite sa source. Quand aucune source publiée n'existe, la valeur est marquée **hypothèse** dans `parametres.json`, avec son raisonnement (un ordre de grandeur tiré d'une valeur sourcée). Le rapport liste ces hypothèses à part. Aucune valeur n'est donnée sans l'une ou l'autre.
 
 ### 4.2 Agents (extension ⋆)
 
@@ -156,7 +156,7 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), un sas d'arrivée
 
 **Pourquoi des agents.** La consigne demande de « suivre leurs déplacements » et de calculer des itinéraires par profil. Avec des effectifs agrégés, il faudrait suivre la destination de chaque groupe. Les contraintes du modèle minimal restent respectées à l'identique.
 
-**Accessibilité en apesanteur** (définition validée par l'enseignante). Il n'y a ni escalier ni fauteuil roulant dans une station. Le profil « à mobilité réduite » désigne une personne qui ne se déplace pas seule : un blessé ou un malade transporté sur civière. Une arête est `pmr: false` quand une civière n'y passe pas : écoutille trop étroite, passage coudé, ou passage encombré d'équipements. Un tel passage reste praticable par une personne valide.
+**Accessibilité.** Les stations ont une gravité artificielle : on y marche comme sur Terre. Le profil « à mobilité réduite » désigne donc, comme dans la consigne, une personne en fauteuil roulant. Une arête est `pmr: false` quand un fauteuil n'y passe pas : écoutille trop étroite ou à seuil, échelle, passage coudé ou encombré d'équipements. Un tel passage reste praticable par une personne valide.
 
 **États d'un agent :**
 1. **Dans un nœud**, où il compte dans l'occupation `o_v`.
@@ -199,7 +199,7 @@ On applique la règle de la consigne :
 - `s_v > 0` seulement pour les nœuds en feu.
 - La règle ne fait qu'augmenter la fumée, qui finit à 100 partout où elle diffuse. Le rapport le signale.
 - **Fumée d'une arête** = le maximum de ses deux extrémités : un passage est aussi dangereux que son bout le plus enfumé. Le format JSON n'a pas besoin d'être étendu.
-- **Limite à discuter dans le rapport** : en apesanteur, il n'y a pas de convection et la fumée suit la ventilation. La règle de la consigne, symétrique, ne le représente pas. Une diffusion orientée selon la ventilation est une extension possible, non prévue.
+- **Limite à discuter dans le rapport** : dans une station, la fumée suit aussi la ventilation. La règle de la consigne, symétrique, ne le représente pas. Une diffusion orientée selon la ventilation est une extension possible, non prévue.
 
 ### 5.2 Détection
 
