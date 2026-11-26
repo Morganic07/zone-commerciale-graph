@@ -163,6 +163,21 @@ def calculer_evacuation(demande=Body()):
     return {"couts": couts, "suivants": suivants, "pieges": pieges}
 
 
+class PageSansCache(StaticFiles):
+    """Sert la page (web/) en demandant au navigateur de revérifier chaque fichier.
+
+    Sans cela, après une modification de visionneuse.js, un simple F5 garde l'ancien
+    script en cache : la page mélange alors le nouvel index.html et l'ancien code.
+    « no-cache » ne supprime pas le cache : le navigateur demande si le fichier a changé,
+    et le serveur répond « 304, pas changé » sans le renvoyer.
+    """
+
+    def file_response(self, full_path, stat_result, scope, status_code=200):
+        reponse = super().file_response(full_path, stat_result, scope, status_code)
+        reponse.headers["Cache-Control"] = "no-cache"
+        return reponse
+
+
 def creer_application(chemin_reseau):
     """Crée le serveur, qui lira le réseau dans ce fichier."""
     etat["chemin"] = chemin_reseau
@@ -175,5 +190,5 @@ def creer_application(chemin_reseau):
     application.add_api_route("/api/evacuation", calculer_evacuation, methods=["POST"])
 
     # Tout le reste est la page : web/index.html et ses fichiers.
-    application.mount("/", StaticFiles(directory=DOSSIER_WEB, html=True))
+    application.mount("/", PageSansCache(directory=DOSSIER_WEB, html=True))
     return application
