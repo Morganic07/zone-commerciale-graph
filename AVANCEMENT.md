@@ -10,7 +10,7 @@ Correspondance avec la consigne :
 - section 1 → epics 2, 3, 4 ;
 - section 2 → epics 2, 5 ;
 - section 3 → epic 6 ;
-- section 4 → epic 8 ;
+- section 4 → epic 8, exercice de réflexion dont les réponses sont rédigées dans le rapport (une story par question) ;
 - section 5 → toutes les epics, l'interface dans les epics 3 à 7, et l'epic 9 pour le rapport.
 
 ## Epic 1 — Socle
@@ -44,15 +44,13 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
 
 - [x] **4.1 Graphe de navigation.** Arcs orientés selon `sens`, filtre PMR, retrait des éléments bloqués, poids selon le critère.
   *Critère :* une arête `unique` donne un seul arc, une arête `bidirectionnel` en donne deux ; aucun arc non PMR dans la vue PMR ; aucun élément bloqué.
-- [ ] **4.2 Dijkstra et les trois fonctions de coût.** Plus court, moins encombré (`longueur × (1 + β·τ)`), PMR ; reconstruction du chemin ; complexité indiquée dans la docstring.
+- [x] **4.2 Dijkstra et les trois fonctions de coût.** Plus court, moins encombré (`longueur × (1 + β·τ)`), PMR ; reconstruction du chemin ; complexité indiquée dans la docstring.
   *Critère :* distances identiques à celles de `networkx` sur 50 graphes aléatoires (graine fixée) et sur le réseau ; β = 0 redonne le plus court chemin ; une destination inaccessible renvoie « aucun chemin ».
 - **4.3 Itinéraire d'une région vers une station — écartée** (décision de l'utilisateur, 2026-11-24). Prévu : d'un sas d'arrivée au meilleur sas d'entrée de la station visée, choisi automatiquement, avec un prolongement possible jusqu'à un module. Motif : la 4.2 répond déjà à la question 2 de la consigne, puisqu'une région est un sas et qu'on entre dans une station par ses sas ; l'itinéraire « région → station » est donc un itinéraire de sas à sas, que les trois fonctions de `chemins.py` calculent. Seul le choix automatique du sas d'entrée est abandonné : la destination d'un visiteur est un lieu précis (sas ou module), pas une station abstraite. Le prolongement jusqu'à un module n'était pas demandé par la consigne. Le critère prévu (chemin PMR sans arête interdite, coût au moins égal au plus court, sur le réseau complet) est déjà vérifié par les tests de la 4.2. Écart à justifier dans le rapport (9.2), voir `epic9_rapport/ecarts.md`.
   *Critère :* sur le réseau complet, le chemin PMR n'emprunte aucune arête non PMR et son coût est supérieur ou égal à celui du plus court chemin.
 - [x] **4.4 Distances d'évacuation.** Dijkstra multi-sources depuis toutes les sorties. Sans graphe inversé (décision du 2026-11-24) : toutes nos arêtes sont bidirectionnelles, le coût de la sortie vers un nœud est donc celui du nœud vers la sortie.
   *Critère :* pour chaque nœud, la distance obtenue égale le minimum des distances calculées sortie par sortie.
-- [ ] **4.5 Connexité, articulations, composantes fortement connexes.** Parcours en largeur, Hopcroft–Tarjan, Tarjan, graphe réduit et tri topologique.
-  *Critère :* résultats identiques à `connected_components`, `articulation_points`, `strongly_connected_components` et `condensation` de `networkx`, sur 50 graphes aléatoires.
-- [ ] **4.6 Affichage des algorithmes.** Route et affichage : tracé d'un itinéraire (départ, arrivée, critère) avec son coût ; points d'articulation mis en évidence.
+- [ ] **4.5 Affichage des algorithmes.** Route et affichage : tracé d'un itinéraire (départ, arrivée, critère) avec son coût. Répond visuellement à la question 2 de la section 1 de la consigne.
   *Critère :* `/run` : l'itinéraire tracé est le même que celui que renvoie le moteur ; sur un même trajet, les trois critères se comparent à l'écran.
 
 ## Epic 5 — Simulation
@@ -96,12 +94,30 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
 
 `proprietaires.json` est écrit par le groupe (`PLAN.md` § 7).
 
-- [ ] **8.1 Jeu de données des propriétaires.** `epic8_proprietes/donnees/proprietaires.json` : une douzaine de stations (dont A, B et C), des agences spatiales et des opérateurs privés, les parts en pourcentage ; chargement et validation ; une notice dans `epic9_rapport/` explique comment il a été construit.
-  *Critère :* le chargement refuse une station dont les parts ne font pas 100 % ; sur ce fichier, G_P a au moins une articulation, et G⃗_P au moins une composante fortement connexe de plus d'un sommet et une chaîne de contrôle de longueur au moins 3 (vérifié avec `networkx`).
-- [ ] **8.2 Analyse de G_P.** Connexité et composantes, vérification de la propriété de clique et de la borne, points d'articulation (stations, puis propriétaires dans le graphe biparti).
-  *Critère :* sur un jeu d'essai conçu à la main puis sur `proprietaires.json`, résultats identiques à `networkx` et borne vérifiée.
-- [ ] **8.3 G⃗_P et graphe réduit.** « Majoritaire » = strictement plus de 50 %, sans arc d'une station vers elle-même, Tarjan, graphe réduit, sources, puits, chaînes de contrôle.
-  *Critère :* le graphe réduit est vérifié acyclique ; les sources, les puits et la plus longue chaîne sont identiques à ceux calculés par `networkx`.
+**Un exercice de réflexion, pas un livrable de code** (décision de l'utilisateur, 2026-11-26). La section 4 de la consigne pose des questions de théorie des graphes. On y répond par écrit dans le rapport, avec des démonstrations et des justifications appuyées sur `proprietaires.json`. Les livrables de la consigne (§ 5) n'exigent pas de code pour cette partie. **On peut s'aider de code** pour calculer ou vérifier les réponses sur le fichier : un petit script dans `epic8_proprietes/`, qui peut utiliser `networkx`. Ce script n'entre ni dans le moteur ni dans l'application. Chaque story ci-dessous produit sa réponse rédigée dans `epic9_rapport/`.
+
+Ces stories n'ont ni tests ni `/run` : on en coche une quand sa réponse est rédigée et vérifiée, et que `/but-for-real` a été mené à son terme.
+
+Une story par question de la consigne (§ 4) :
+
+| Story | Question de la consigne |
+|---|---|
+| 8.1 | aucune : prépare les « données fournies » dont parlent les questions 1, 3 et 4 |
+| 8.2 | Q1 — G_P est-il connexe ? ses composantes connexes |
+| 8.3 | Q2 — les centres d'un même propriétaire forment une clique ; borne sur le nombre d'arêtes |
+| 8.4 | Q3 — points d'articulation de G_P et leur interprétation |
+| 8.5 | Q4 — G⃗_P, son graphe réduit, acyclicité, sources, puits, chaînes de contrôle |
+
+- [ ] **8.1 Jeu de données des propriétaires.** `epic8_proprietes/donnees/proprietaires.json` : une douzaine de stations (dont A, B et C), des agences spatiales et des opérateurs privés, les parts en pourcentage. Le fichier est relu à la main, pas validé par du code. Une notice dans `epic9_rapport/` explique comment il a été construit.
+  *Critère :* les parts de chaque station font 100 % ; le fichier donne une réponse intéressante à chaque question (`PLAN.md` § 7) : au moins une station articulation et un propriétaire articulation dans G_P, et dans G⃗_P au moins une composante fortement connexe de plus d'un sommet et une chaîne de contrôle de longueur au moins 3.
+- [ ] **8.2 Q1 — Connexité de G_P.** Construire G_P (une arête entre deux stations qui ont un propriétaire en commun), le dessiner, dire s'il est connexe et donner ses composantes connexes.
+  *Critère :* la réponse est justifiée sur les données (dessin de G_P à l'appui) ; les composantes sont vérifiées, à la main ou par le script.
+- [ ] **8.3 Q2 — Clique et borne.** Démontrer que les stations d'un même propriétaire forment une clique dans G_P, en déduire la borne `|E_P| ≤ Σ_p C(k_p, 2)` (k_p = nombre de stations du propriétaire p) et l'appliquer au fichier.
+  *Critère :* la preuve est complète ; elle explique pourquoi la borne est une inégalité et non une égalité (deux propriétaires peuvent produire la même arête) ; le nombre réel d'arêtes de G_P est comparé à la borne.
+- [ ] **8.4 Q3 — Points d'articulation.** Les stations articulation de G_P, puis les propriétaires articulation, dans le graphe biparti propriétaires–stations (`PLAN.md` § 7) ; dire ce que la disparition de chacun scinde.
+  *Critère :* chaque articulation est trouvée et interprétée en une phrase ; la liste est vérifiée, à la main ou par le script.
+- [ ] **8.5 Q4 — G⃗_P et graphe réduit.** Construire G⃗_P (arc c1 → c2 si le propriétaire majoritaire de c1, strictement plus de 50 %, a une part dans c2 ; pas d'arc d'une station vers elle-même), ses composantes fortement connexes, puis son graphe réduit. Dire s'il est acyclique et décrire sa structure : sources, puits, chaînes de contrôle.
+  *Critère :* l'acyclicité du graphe réduit est justifiée par le théorème (elle est toujours vraie) ; les composantes, les sources, les puits et la plus longue chaîne de contrôle sont identifiés et vérifiés, à la main ou par le script.
 
 ## Epic 9 — Rapport
 
@@ -113,5 +129,5 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
   *Critère :* chaque algorithme a sa complexité justifiée ; les trois critères d'itinéraire sont illustrés sur un même trajet.
 - [ ] **9.4 Incendie.** Règles et paramètres justifiés, limite de la diffusion symétrique de la fumée ; réponses aux trois questions imposées, appuyées sur les indicateurs.
   *Critère :* chaque question a une réponse argumentée et chiffrée.
-- [ ] **9.5 Propriétés.** Construction du jeu de données, preuve de la clique et de la borne, résultats, interprétation des articulations et de la structure de G⃗_P.
-  *Critère :* les preuves sont complètes ; les résultats correspondent à ceux de l'epic 8.
+- [ ] **9.5 Propriétés.** Assembler dans le rapport les réponses rédigées aux stories 8.1 à 8.5 : construction du jeu de données, puis une réponse par question de la section 4 de la consigne.
+  *Critère :* chacune des quatre questions de la section 4 a sa réponse, dans l'ordre de la consigne ; les résultats correspondent à ceux de l'epic 8.

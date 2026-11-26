@@ -48,8 +48,7 @@ graph-satellites/
 ├── epic4_algorithmes/
 │   ├── moteur/
 │   │   ├── navigation.py      graphe orienté de navigation : sens, filtres PMR et blocage, poids
-│   │   ├── chemins.py         Dijkstra, une fonction par critère, distances d'évacuation
-│   │   └── connexite.py       composantes, points d'articulation, Tarjan, graphe réduit
+│   │   └── chemins.py         Dijkstra, une fonction par critère, distances d'évacuation
 │   └── tests/
 ├── epic5_simulation/
 │   ├── moteur/                simulation.py (agents, pas de temps, capacités, admission),
@@ -57,7 +56,8 @@ graph-satellites/
 │   └── donnees/               simulation.json
 ├── epic6_incendie/moteur/     incendie.py : diffusion, détection, effets, évacuation
 ├── epic7_interface/
-├── epic8_proprietes/          moteur/proprietes.py (partie 4), donnees/proprietaires.json
+├── epic8_proprietes/          partie 4, exercice de réflexion (§ 7) : donnees/proprietaires.json,
+│                              script d'aide facultatif, hors moteur et hors application
 └── epic9_rapport/             rapport.md, sources.md, figures générées, construction PDF (pandoc)
 ```
 
@@ -65,12 +65,12 @@ graph-satellites/
 
 **Stack.** Choix issu de la recherche d'antériorité.
 - **Python ≥ 3.11.** Dépendances d'exécution : `fastapi`, `uvicorn`. Dépendances de test : `pytest`, `httpx` (pour le client de test FastAPI), `networkx`, `ruff`. `mypy` a été retiré le 2026-11-24, avec les annotations de type, jugées illisibles pour un débutant (décision de l'utilisateur).
-- **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit qu'aucun dossier `epic*/moteur/` ne l'importe.
+- **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit qu'aucun dossier `epic*/moteur/` ne l'importe. Seule exception : le script d'aide facultatif de la partie 4 (§ 7), qui n'est ni du moteur ni de l'application.
 - **Page.** Cytoscape.js (MIT), copié dans `epic3_visionneuse/web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
 - **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
 - **Lancement en une commande** : `python -m serveur` depuis la racine du projet (fichier `serveur.py`, décision de l'utilisateur, 2026-11-24 ; avant : `python -m epic3_visionneuse.serveur`), puis on ouvre la page indiquée.
 
-**Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires et articulations, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `epic3_visionneuse/serveur/` et `epic3_visionneuse/web/` grandissent.
+**Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `epic3_visionneuse/serveur/` et `epic3_visionneuse/web/` grandissent.
 
 **Design super simple** (même décision) : une page claire et sobre, sans recherche graphique. L'ancien design system de l'autre projet n'est pas repris.
 
@@ -126,10 +126,8 @@ Champs facultatifs ajoutés, tous justifiés :
 | Moins encombré | Dijkstra, coût = `longueur × (1 + β·τ_e)` | O(V² + E) |
 | Accessible PMR | Dijkstra sur le sous-graphe des arêtes `pmr`, coût = longueur | O(V² + E) |
 | Distances d'évacuation | Un seul Dijkstra multi-sources, lancé depuis toutes les sorties (graphe non inversé : toutes les arêtes sont bidirectionnelles) | O(V² + E) |
-| Connexité | Parcours en largeur | O(V+E) |
-| Points d'articulation | Hopcroft–Tarjan (DFS, indices et `low`) | O(V+E) |
-| Composantes fortement connexes | Tarjan, puis graphe réduit et tri topologique | O(V+E) |
 
+- **Connexité, points d'articulation, composantes fortement connexes et graphe réduit ne sont pas codés dans le moteur** (décision de l'utilisateur, 2026-11-26 ; l'ancienne story 4.5, qui les prévoyait, est supprimée, et la 4.6 n'affiche plus d'articulations) : seule la partie 4 en a besoin, et elle se traite par écrit (§ 7). La consigne ne demande pas d'articulations sur le réseau des stations.
 - **Tous les coûts sont positifs**, condition nécessaire à Dijkstra.
 - **Dijkstra sans tas** (décision du 2026-11-24, code simplifié) : à chaque tour, on cherche le nœud le plus proche en parcourant la liste des nœuds à traiter. C'est O(V² + E) au lieu de O((V+E) log V) avec un tas binaire, mais le réseau ne compte que quelques dizaines de nœuds, et le code se lit sans connaître le module `heapq`. Le rapport le justifie.
 - **Le graphe de navigation est orienté** : une arête `bidirectionnel` donne deux arcs, une arête `unique` un seul.
@@ -270,14 +268,21 @@ Les deux stations simples, B et C, comptent au moins 12 nœuds et 2 sas chacune.
 - au moins une station articulation, et un propriétaire articulation ;
 - dans G⃗_P, au moins un cycle de contrôle (donc une composante fortement connexe de plus d'un sommet) et une chaîne de contrôle de longueur au moins 3.
 
-Ce qui est prévu :
-- **Connexité de G_P** par parcours en largeur, avec ses composantes.
-- **Preuve que les stations d'un même propriétaire forment une clique**, d'où la borne `|E_P| ≤ Σ_p C(k_p, 2)`.
-- **Points d'articulation** (Hopcroft–Tarjan), à deux niveaux :
-  - les stations articulation de G_P ;
-  - les propriétaires articulation, dans le graphe biparti propriétaires–stations. La disparition d'un propriétaire retire une clique d'arêtes et non un sommet de G_P : c'est pourquoi il faut ce second graphe.
-- **G⃗_P**, sans les arcs d'une station vers elle-même, puis ses composantes fortement connexes (Tarjan) et son graphe réduit.
-  - Le graphe réduit est toujours acyclique : la réponse découle d'un théorème. L'analyse porte donc sur sa structure : sources, puits, chaînes de contrôle (plus long chemin dans l'ordre topologique).
+**Nature de la partie 4 : un exercice de réflexion** (décision de l'utilisateur, 2026-11-26). La consigne y pose des questions de théorie des graphes, auxquelles on répond **par écrit dans le rapport** : démonstrations, raisonnements, justifications sur les données. Les livrables de la consigne (§ 5) réclament l'implémentation des algorithmes de chemin, de flux et de fumée, pas celle de cette partie. **On peut s'aider de code** pour calculer ou vérifier les réponses sur `proprietaires.json` : un petit script facultatif dans `epic8_proprietes/`, qui peut utiliser `networkx`, puisqu'il ne livre aucun algorithme. Ce script n'entre ni dans le moteur ni dans l'application. Avec une douzaine de stations, tout se vérifie aussi à la main sur un dessin.
+
+**Une story par question de la consigne** (détail dans `AVANCEMENT.md`, epic 8) :
+
+| Story | Question de la consigne (§ 4) | Ce qu'on rédige |
+|---|---|---|
+| 8.1 | aucune : prépare les « données fournies » des questions 1, 3 et 4 | le fichier et la notice qui explique sa construction |
+| 8.2 | Q1 — G_P est-il connexe ? | G_P dessiné, la réponse justifiée, ses composantes connexes |
+| 8.3 | Q2 — clique et borne | la preuve que les stations d'un même propriétaire forment une clique, d'où la borne `|E_P| ≤ Σ_p C(k_p, 2)`, appliquée au fichier |
+| 8.4 | Q3 — points d'articulation | les stations articulation de G_P, puis les propriétaires articulation, et ce que la disparition de chacun scinde |
+| 8.5 | Q4 — G⃗_P et graphe réduit | G⃗_P, ses composantes fortement connexes, son graphe réduit, son acyclicité, ses sources, ses puits et ses chaînes de contrôle |
+
+Points de méthode :
+- **Propriétaires articulation (Q3)** : ils se cherchent dans le graphe biparti propriétaires–stations. La disparition d'un propriétaire retire une clique d'arêtes et non un sommet de G_P : c'est pourquoi il faut ce second graphe.
+- **G⃗_P (Q4)** : pas d'arc d'une station vers elle-même. Le graphe réduit est toujours acyclique : la réponse découle d'un théorème. L'analyse porte donc sur sa structure : sources, puits, chaînes de contrôle (plus long chemin dans l'ordre topologique).
 
 ## 8. Priorités en cas de retard
 
@@ -299,4 +304,4 @@ Il contient :
 - les preuves (clique, borne) ;
 - les sources des valeurs physiques, et la liste des hypothèses ;
 e- les réponses aux trois questions de l'incendie, appuyées sur des résultats chiffrés ;
-- les résultats de la partie 4.
+- les réponses rédigées aux quatre questions de la partie 4 (§ 7), une par question.
