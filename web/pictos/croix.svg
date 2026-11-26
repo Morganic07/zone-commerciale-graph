@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <!-- Élément bloqué : croix rouge de sécurité, posée par-dessus le nœud. -->
-  <g stroke="#C8102E" stroke-width="3" stroke-linecap="round">
-    <path d="M5 5 L19 19"/>
-    <path d="M19 5 L5 19"/>
-  </g>
-</svg>

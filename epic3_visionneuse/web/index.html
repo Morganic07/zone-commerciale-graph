@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Réseau de stations spatiales</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Réseau de stations spatiales</h1>
+    <button id="recharger" type="button">Recharger les fichiers</button>
+  </header>
+
+  <form class="filtres" role="search" id="filtres">
+    <label>Nœud
+      <input id="filtre-id" type="search" placeholder="ex. A2" size="6" autocomplete="off">
+    </label>
+    <label>Type
+      <select id="filtre-type">
+        <option value="">tous</option>
+        <option value="module">module</option>
+        <option value="sanitaire">sanitaire</option>
+        <option value="carrefour">carrefour</option>
+        <option value="sortie">sortie (sas)</option>
+      </select>
+    </label>
+    <label>Capteur de fumée
+      <select id="filtre-capteur">
+        <option value="">peu importe</option>
+        <option value="avec">avec</option>
+        <option value="sans">sans</option>
+      </select>
+    </label>
+    <label>Arêtes
+      <select id="filtre-pmr">
+        <option value="">toutes</option>
+        <option value="oui">accessibles en fauteuil</option>
+        <option value="non">interdites aux fauteuils</option>
+      </select>
+    </label>
+    <button id="tout-afficher" type="reset">Tout afficher</button>
+    <p id="message-filtre" role="status"></p>
+  </form>
+
+  <main>
+    <div id="graphe"></div>
+    <div id="infobulle" hidden></div>
+
+    <div class="panneaux">
+    <details class="panneau">
+      <summary>navigation.py</summary>
+      <p class="explication">
+        Lance <code>graphe_de_navigation</code> du moteur Python dans la situation choisie,
+        puis cliquez sur un nœud : vous verrez où l'on peut aller depuis lui, et à quel coût.
+        Ce qui n'est plus praticable s'estompe.
+      </p>
+      <label class="case"><input id="nav-pmr" type="checkbox"> En fauteuil (pmr)</label>
+      <label>Nœuds bloqués
+        <input id="nav-bloques" type="text" placeholder="ex. A5, B3" autocomplete="off">
+      </label>
+      <label>Arêtes encombrées (taux τ entre 0 et 1)
+        <input id="nav-taux" type="text" placeholder="ex. A2-A5=0.8" autocomplete="off">
+      </label>
+      <label>β (poids de l'encombrement)
+        <input id="nav-beta" type="number" value="0" min="0" step="0.5">
+      </label>
+      <p class="formule">coût d'une arête = longueur × (1 + β × τ)</p>
+      <div class="boutons">
+        <button id="nav-lancer" type="button">Lancer graphe_de_navigation</button>
+        <button id="nav-effacer" type="button">Effacer</button>
+      </div>
+      <p id="nav-resume" role="status"></p>
+      <pre id="nav-voisins"></pre>
+    </details>
+
+    <details class="panneau">
+      <summary>chemins.py</summary>
+      <p class="explication">
+        Lance <code>plus_court_chemin</code>, <code>chemin_le_moins_encombre</code> et
+        <code>chemin_pmr</code> du moteur Python (algorithme de Dijkstra) sur le même trajet :
+        les trois chemins s'écrivent l'un sous l'autre avec leur coût, et celui du critère
+        choisi se dessine en noir sur le plan.
+      </p>
+      <label>Départ
+        <input id="chemin-depart" type="text" placeholder="ex. A1" autocomplete="off">
+      </label>
+      <label>Arrivée
+        <input id="chemin-arrivee" type="text" placeholder="ex. B3" autocomplete="off">
+      </label>
+      <label>Critère dessiné
+        <select id="chemin-critere">
+          <option value="plus_court">plus court (coût = longueur)</option>
+          <option value="moins_encombre">moins encombré (longueur × (1 + β × τ))</option>
+          <option value="pmr">en fauteuil (pmr, coût = longueur)</option>
+        </select>
+      </label>
+      <label>Nœuds bloqués
+        <input id="chemin-bloques" type="text" placeholder="ex. A5, B3" autocomplete="off">
+      </label>
+      <label>Arêtes encombrées (taux τ entre 0 et 1)
+        <input id="chemin-taux" type="text" placeholder="ex. A2-A5=0.8" autocomplete="off">
+      </label>
+      <label>β (critère « moins encombré » seulement)
+        <input id="chemin-beta" type="number" value="1" min="0" step="0.5">
+      </label>
+      <div class="boutons">
+        <button id="chemin-lancer" type="button">Chercher les chemins</button>
+        <button id="chemin-effacer" type="button">Effacer</button>
+      </div>
+      <p id="chemin-resultat" role="status"></p>
+    </details>
+
+    <details class="panneau">
+      <summary>chemins.py : évacuation</summary>
+      <p class="explication">
+        Lance <code>chemins_d_evacuation</code> du moteur Python : un seul Dijkstra, parti de
+        tous les sas à la fois. Cliquez ensuite sur un nœud pour voir son chemin vers le sas
+        le plus proche.
+      </p>
+      <label class="case"><input id="evac-pmr" type="checkbox"> En fauteuil (pmr)</label>
+      <label>Nœuds bloqués
+        <input id="evac-bloques" type="text" placeholder="ex. A5, B3" autocomplete="off">
+      </label>
+      <div class="boutons">
+        <button id="evac-lancer" type="button">Calculer l'évacuation</button>
+        <button id="evac-effacer" type="button">Effacer</button>
+      </div>
+      <p id="evac-resultat" role="status"></p>
+    </details>
+    </div>
+
+    <aside class="legende" aria-label="Légende">
+      <ul>
+        <li><span class="forme point"></span> Noeud</li>
+        <li><span class="forme source"></span> Sas (noeud source)</li>
+        <li><span class="trait arete"></span> Arête</li>
+        <li><span class="trait non-pmr"></span> Arête interdite aux fauteuils</li>
+        <li><span class="trait tunnel"></span> Tunnel entre stations</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script src="vendor/cytoscape.min.js"></script>
+  <script src="visionneuse.js"></script>
+</body>
+</html>

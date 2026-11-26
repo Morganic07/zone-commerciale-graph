@@ -1,0 +1,103 @@
+{
+  "noeuds": [
+
+    {"id": "C1", "type": "sortie", "capacite_max": 32, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
+     "x": 0, "y": 150},
+
+     {"id": "C2", "type": "carrefour", "capacite_max": 48, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 130, "y": 150},
+
+     {"id": "C3", "type": "carrefour", "capacite_max": 48, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 260, "y": 150},
+
+     {"id": "C4", "type": "carrefour", "capacite_max": 48, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 390, "y": 150},
+
+     {"id": "C5", "type": "sortie", "capacite_max": 32, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "sortie",
+     "x": 520, "y": 150},
+
+     {"id": "C6", "type": "module", "capacite_max": 120, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 130, "y": 40},
+
+     {"id": "C7", "type": "module", "capacite_max": 40, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 260, "y": 40},
+
+     {"id": "C8", "type": "module", "capacite_max": 60, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 60, "y": 260},
+
+     {"id": "C9", "type": "sanitaire", "capacite_max": 24, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 200, "y": 260},
+
+     {"id": "C10", "type": "module", "capacite_max": 100, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 320, "y": 260},
+
+     {"id": "C11", "type": "module", "capacite_max": 80, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 400, "y": 270},
+
+     {"id": "C12", "type": "module", "capacite_max": 120, "occupation": 0,
+     "capteur_fumee": true, "niveau_fumee": 0, "statut": "libre",
+     "x": 500, "y": 270}
+  ],
+  "aretes": [
+
+    {"source": "C1", "cible": "C2", "capacite_max": 1.64, "longueur": 8.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C2", "cible": "C3", "capacite_max": 1.37, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C3", "cible": "C4", "capacite_max": 1.37, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": false},
+
+     {"source": "C4", "cible": "C5", "capacite_max": 1.64, "longueur": 8.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C2", "cible": "C6", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C6", "cible": "C7", "capacite_max": 0.82, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": false},
+
+     {"source": "C7", "cible": "C3", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+      {"source": "C7", "cible": "C4", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C2", "cible": "C8", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C3", "cible": "C9", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C3", "cible": "C10", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C4", "cible": "C11", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C11", "cible": "C12", "capacite_max": 1.37, "longueur": 10.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C12", "cible": "C4", "capacite_max": 1.37, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true},
+
+     {"source": "C8", "cible": "C9", "capacite_max": 0.82, "longueur": 14.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": false},
+
+     {"source": "C9", "cible": "C10", "capacite_max": 1.37, "longueur": 12.0,
+     "statut": "libre", "sens": "bidirectionnel", "pmr": true}
+  ]
+}
+
