@@ -126,6 +126,14 @@ main {
   inset: 0;
 }
 
+/* Panneau « simulation.py » : calque des agents, posé exactement sur le graphe.
+   Il laisse passer les clics et la souris vers le graphe en dessous. */
+#agents {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 /* Panneaux « navigation.py » et « chemins.py » : l'un sous l'autre, en haut à droite du
    plan. Chacun se déplie au clic. */
 .panneaux {
@@ -291,6 +299,12 @@ main {
 @media (max-width: 700px) {
   #graphe {
     position: relative;
+    height: 60vh;
+  }
+
+  /* Le calque des agents garde la hauteur du graphe. */
+  #agents {
+    bottom: auto;
     height: 60vh;
   }
 

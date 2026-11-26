@@ -54,8 +54,8 @@ Pour voir les plans et le réseau dès maintenant. Design **super simple** (déc
 
 ## Epic 5 — Simulation
 
-- [ ] **5.1 Pas de temps et contraintes.** Agents dans un nœud, sur une arête ou en attente ; avancée à vitesse `v·Δt` ; admission tirée au sort avec une graine.
-  *Critère :* sur 1000 pas, `o_v ≤ c_v` et `φ_e ≤ c_e·Δt` sont vrais à chaque pas ; deux exécutions avec la même graine donnent le même état.
+- [ ] **5.1 Pas de temps et contraintes.** Agents dans un nœud, sur une arête ou en attente ; avancée à vitesse `v·Δt` ; admission tirée au sort. Sans graine (décision de l'utilisateur, 2026-11-26) : le hasard vient du module `random`, et deux exécutions ne donnent pas le même état.
+  *Critère :* sur 1000 pas, `o_v ≤ c_v` et `φ_e ≤ c_e·Δt` sont vrais à chaque pas.
 - [ ] **5.2 Demande.** Arrivées par les sas, choix d'une station puis de 1 à 3 modules, visite aléatoire, retour ; part de PMR.
   *Critère :* conservation (créés = présents + repartis) à chaque pas ; la part de PMR observée est conforme au paramètre, à une tolérance près.
 - [ ] **5.3 Routage des agents.** Critère « moins encombré » par défaut, contrainte PMR, recalcul quand l'objectif ou le graphe change.

@@ -45,6 +45,7 @@
 
   <main>
     <div id="graphe"></div>
+    <canvas id="agents"></canvas>
     <div id="infobulle" hidden></div>
 
     <div class="panneaux">
@@ -127,6 +128,34 @@
         <button id="evac-effacer" type="button">Effacer</button>
       </div>
       <p id="evac-resultat" role="status"></p>
+    </details>
+
+    <details class="panneau">
+      <summary>simulation.py</summary>
+      <p class="explication">
+        Crée des visiteurs, qui attendent devant un sas tiré au hasard et vont vers un
+        module tiré au hasard. Chaque pas dure une seconde. Sur le plan, chaque nœud
+        affiche « présents / capacité », et chaque arête le nombre de personnes qui y
+        marchent ou attendent à son bout.
+      </p>
+      <p class="explication">
+        Chaque visiteur est un point noir ; un visiteur en fauteuil, un carré orange.
+        Ceux qui attendent une place font la queue au bout de leur arête, ou sous leur
+        sas d'arrivée.
+      </p>
+      <label>Visiteurs
+        <input id="sim-visiteurs" type="number" value="200" min="1" step="10">
+      </label>
+      <label>Part en fauteuil (entre 0 et 1)
+        <input id="sim-pmr" type="number" value="0.1" min="0" max="1" step="0.1">
+      </label>
+      <div class="boutons">
+        <button id="sim-creer" type="button">Créer la simulation</button>
+        <button id="sim-pas" type="button">Un pas</button>
+        <button id="sim-lecture" type="button">Lecture</button>
+        <button id="sim-effacer" type="button">Effacer</button>
+      </div>
+      <p id="sim-resultat" role="status"></p>
     </details>
     </div>
 

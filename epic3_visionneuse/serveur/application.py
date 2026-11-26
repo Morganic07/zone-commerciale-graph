@@ -1,5 +1,6 @@
 """Le serveur web : il charge le réseau avec le moteur et l'envoie à la page."""
 
+import json
 from pathlib import Path
 
 from fastapi import Body, FastAPI
@@ -14,10 +15,12 @@ from epic4_algorithmes.moteur.chemins import (
     plus_court_chemin,
 )
 from epic4_algorithmes.moteur.navigation import graphe_de_navigation
+from epic5_simulation.moteur.simulation import ajouter_visiteurs, creer_simulation, pas
 
 # Racine du projet : serveur/ est dans epic3_visionneuse/, lui-même à la racine.
 RACINE = Path(__file__).resolve().parent.parent.parent
 RESEAU_PAR_DEFAUT = RACINE / "epic2_donnees" / "donnees" / "reseau.json"
+PARAMETRES = RACINE / "epic2_donnees" / "donnees" / "parametres.json"
 DOSSIER_WEB = RACINE / "epic3_visionneuse" / "web"
 
 
@@ -54,8 +57,9 @@ def reseau_en_dictionnaire(reseau):
     return {"stations": liste_stations, "sources": liste_sources, "connexions": liste_tunnels}
 
 
-# Ce que le serveur garde en mémoire : le chemin du fichier du réseau.
-etat = {"chemin": None}
+# Ce que le serveur garde en mémoire : le chemin du fichier du réseau, la simulation
+# en cours (None tant qu'on n'en a pas créé) et le nombre de pas déjà joués.
+etat = {"chemin": None, "simulation": None, "pas": 0}
 
 
 def donner_reseau():
@@ -163,6 +167,115 @@ def calculer_evacuation(demande=Body()):
     return {"couts": couts, "suivants": suivants, "pieges": pieges}
 
 
+def charger_parametres():
+    """Lit les valeurs physiques (parametres.json) et renvoie un dictionnaire
+    nom → valeur (par exemple « vitesse_valide » → 1.34). La source de chaque valeur
+    reste dans le fichier : le programme n'a besoin que du nombre."""
+    with open(PARAMETRES, encoding="utf-8") as fichier:
+        donnees = json.load(fichier)
+
+    parametres = {}
+    for nom in donnees:
+        parametres[nom] = donnees[nom]["valeur"]
+    return parametres
+
+
+def creer_la_simulation(demande=Body()):
+    """Route POST /api/simulation/creer : crée une simulation (epic5_simulation/moteur/
+    simulation.py) sur le réseau des fichiers, avec des visiteurs de démonstration.
+
+    La demande contient « visiteurs » (leur nombre) et « part_pmr » (entre 0 et 1).
+    Les visiteurs et leurs chemins sont créés par ajouter_visiteurs
+    (simulation.py). Renvoie l'état de la simulation (voir etat_de_la_simulation).
+    """
+    reseau = charger_reseau(etat["chemin"])
+    parametres = charger_parametres()
+    simulation = creer_simulation(reseau, parametres["vitesse_valide"], parametres["vitesse_pmr"])
+    ajouter_visiteurs(simulation, reseau, demande["visiteurs"], demande["part_pmr"])
+
+    etat["simulation"] = simulation
+    etat["pas"] = 0
+    return etat_de_la_simulation(simulation)
+
+
+def jouer_un_pas():
+    """Route POST /api/simulation/pas : joue un pas de temps et renvoie le nouvel état."""
+    pas(etat["simulation"])
+    etat["pas"] = etat["pas"] + 1
+    return etat_de_la_simulation(etat["simulation"])
+
+
+def etat_de_la_simulation(simulation):
+    """Ce que la page affiche :
+    - « pas » : le nombre de pas joués (un pas = une seconde) ;
+    - « occupations » : pour chaque nœud, le nombre de personnes présentes ;
+    - « sur_les_aretes » : pour chaque arête, le nombre de personnes qui y marchent ou
+      attendent à son bout, rangé sous « source vers cible » comme dans la page ;
+    - « compteurs » : le nombre d'agents dans chaque état, et le nombre d'arrivés ;
+    - « agents » : pour chaque agent, de quoi le dessiner (voir agent_en_dictionnaire).
+    """
+    occupations = {}
+    for identifiant in simulation.noeuds:
+        occupations[identifiant] = simulation.noeuds[identifiant].occupation
+
+    sur_les_aretes = {}
+    compteurs = {"noeud": 0, "arete": 0, "attente": 0, "arrives": 0}
+    for agent in simulation.agents:
+        compteurs[agent.etat] = compteurs[agent.etat] + 1
+        # Arrivé : dans le dernier nœud de son chemin.
+        if agent.etat == "noeud" and len(agent.chemin) == 0:
+            compteurs["arrives"] = compteurs["arrives"] + 1
+
+        # Un agent qui attend devant son premier sas n'est sur aucune arête.
+        sur_une_arete = agent.etat == "arete" or agent.etat == "attente"
+        if sur_une_arete and agent.noeud != "":
+            arete = simulation.aretes[(agent.noeud, agent.chemin[0])]
+            cle = arete.source + " vers " + arete.cible
+            if cle not in sur_les_aretes:
+                sur_les_aretes[cle] = 0
+            sur_les_aretes[cle] = sur_les_aretes[cle] + 1
+
+    liste_agents = []
+    for agent in simulation.agents:
+        liste_agents.append(agent_en_dictionnaire(simulation, agent))
+
+    return {
+        "pas": etat["pas"],
+        "occupations": occupations,
+        "sur_les_aretes": sur_les_aretes,
+        "compteurs": compteurs,
+        "agents": liste_agents,
+    }
+
+
+def agent_en_dictionnaire(simulation, agent):
+    """Ce qu'il faut à la page pour dessiner un agent :
+    - « etat » : « noeud », « arete » ou « attente » ;
+    - « pmr » : vrai s'il est en fauteuil ;
+    - « noeud » : le nœud où il est, ou celui qu'il vient de quitter ("" s'il n'est
+      encore entré nulle part) ;
+    - « suivant » : le nœud suivant de son chemin ("" s'il est arrivé) ;
+    - « avance » : la part de l'arête déjà parcourue, entre 0 et 1 (0 hors d'une arête).
+    """
+    suivant = ""
+    if len(agent.chemin) > 0:
+        suivant = agent.chemin[0]
+
+    avance = 0
+    if agent.etat == "arete":
+        arete = simulation.aretes[(agent.noeud, suivant)]
+        # Toujours inférieur à 1 : au bout de l'arête, l'agent passe en attente.
+        avance = agent.position / arete.longueur
+
+    donnee_agent = {}
+    donnee_agent["etat"] = agent.etat
+    donnee_agent["pmr"] = agent.pmr
+    donnee_agent["noeud"] = agent.noeud
+    donnee_agent["suivant"] = suivant
+    donnee_agent["avance"] = avance
+    return donnee_agent
+
+
 class PageSansCache(StaticFiles):
     """Sert la page (web/) en demandant au navigateur de revérifier chaque fichier.
 
@@ -188,6 +301,8 @@ def creer_application(chemin_reseau):
     application.add_api_route("/api/navigation", calculer_navigation, methods=["POST"])
     application.add_api_route("/api/chemin", calculer_chemin, methods=["POST"])
     application.add_api_route("/api/evacuation", calculer_evacuation, methods=["POST"])
+    application.add_api_route("/api/simulation/creer", creer_la_simulation, methods=["POST"])
+    application.add_api_route("/api/simulation/pas", jouer_un_pas, methods=["POST"])
 
     # Tout le reste est la page : web/index.html et ses fichiers.
     application.mount("/", PageSansCache(directory=DOSSIER_WEB, html=True))

@@ -104,6 +104,23 @@ const STYLE = [
   {
     selector: ".arc-choisi-inverse",
     style: {"source-arrow-shape": "triangle", "source-arrow-color": COULEURS.encre}
+  },
+  {
+    // Panneau simulation.py : le nombre de personnes, écrit à côté du nœud ou de l'arête.
+    selector: ".simule",
+    style: {
+      "label": "data(simulation)",
+      "font-size": 11,
+      "color": COULEURS.encre,
+      "font-family": "system-ui, sans-serif",
+      "text-background-color": "#FFFFFF",
+      "text-background-opacity": 0.8
+    }
+  },
+  {
+    // Panneau simulation.py : un nœud plein est cerclé de noir.
+    selector: ".plein",
+    style: {"border-width": 3, "border-color": COULEURS.encre}
   }
 ];
 
@@ -185,7 +202,8 @@ function creerElements(reseau) {
           infos: decrireNoeud(noeud, station),
           idFichier: idDansLeFichier(noeud.id, station.id),
           type: noeud.type,
-          capteur: noeud.capteur_fumee
+          capteur: noeud.capteur_fumee,
+          capacite: noeud.capacite_max
         },
         position: {x: station.x + noeud.x, y: station.y + noeud.y},
         classes: classe
@@ -737,6 +755,216 @@ function effacerEvacuation() {
   document.getElementById("evac-resultat").textContent = "";
 }
 
+// ---------------------------------------------------------------------------------------
+// Panneau « simulation.py » : crée une simulation sur le serveur, puis joue des pas et
+// écrit sur le plan combien de personnes se trouvent dans chaque nœud et sur chaque arête.
+// ---------------------------------------------------------------------------------------
+
+// « creee » : vrai quand le serveur a une simulation à jouer.
+// « minuteur » : le numéro du minuteur de la lecture automatique, ou null quand elle
+// est arrêtée.
+// « points » : un point par agent, à dessiner sur le calque (position sur le plan, et
+// vrai s'il est en fauteuil).
+const lecture = {creee: false, minuteur: null, points: []};
+
+// Écart entre deux agents qui font la queue, en unités du plan.
+const ECART_DANS_LA_QUEUE = 6;
+
+// Donne à un agent son rang à un endroit (0 pour le premier, 1 pour le deuxième…),
+// pour que les agents au même endroit ne se cachent pas les uns les autres.
+function prendreRang(rangs, endroit) {
+  if (!(endroit in rangs)) {
+    rangs[endroit] = 0;
+  }
+  const rang = rangs[endroit];
+  rangs[endroit] = rang + 1;
+  return rang;
+}
+
+// Calcule, pour chaque agent reçu du serveur, sa position sur le plan.
+function placerAgents(agents) {
+  const rangs = {};
+  const points = [];
+
+  for (const agent of agents) {
+    let x = 0;
+    let y = 0;
+
+    if (agent.etat === "noeud") {
+      // Dans un nœud : les agents s'enroulent en spirale autour du point du nœud.
+      // L'angle de 2,4 radians (l'angle d'or) écarte bien chaque agent du précédent.
+      const centre = cy.getElementById(agent.noeud).position();
+      const rang = prendreRang(rangs, agent.noeud);
+      const angle = rang * 2.4;
+      const rayon = 10 + 5 * Math.sqrt(rang);
+      x = centre.x + rayon * Math.cos(angle);
+      y = centre.y + rayon * Math.sin(angle);
+    } else if (agent.etat === "arete") {
+      // Sur une arête : entre ses deux bouts, selon la part déjà parcourue.
+      const depart = cy.getElementById(agent.noeud).position();
+      const arrivee = cy.getElementById(agent.suivant).position();
+      x = depart.x + (arrivee.x - depart.x) * agent.avance;
+      y = depart.y + (arrivee.y - depart.y) * agent.avance;
+    } else if (agent.noeud === "") {
+      // En attente devant son premier sas : une queue de 10 agents par ligne, sous le sas.
+      const sas = cy.getElementById(agent.suivant).position();
+      const rang = prendreRang(rangs, "devant " + agent.suivant);
+      x = sas.x - 27 + (rang % 10) * ECART_DANS_LA_QUEUE;
+      y = sas.y + 20 + Math.floor(rang / 10) * ECART_DANS_LA_QUEUE;
+    } else {
+      // En attente au bout d'une arête : la queue remonte l'arête depuis le nœud suivant.
+      const depart = cy.getElementById(agent.noeud).position();
+      const arrivee = cy.getElementById(agent.suivant).position();
+      const rang = prendreRang(rangs, agent.noeud + " vers " + agent.suivant);
+      const longueur = Math.hypot(arrivee.x - depart.x, arrivee.y - depart.y);
+      let part = 1 - (12 + rang * ECART_DANS_LA_QUEUE) / longueur;
+      // Queue plus longue que l'arête : les derniers s'entassent au départ.
+      if (part < 0) {
+        part = 0;
+      }
+      x = depart.x + (arrivee.x - depart.x) * part;
+      y = depart.y + (arrivee.y - depart.y) * part;
+    }
+
+    points.push({x: x, y: y, pmr: agent.pmr});
+  }
+
+  lecture.points = points;
+}
+
+// Dessine les agents sur le calque. Les positions sont celles du plan : on les convertit
+// en pixels de l'écran avec le zoom et le déplacement actuels de la vue.
+function dessinerAgents() {
+  const calque = document.getElementById("agents");
+  const graphe = document.getElementById("graphe");
+  // Le calque prend la taille du graphe (elle change quand on redimensionne la fenêtre).
+  calque.width = graphe.clientWidth;
+  calque.height = graphe.clientHeight;
+
+  const pinceau = calque.getContext("2d");
+  pinceau.clearRect(0, 0, calque.width, calque.height);
+
+  const zoom = cy.zoom();
+  const decalage = cy.pan();
+  for (const point of lecture.points) {
+    const x = point.x * zoom + decalage.x;
+    const y = point.y * zoom + decalage.y;
+    if (point.pmr) {
+      // En fauteuil : un carré orange, pour ne pas reposer sur la seule couleur.
+      pinceau.fillStyle = COULEURS.nonPmr;
+      pinceau.fillRect(x - 3, y - 3, 6, 6);
+    } else {
+      pinceau.fillStyle = COULEURS.encre;
+      pinceau.beginPath();
+      pinceau.arc(x, y, 2.5, 0, 2 * Math.PI);
+      pinceau.fill();
+    }
+  }
+}
+
+// Nombre de pas joués par seconde pendant la lecture.
+const PAS_PAR_SECONDE = 5;
+
+// Écrit l'état reçu du serveur sur le plan et sous les boutons.
+function afficherSimulation(resultat) {
+  for (const noeud of cy.nodes()) {
+    if (noeud.hasClass("station")) {
+      continue;
+    }
+    const presents = resultat.occupations[noeud.id()];
+    const capacite = noeud.data("capacite");
+    noeud.data("simulation", presents + "/" + capacite);
+    noeud.addClass("simule");
+    // Un nœud plein est cerclé : sa couleur ne change pas, la bordure suffit.
+    if (presents >= capacite) {
+      noeud.addClass("plein");
+    } else {
+      noeud.removeClass("plein");
+    }
+  }
+
+  for (const arete of cy.edges()) {
+    let nombre = 0;
+    if (arete.id() in resultat.sur_les_aretes) {
+      nombre = resultat.sur_les_aretes[arete.id()];
+    }
+    // Une arête vide n'affiche rien, pour ne pas surcharger le plan.
+    if (nombre > 0) {
+      arete.data("simulation", String(nombre));
+      arete.addClass("simule");
+    } else {
+      arete.removeClass("simule");
+    }
+  }
+
+  placerAgents(resultat.agents);
+  dessinerAgents();
+
+  const compteurs = resultat.compteurs;
+  document.getElementById("sim-resultat").textContent = "Pas " + resultat.pas
+    + " (" + resultat.pas + " s)\n"
+    + compteurs.noeud + " dans un nœud, dont " + compteurs.arrives + " arrivés\n"
+    + compteurs.arete + " en marche sur une arête\n"
+    + compteurs.attente + " en attente d'une place";
+}
+
+// Envoie les réglages au serveur, qui crée la simulation et ses visiteurs.
+async function creerSimulation() {
+  arreterLecture();
+  const demande = {
+    visiteurs: Number(document.getElementById("sim-visiteurs").value),
+    part_pmr: Number(document.getElementById("sim-pmr").value)
+  };
+  const reponse = await fetch("/api/simulation/creer", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(demande)
+  });
+  lecture.creee = true;
+  afficherSimulation(await reponse.json());
+}
+
+// Joue un pas sur le serveur et affiche le nouvel état.
+async function jouerUnPas() {
+  // Pas encore de simulation : on ne peut rien jouer.
+  if (!lecture.creee) {
+    return;
+  }
+  const reponse = await fetch("/api/simulation/pas", {method: "POST"});
+  afficherSimulation(await reponse.json());
+}
+
+// Bouton « Lecture » : lance ou arrête la lecture automatique.
+function basculerLecture() {
+  if (lecture.minuteur === null) {
+    lecture.minuteur = setInterval(jouerUnPas, 1000 / PAS_PAR_SECONDE);
+    document.getElementById("sim-lecture").textContent = "Pause";
+  } else {
+    arreterLecture();
+  }
+}
+
+function arreterLecture() {
+  if (lecture.minuteur !== null) {
+    clearInterval(lecture.minuteur);
+    lecture.minuteur = null;
+  }
+  document.getElementById("sim-lecture").textContent = "Lecture";
+}
+
+// Efface la simulation du plan.
+function effacerSimulation() {
+  arreterLecture();
+  lecture.creee = false;
+  for (const element of cy.elements()) {
+    element.removeClass("simule");
+    element.removeClass("plein");
+  }
+  lecture.points = [];
+  dessinerAgents();
+  document.getElementById("sim-resultat").textContent = "";
+}
+
 // Remplace tout le dessin par le réseau reçu, puis cadre la vue.
 function dessiner(cy, reseau) {
   cy.elements().remove();
@@ -749,6 +977,7 @@ function dessiner(cy, reseau) {
   effacerNavigation();
   effacerChemin();
   effacerEvacuation();
+  effacerSimulation();
 }
 
 const cy = cytoscape({
@@ -795,6 +1024,14 @@ document.getElementById("chemin-critere").addEventListener("change", changerCrit
 document.getElementById("evac-lancer").addEventListener("click", lancerEvacuation);
 document.getElementById("evac-effacer").addEventListener("click", effacerEvacuation);
 cy.on("tap", "node", montrerEvacuation);
+// Panneau simulation.py.
+document.getElementById("sim-creer").addEventListener("click", creerSimulation);
+document.getElementById("sim-pas").addEventListener("click", jouerUnPas);
+document.getElementById("sim-lecture").addEventListener("click", basculerLecture);
+document.getElementById("sim-effacer").addEventListener("click", effacerSimulation);
+// Le calque des agents suit le graphe : on le redessine à chaque zoom ou déplacement.
+cy.on("viewport", dessinerAgents);
+window.addEventListener("resize", dessinerAgents);
 
 // Entrée dans le champ de recherche ne doit pas recharger la page.
 document.getElementById("filtres").addEventListener("submit", empecherEnvoi);

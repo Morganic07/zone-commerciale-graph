@@ -67,7 +67,7 @@ graph-satellites/
 - **Python ≥ 3.11.** Dépendances d'exécution : `fastapi`, `uvicorn`. Dépendances de test : `pytest`, `httpx` (pour le client de test FastAPI), `networkx`, `ruff`. `mypy` a été retiré le 2026-11-24, avec les annotations de type, jugées illisibles pour un débutant (décision de l'utilisateur).
 - **`networkx` ne sert qu'aux tests**, comme oracle : il vérifie nos propres résultats. Un test garantit qu'aucun dossier `epic*/moteur/` ne l'importe. Seule exception : le script d'aide facultatif de la partie 4 (§ 7), qui n'est ni du moteur ni de l'application.
 - **Page.** Cytoscape.js (MIT), copié dans `epic3_visionneuse/web/vendor/`, sans npm ni étape de compilation. Ses nœuds composés représentent directement les macro-nœuds. Les agents sont dessinés sur un calque `<canvas>` écrit par nos soins, superposé à Cytoscape.
-- **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket, et la simulation reste déterministe.
+- **Transport.** C'est la page qui pilote l'horloge : elle demande un pas au serveur toutes les `1000 / vitesse` ms. Pause = plus de demandes ; pas à pas = une demande. Il n'y a pas de WebSocket.
 - **Lancement en une commande** : `python -m serveur` depuis la racine du projet (fichier `serveur.py`, décision de l'utilisateur, 2026-11-24 ; avant : `python -m epic3_visionneuse.serveur`), puis on ouvre la page indiquée.
 
 **Une interface qui grandit avec le moteur** (décision du 2026-11-20). Plutôt qu'une interface faite d'un bloc à la fin, une visionneuse est livrée juste après les données : elle affiche le réseau et les plans des stations, et se recharge après chaque modification d'un fichier JSON. Chaque epic suivant ajoute ensuite ce qu'il faut pour voir son travail : itinéraires, puis simulation, puis incendie. Pourquoi : un plan mal saisi ou un algorithme faux se repère bien plus vite à l'œil que dans un test. Le moteur reste pur : seuls `epic3_visionneuse/serveur/` et `epic3_visionneuse/web/` grandissent.
@@ -128,7 +128,7 @@ Champs facultatifs ajoutés, tous justifiés :
 ### 2.3 Réglages de la simulation et paramètres
 
 - `epic2_donnees/donnees/parametres.json` : les valeurs physiques, chacune avec sa source ou sa justification (§ 4.1).
-- `epic5_simulation/donnees/simulation.json` : réglages de départ (graine aléatoire, rythme d'arrivée par source, part de PMR, durée des visites, β).
+- `epic5_simulation/donnees/simulation.json` : réglages de départ (rythme d'arrivée par source, part de PMR, durée des visites, β).
 - La page démarre une simulation unique, dont l'affluence se règle au curseur (visiteurs par minute pour tout le réseau, répartis entre les sas dans les proportions de départ). Le feu se déclenche au clic, avec α, θ₁, θ₂, δ et le mode de connaissance réglés dans le panneau.
 
 ## 3. Algorithmes (codés à la main)
@@ -179,7 +179,7 @@ Chaque visiteur est un agent : il a un profil (valide ou PMR), un sas d'arrivée
 **Un pas de temps se déroule ainsi :**
 1. Les arrivées sont générées aux sas, au rythme fixé par l'affluence réglée.
 2. Les agents sur une arête avancent de `v · Δt`, où `v` dépend du profil et de la fumée.
-3. Les agents arrivés au bout d'une arête demandent à entrer dans le nœud. Ce nœud offre `c_v − o_v` places. Les candidats sont **tirés au sort** avec le générateur de la simulation (graine fixée, donc rejouable). Les refusés attendent et réessaient au pas suivant.
+3. Les agents arrivés au bout d'une arête demandent à entrer dans le nœud. Ce nœud offre `c_v − o_v` places. Les candidats sont **tirés au sort** avec le module `random` de Python, sans graine (décision de l'utilisateur, 2026-11-26) : deux simulations ne sont pas identiques. Les refusés attendent et réessaient au pas suivant.
 4. Les agents qui quittent un nœud prennent l'arête suivante de leur itinéraire, dans la limite de `c_e · Δt` entrées par pas.
 5. Les indicateurs sont mis à jour.
 

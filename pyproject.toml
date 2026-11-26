@@ -40,7 +40,9 @@ target-version = "py311"
 select = ["E", "F", "W", "I", "B", "UP"]
 # B904 imposerait `raise ... from erreur` dans chaque `except` : une syntaxe de plus
 # pour un débutant, sans utilité pour ce projet, dont le code vise un niveau lycée.
-ignore = ["B904"]
+# B007 refuse `for numero in range(n)` quand `numero` ne sert pas, et voudrait `_` à la
+# place : `for numero in range(n)` est la façon la plus lisible de répéter n fois.
+ignore = ["B904", "B007"]
 
 # `demande=Body()` est la manière de FastAPI de lire le JSON envoyé par la page :
 # la règle B008, qui interdit un appel de fonction en valeur par défaut, ne s'y applique pas.
