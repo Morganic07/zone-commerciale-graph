@@ -51,46 +51,46 @@
 
 
   "aretes": [
-    {"source": "A1", "cible": "A2", "capacite_max": 1.64, "longueur": 8.0,
+    {"source": "A1", "cible": "A2", "capacite_max": 2, "longueur": 8.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A2", "cible": "A5", "capacite_max": 1.1, "longueur": 12.0,
+     {"source": "A2", "cible": "A5", "capacite_max": 1, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A2", "cible": "A3", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "A2", "cible": "A3", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A3", "cible": "A4", "capacite_max": 0.82, "longueur": 12.0,
+     {"source": "A3", "cible": "A4", "capacite_max": 1, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": false},
 
-     {"source": "A4", "cible": "A5", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "A4", "cible": "A5", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A5", "cible": "A8", "capacite_max": 0.82, "longueur": 12.0,
+     {"source": "A5", "cible": "A8", "capacite_max": 1, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": false},
 
-     {"source": "A4", "cible": "A7", "capacite_max": 1.37, "longueur": 12.0,
+     {"source": "A4", "cible": "A7", "capacite_max": 2, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A7", "cible": "A8", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "A7", "cible": "A8", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A5", "cible": "A6", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "A5", "cible": "A6", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A6", "cible": "A9", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "A6", "cible": "A9", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A9", "cible": "A11", "capacite_max": 1.37, "longueur": 12.0,
+     {"source": "A9", "cible": "A11", "capacite_max": 2, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A8", "cible": "A11", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "A8", "cible": "A11", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A8", "cible": "A10", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "A8", "cible": "A10", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "A8", "cible": "A12", "capacite_max": 1.64, "longueur": 8.0,
+     {"source": "A8", "cible": "A12", "capacite_max": 2, "longueur": 8.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true}
   ]
 }

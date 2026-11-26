@@ -28,7 +28,7 @@ namespaces = true
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["epic2_donnees", "epic3_visionneuse", "epic4_algorithmes"]
+testpaths = ["epic2_donnees", "epic3_visionneuse", "epic4_algorithmes", "epic5_simulation"]
 # Deux epics peuvent avoir des fichiers de test de même nom.
 addopts = "--import-mode=importlib"
 

@@ -1,4 +1,5 @@
 {
+  "commentaire": "capacite_max d'un nœud : nombre maximal de personnes présentes en même temps. capacite_max d'une arête : débit maximal, en personnes par seconde (2 pour un passage ordinaire ou un sas, 1 pour un passage non PMR ; voir PLAN.md § 2.1).",
   "noeuds": [
 
     {"id": "B1", "type": "sortie", "capacite_max": 32, "occupation": 0,
@@ -51,49 +52,49 @@
   ],
 
   "aretes": [
-    {"source": "B1", "cible": "B2", "capacite_max": 1.64, "longueur": 8.0,
+    {"source": "B1", "cible": "B2", "capacite_max": 2, "longueur": 8.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B2", "cible": "B3", "capacite_max": 1.37, "longueur": 12.0,
+     {"source": "B2", "cible": "B3", "capacite_max": 2, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B3", "cible": "B4", "capacite_max": 1.37, "longueur": 12.0,
+     {"source": "B3", "cible": "B4", "capacite_max": 2, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B4", "cible": "B5", "capacite_max": 1.37, "longueur": 12.0,
+     {"source": "B4", "cible": "B5", "capacite_max": 1, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": false},
 
-     {"source": "B5", "cible": "B2", "capacite_max": 1.37, "longueur": 12.0,
+     {"source": "B5", "cible": "B2", "capacite_max": 2, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B4", "cible": "B6", "capacite_max": 1.64, "longueur": 8.0,
+     {"source": "B4", "cible": "B6", "capacite_max": 2, "longueur": 8.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B3", "cible": "B7", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "B3", "cible": "B7", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B3", "cible": "B8", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "B3", "cible": "B8", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B5", "cible": "B9", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "B5", "cible": "B9", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B5", "cible": "B10", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "B5", "cible": "B10", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B2", "cible": "B11", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "B2", "cible": "B11", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B4", "cible": "B12", "capacite_max": 1.37, "longueur": 10.0,
+     {"source": "B4", "cible": "B12", "capacite_max": 2, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B11", "cible": "B7", "capacite_max": 0.82, "longueur": 12.0,
+     {"source": "B11", "cible": "B7", "capacite_max": 1, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": false},
 
-     {"source": "B8", "cible": "B12", "capacite_max": 1.37, "longueur": 12.0,
+     {"source": "B8", "cible": "B12", "capacite_max": 2, "longueur": 12.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
 
-     {"source": "B9", "cible": "B10", "capacite_max": 0.82, "longueur": 10.0,
+     {"source": "B9", "cible": "B10", "capacite_max": 1, "longueur": 10.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": false}
   ]
 }

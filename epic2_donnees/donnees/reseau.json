@@ -1,4 +1,5 @@
 {
+  "commentaire": "capacite_max d'un tunnel (connexion) : débit maximal, en personnes par seconde (2, comme un passage ordinaire ; voir PLAN.md § 2.1).",
   "stations": [
     {"id": "A", "fichier": "stations/A.json", "x": 0, "y": 0},
     {"id": "B", "fichier": "stations/B.json", "x": 1100, "y": -350},
@@ -7,16 +8,16 @@
   "sources": [],
 
   "connexions": [
-    {"source": "A:A12", "cible": "B:B1", "capacite_max": 1.64, "longueur": 350.0,
+    {"source": "A:A12", "cible": "B:B1", "capacite_max": 8, "longueur": 350.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
   
-     {"source": "A:A12", "cible": "C:C1", "capacite_max": 1.64, "longueur": 400.0,
+     {"source": "A:A12", "cible": "C:C1", "capacite_max": 8, "longueur": 400.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
   
-     {"source": "A:A1", "cible": "C:C1", "capacite_max": 1.64, "longueur": 600.0,
+     {"source": "A:A1", "cible": "C:C1", "capacite_max": 8, "longueur": 600.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true},
   
-     {"source": "B:B6", "cible": "C:C5", "capacite_max": 1.64, "longueur": 300.0,
+     {"source": "B:B6", "cible": "C:C5", "capacite_max": 8, "longueur": 300.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true}
   ]
 }

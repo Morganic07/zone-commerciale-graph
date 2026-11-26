@@ -87,7 +87,20 @@ On reprend **exactement le format imposé** (section 2.3 de la consigne) : liste
 Champs facultatifs ajoutés, tous justifiés :
 - `x`, `y` sur les nœuds : la position sur le plan, pour l'affichage ;
 - `nom` sur les nœuds : retiré du programme (décision du 2026-11-24, code simplifié) ; un nœud se désigne par son identifiant (`A4`) ;
-- `largeur` sur les arêtes : prévu par la consigne comme facultatif, mais ni lu ni écrit par le programme (décision du 2026-11-24, code simplifié) : un fichier qui le contient se charge, le champ est ignoré. La capacité `capacite_max` est donnée directement. Elle a été calculée comme largeur × débit par mètre (§ 4.1), avec 1,2 m pour un sas, 1 m pour un passage ordinaire, 0,8 m pour un goulot et 0,6 m pour un passage non PMR ; le rapport garde ce calcul.
+- `largeur` sur les arêtes : prévu par la consigne comme facultatif, mais ni lu ni écrit par le programme (décision du 2026-11-24, code simplifié) : un fichier qui le contient se charge, le champ est ignoré. La capacité `capacite_max` est donnée directement.
+- **Unités de `capacite_max`** : pour un nœud, c'est un **nombre de personnes** présentes en même temps (un stock) ; pour une arête, c'est un **débit en personnes par seconde**, comme le définit la consigne (« flux maximal de personnes par unité de temps »). Le nom du champ, imposé, est gardé tel quel ; une clé `commentaire` en tête de chaque fichier de données le rappelle (le chargement l'ignore). Pourquoi un débit pour une arête : un passage se traverse, on n'y reste pas, et ce qui le limite est son goulot (une écoutille ne laisse passer que tant de personnes par seconde). C'est ce débit qui ralentit une évacuation.
+- **Capacités des arêtes : 2 ou 1 personne par seconde** (décision de l'utilisateur, 2026-11-26) :
+
+  | Passage | `capacite_max` | Largeur équivalente |
+  |---|---|---|
+  | Arête de sas, passage ordinaire, tunnel entre stations | 2 personnes/s | ≈ 1,5 m |
+  | Goulot (A2–A5 dans la station A) et passage non PMR | 1 personne/s | ≈ 0,7 m |
+
+  **Source** : le débit maximal à travers un passage plat est de 82 personnes par mètre de largeur et par minute, soit 1,37 personne/(m·s) (*Guide to Safety at Sports Grounds*, « Green Guide », 5e édition, 2008 ; `parametres.json`, `debit_par_metre`, et `epic9_rapport/sources.md`). La capacité d'une arête vaut donc largeur × 1,37 ; la largeur équivalente du tableau est la capacité divisée par 1,37.
+
+  **Pourquoi arrondir à un entier** : avec Δt = 1 s, une arête admet au plus `c_e · Δt` entrées par pas (§ 4.1), et une entrée compte une personne entière. Les capacités calculées d'abord à partir des largeurs (0,6 m → 0,82 ; 0,8 m → 1,1 ; 1 m → 1,37 ; 1,2 m → 1,64 personne/s) n'étaient pas entières : une arête à 0,82 n'aurait jamais admis personne (0 entrée par pas), et toutes les autres seraient tombées à 1 personne/s, sans plus de différence entre un goulot et un passage ordinaire. On a donc fixé deux valeurs entières, qui gardent cette différence : 2 pour un passage où l'on se croise (≈ 1,5 m, la largeur d'un couloir pour deux personnes), 1 pour un passage où l'on passe un par un (≈ 0,7 m, une écoutille étroite). Une règle intermédiaire, capacité = longueur, a été essayée le même jour puis écartée : elle mélangeait des mètres et des personnes par seconde, et donnait des débits sans réalité physique (300 à 600 personnes/s dans les tunnels).
+
+  Le goulot de la station A (§ 6) est le passage A2–A5, entre deux jonctions : 1 personne/s, moins que les 2 des arêtes des sas.
 
 **Ce qui n'entre pas dans le JSON** : les valeurs calculées (taux d'occupation, coût, trafic, fumée des arêtes). Les stocker les ferait diverger de la simulation.
 
@@ -98,7 +111,7 @@ Champs facultatifs ajoutés, tous justifiés :
   "stations": [{"id": "A", "fichier": "stations/A.json", "x": 0, "y": 0}],
   "sources": [],
   "connexions": [
-    {"source": "A:SAS2", "cible": "B:SAS1", "capacite_max": 1.64, "longueur": 350.0,
+    {"source": "A:SAS2", "cible": "B:SAS1", "capacite_max": 2, "longueur": 350.0,
      "statut": "libre", "sens": "bidirectionnel", "pmr": true}
   ]
 }
@@ -145,7 +158,7 @@ Champs facultatifs ajoutés, tous justifiés :
 - **Pas d'apesanteur : les stations simulent la gravité** (gravité artificielle, par rotation). Les occupants marchent comme sur Terre. Les valeurs physiques sont donc celles d'une personne au sol, tirées des études de foule et de mobilité terrestres :
   - vitesse de marche d'une personne valide (1,34 m/s) ;
   - vitesse d'une personne en fauteuil roulant (0,67 m/s) ;
-  - débit de passage par mètre de largeur ;
+  - débit de passage par mètre de largeur, d'où les capacités d'arête, arrondies à 1 ou 2 personnes par seconde (§ 2.1) ;
   - surface par personne, d'où la capacité des modules.
 - **Sources** (story 2.1) : `epic2_donnees/donnees/parametres.json`, détaillées dans `epic9_rapport/sources.md`.
 - **Règle** : chaque valeur cite sa source. Quand aucune source publiée n'existe, la valeur est marquée **hypothèse** dans `parametres.json`, avec son raisonnement (un ordre de grandeur tiré d'une valeur sourcée). Le rapport liste ces hypothèses à part. Aucune valeur n'est donnée sans l'une ou l'autre.
